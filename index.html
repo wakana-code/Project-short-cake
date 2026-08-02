@@ -28,7 +28,7 @@ header .sub{font-size:11px;color:#776b85}
 .card code{background:#2e2940;padding:2px 8px;border-radius:6px;font-size:12px;color:#ffd3a3}
 .card a{color:#8fc7ff}
 .steps{background:#1b1824;border-radius:10px;padding:14px 18px;margin:10px 0}
-input[type=password]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #3a3348;background:#17141f;color:#eee;font-size:14px;outline:none;font-family:Consolas,monospace}
+input[type=password],input[type=text]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #3a3348;background:#17141f;color:#eee;font-size:14px;outline:none;font-family:Consolas,monospace}
 input:focus{border-color:#ff9eb5}
 .btn{padding:11px 24px;border:none;border-radius:10px;background:#3a3348;color:#ddd;cursor:pointer;font-size:14px;margin-top:12px}
 .btn:hover{background:#453d55}
@@ -76,7 +76,6 @@ textarea:focus{border-color:#ff9eb5}
 #treeView{flex:1;overflow:auto;padding:14px;font-family:Consolas,monospace;font-size:12.5px;color:#cfc5dd;white-space:pre;background:#12101a}
 .badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;margin-left:8px}
 .badge.bin{background:#3a3020;color:#ffd3a3}
-/* 検品レポート */
 #inspectBody{flex:1;overflow-y:auto;padding:18px}
 .rep{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:10px;line-height:1.8}
 .rep b{display:block;margin-bottom:2px}
@@ -84,7 +83,24 @@ textarea:focus{border-color:#ff9eb5}
 .rep.ok{background:#20301f;color:#a7d8a0}
 .rep.warn{background:#332b1c;color:#e0c890}
 .rep.fix{background:#2a2338;color:#c9b3e8}
-.rep small{color:#889;display:block;margin-top:4px}
+/* ===== STEP4: デプロイ ===== */
+#deployPane.on{display:flex;flex-direction:column;gap:14px;padding:18px;max-width:760px;margin:0 auto;width:100%}
+.dcard{background:#211d2b;border:1px solid #322c40;border-radius:14px;padding:18px}
+.dcard h3{font-size:14px;color:#ff9eb5;margin-bottom:10px}
+#dSummary{font-size:13px;line-height:2;color:#c9bfd6}
+#dSummary b{color:#ffd3a3}
+#repoRow{display:flex;gap:10px;align-items:center}
+#repoRow input{flex:1}
+#repoRow .btn{margin:0;white-space:nowrap}
+#deployLog{background:#12101a;border:1px solid #322c40;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:12.5px;line-height:1.9;min-height:120px;max-height:300px;overflow-y:auto;display:none}
+#deployLog.show{display:block}
+#deployLog .lok{color:#8fd8a0}
+#deployLog .lng{color:#ff9d9d}
+#deployLog .lin{color:#9b8dae}
+#deployLog a{color:#8fc7ff}
+#progWrap{display:none;height:10px;background:#2a2536;border-radius:5px;overflow:hidden;margin-top:8px}
+#progWrap.show{display:block}
+#progBar{height:100%;width:0%;background:linear-gradient(90deg,#ff9eb5,#e0709a);transition:width .2s}
 </style>
 </head>
 <body>
@@ -113,10 +129,7 @@ textarea:focus{border-color:#ff9eb5}
 
 <div class="pane" id="folderPane">
   <div class="hint">💡 青いフォルダ/ZIPをドロップ、またはボタンから選択。<code>node_modules</code>等は自動除外。</div>
-  <div id="dropZone">
-    <span class="big">📁</span>
-    <span>ここにフォルダ or ZIP をドロップ</span>
-  </div>
+  <div id="dropZone"><span class="big">📁</span><span>ここにフォルダ or ZIP をドロップ</span></div>
   <div id="pickRow">
     <button class="btn" onclick="document.getElementById('dirPicker').click()">📂 Finderからフォルダを選ぶ</button>
     <button class="btn" onclick="document.getElementById('zipPicker').click()">🤐 ZIPファイルを選ぶ</button>
@@ -125,7 +138,29 @@ textarea:focus{border-color:#ff9eb5}
   <input type="file" id="zipPicker" accept=".zip" hidden>
 </div>
 
-<div class="pane" id="deployPane"><div class="placeholder"><span class="big">🚀</span>STEP 4で実装予定:ボタン1回でGitHubへ</div></div>
+<!-- ===== デプロイペイン ===== -->
+<div class="pane" id="deployPane">
+  <div class="dcard" id="dNoWs" style="display:none">
+    <h3>📭 プロジェクトが未読み込みです</h3>
+    <p style="font-size:13px;color:#c9bfd6">先に📋貼り付けタブか📁フォルダタブからプロジェクトを読み込んでください。</p>
+  </div>
+  <div id="dReady" style="display:none">
+    <div class="dcard">
+      <h3>📦 デプロイ内容の確認</h3>
+      <div id="dSummary"></div>
+    </div>
+    <div class="dcard">
+      <h3>🏷️ リポジトリ名</h3>
+      <div id="repoRow">
+        <input type="text" id="repoName" placeholder="my-project">
+        <button class="btn pink" id="deployBtn" onclick="deploy()">🚀 デプロイ!</button>
+      </div>
+      <p class="danger">⚠️ 公開リポジトリとして作成されます(全世界から閲覧可能)。検品レポートの🔑警告があれば必ず確認を!</p>
+      <div id="progWrap"><div id="progBar"></div></div>
+      <div id="deployLog"></div>
+    </div>
+  </div>
+</div>
 
 <div class="pane on" id="setupPane">
   <div class="card">
@@ -174,10 +209,11 @@ textarea:focus{border-color:#ff9eb5}
 
 <script>
 /* ================================================
-   🍰 ShortCake — STEP 3: 判定エンジン + UI改善
+   🍰 ShortCake — STEP 4: アップロードエンジン
    ================================================ */
-const LS_TOKEN='sc_token';
+const LS_TOKEN='sc_token',LS_HIST='sc_history';
 let WS={name:null,files:{},type:null,report:[],extras:{}};
+let USER=null;
 
 /* ========== GitHub API ========== */
 async function gh(path,opt={}){
@@ -185,7 +221,7 @@ async function gh(path,opt={}){
   const res=await fetch('https://api.github.com'+path,{...opt,headers:{
     'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json',
     'X-GitHub-Api-Version':'2022-11-28',...(opt.headers||{})}});
-  if(!res.ok)throw new Error(`GitHub API ${res.status}: ${(await res.text()).slice(0,200)}`);
+  if(!res.ok)throw new Error(`GitHub API ${res.status}: ${(await res.text()).slice(0,300)}`);
   return res.status===204?null:res.json();
 }
 async function connect(){
@@ -204,6 +240,7 @@ async function connect(){
   btn.disabled=false;btn.textContent='🤝 接続テスト';
 }
 function onConnected(user){
+  USER=user.login;
   document.getElementById('connState').textContent='接続済み';
   document.getElementById('connState').className='ok';
   document.getElementById('uname').textContent=user.login;
@@ -216,7 +253,7 @@ function disconnect(){localStorage.removeItem(LS_TOKEN);location.reload();}
   try{onConnected(await gh('/user'));}
   catch{localStorage.removeItem(LS_TOKEN);toast('⚠️ トークン無効。再設定を');}}})();
 
-/* ========== パーサー(STEP2と同じ) ========== */
+/* ========== パーサー ========== */
 function parseManifest(text){
   const mm=text.match(/####\s*MANIFEST\s*```\w*\n([\s\S]*?)```/);
   if(!mm)return null;
@@ -291,7 +328,7 @@ function importPaste(){
   toast('😵 コードブロックが見つかりません');
 }
 
-/* ========== フォルダ読み込み(ドロップ+ピッカー) ========== */
+/* ========== フォルダ読み込み ========== */
 const SKIP_RE=/(^|\/)(node_modules|\.git|\.DS_Store|dist|build|\.next|__pycache__|\.cache)(\/|$)/;
 const TEXT_EXT=/\.(html?|css|js|mjs|cjs|ts|tsx|jsx|json|md|txt|svg|xml|yml|yaml|toml|py|rb|sh|env|gitignore|csv|vue|svelte)$/i;
 const zone=document.getElementById('dropZone');
@@ -308,25 +345,20 @@ zone.addEventListener('drop',async e=>{
   for(const en of entries)await walkEntry(en,'',files,entries.length===1&&en.isDirectory);
   finishFolderLoad(rootName,files);
 });
-/* 📂 Finderピッカー(webkitdirectory) */
 document.getElementById('dirPicker').addEventListener('change',async e=>{
-  const list=[...e.target.files];
-  if(!list.length)return;
+  const list=[...e.target.files];if(!list.length)return;
   toast('📥 読み込み中...');
   const files={};
-  // webkitRelativePath = "フォルダ名/sub/file.js" → ルートを剥がす
   for(const f of list){
     const rel=f.webkitRelativePath.split('/').slice(1).join('/');
     if(!rel||SKIP_RE.test(rel)||f.size>3*1024*1024)continue;
     files[rel]=await readFileSmart(f,rel);
   }
-  const rootName=list[0].webkitRelativePath.split('/')[0];
-  finishFolderLoad(rootName,files);
+  finishFolderLoad(list[0].webkitRelativePath.split('/')[0],files);
   e.target.value='';
 });
 document.getElementById('zipPicker').addEventListener('change',async e=>{
-  if(e.target.files[0])await loadZip(e.target.files[0]);
-  e.target.value='';
+  if(e.target.files[0])await loadZip(e.target.files[0]);e.target.value='';
 });
 function walkEntry(entry,prefix,files,stripRoot){
   return new Promise(resolve=>{
@@ -375,20 +407,15 @@ function finishFolderLoad(name,files){
   setWS(name,files);
 }
 
-/* ================================================
-   🕵️ STEP 3の心臓部:プロジェクト判定エンジン
-   ================================================ */
+/* ========== 判定エンジン(STEP3) ========== */
 function inspectProject(){
   WS.report=[];WS.extras={};
   const F=WS.files;
   const has=p=>p in F;
   const rep=(cls,title,msg)=>WS.report.push({cls,title,msg});
-
-  /* ---- 種別判定 ---- */
-  let type='static';
-  let pkg=null;
+  let type='static',pkg=null;
   if(has('package.json')){
-    try{pkg=JSON.parse(F['package.json'].text);}catch{rep('warn','package.jsonが壊れています','JSONとして読めませんでした。静的サイトとして扱います');}
+    try{pkg=JSON.parse(F['package.json'].text);}catch{rep('warn','package.jsonが壊れています','静的サイトとして扱います');}
   }
   if(pkg){
     const deps={...pkg.dependencies,...pkg.devDependencies};
@@ -398,30 +425,18 @@ function inspectProject(){
     else if(pkg.scripts&&pkg.scripts.build)type='node-build';
     else type='node-unknown';
   }
-  /* tsx/jsxがあるのにpackage.jsonがない事故(今日のやつ!) */
-  if(!pkg&&Object.keys(F).some(p=>/\.(tsx|jsx|ts)$/.test(p)&&!p.endsWith('.d.ts'))){
-    type='broken-react';
-  }
+  if(!pkg&&Object.keys(F).some(p=>/\.(tsx|jsx|ts)$/.test(p)&&!p.endsWith('.d.ts')))type='broken-react';
   WS.type=type;
-
-  /* ---- 種別ごとの処理 ---- */
-  const label={static:'📄 静的サイト',vite:'⚡ Vite(React等)',cra:'⚛️ Create React App',
-    next:'▲ Next.js',['node-build']:'🔧 Node系ビルド',['node-unknown']:'❓ Node系(build無)',
-    ['broken-react']:'💥 React断片'}[type];
+  const label={static:'📄 静的サイト',vite:'⚡ Vite',cra:'⚛️ CRA',next:'▲ Next.js',
+    ['node-build']:'🔧 Node系',['node-unknown']:'❓ Node系(build無)',['broken-react']:'💥 React断片'}[type];
   document.getElementById('wsType').textContent=label;
-
   if(type==='static'){
     rep('ok','静的サイトと判定','ビルド不要。そのままGitHub Pagesで動きます');
-    /* index.html検品 */
     if(!has('index.html')){
       const found=Object.keys(F).find(p=>p.endsWith('/index.html'));
-      if(found){
-        rep('warn','index.htmlが深い場所にあります',`${found} にあります。公開URLの直下では404になるため、デプロイ時にサブフォルダごと公開するか、ルートへの移動を検討してください`);
-      }else{
-        rep('warn','index.htmlがありません','公開してもトップページは404になります(README表示になります)');
-      }
+      rep('warn',found?`index.htmlが深い場所(${found})にあります`:'index.htmlがありません',
+        found?'公開URL直下では404になる可能性があります':'トップページは404になります');
     }
-    /* 先頭スラッシュ検査(真っ白ドーンの犯人その2) */
     let absCount=0;
     Object.entries(F).forEach(([p,f])=>{
       if(!p.endsWith('.html')||f.bin)return;
@@ -429,49 +444,24 @@ function inspectProject(){
       if(m)absCount+=m.length;
     });
     if(absCount){
-      rep('fix',`絶対パス参照を${absCount}件検出`,
-        `src="/..." 形式はGitHub Pagesで404になります。デプロイ時に自動で相対パスへ変換します(src="/x" → src="./x")`);
+      rep('fix',`絶対パス参照を${absCount}件検出`,'デプロイ時に自動で相対パスへ変換します');
       WS.extras.fixAbsPaths=true;
     }
   }
-
   if(type==='vite'){
-    rep('ok','Viteプロジェクトと判定','GitHub Actionsでの自動ビルド設定を同梱します(あなたのビルド作業は不要)');
-    /* base設定チェック */
+    rep('ok','Viteプロジェクトと判定','GitHub Actionsで自動ビルドします(あなたの作業は不要)');
     const cfgPath=Object.keys(F).find(p=>/^vite\.config\.(js|ts|mjs)$/.test(p));
     if(cfgPath&&!/base\s*:/.test(F[cfgPath].text)){
-      rep('fix','vite.configにbase設定がありません',
-        `base:'./' が無いと公開後に真っ白になります。デプロイ時に自動で注入します`);
+      rep('fix','vite.configにbase設定なし',`真っ白ドーン防止のため base:'./' をデプロイ時に自動注入します`);
       WS.extras.injectViteBase=cfgPath;
-    }else if(!cfgPath){
-      rep('warn','vite.configが見つかりません','標準構成と仮定してビルド設定を作ります');
     }
     WS.extras.workflow='vite';
   }
-  if(type==='cra'){
-    rep('ok','Create React Appと判定','Actionsで自動ビルドします');
-    rep('fix','homepage設定をデプロイ時に自動注入します','package.jsonに homepage:"./" が必要なため');
-    WS.extras.injectCRAHomepage=true;WS.extras.workflow='cra';
-  }
-  if(type==='next'){
-    rep('warn','Next.jsを検出',
-      'Pagesで動かすには静的エクスポート(output:"export")が必要です。サーバー機能(API Routes等)は動きません。設定があるか確認の上、Actionsビルドを試みます');
-    WS.extras.workflow='next';
-  }
-  if(type==='node-build'){
-    rep('warn','ビルドスクリプト付きNodeプロジェクト',`"npm run build" を実行し、dist/ または build/ を公開する汎用設定を同梱します。出力先が違う場合は失敗する可能性があります`);
-    WS.extras.workflow='generic';
-  }
-  if(type==='node-unknown'){
-    rep('warn','Node系だがbuildスクリプトがありません','サーバーアプリ(Express等)の場合、GitHub Pagesでは動きません(静的ファイルのみ公開されます)');
-  }
-  if(type==='broken-react'){
-    rep('warn','React/TSファイルがあるのにpackage.jsonがありません',
-      '今日どこかで見た事故です!ビルドに必要な情報が足りないため、このままでは動きません。AIに「package.jsonとvite.config.tsを含む完全なVite構成で出し直して」と依頼するのが確実です');
-  }
-
-  /* ---- 共通検品 ---- */
-  /* 秘密情報スキャン(例の全世界公開事件の教訓) */
+  if(type==='cra'){rep('ok','CRAと判定','Actionsで自動ビルド+homepage自動注入');WS.extras.injectCRAHomepage=true;WS.extras.workflow='cra';}
+  if(type==='next'){rep('warn','Next.js検出','静的エクスポート前提でActionsビルドを試みます(API Routes等は動きません)');WS.extras.workflow='next';}
+  if(type==='node-build'){rep('warn','汎用Nodeビルド',`npm run build → dist/ 公開の汎用設定を同梱します`);WS.extras.workflow='generic';}
+  if(type==='node-unknown')rep('warn','buildスクリプトなし','サーバーアプリの場合Pagesでは動きません');
+  if(type==='broken-react')rep('warn','package.jsonなしのReact断片','AIに「Vite完全構成で出し直して」と依頼してください');
   const secretPatterns=[
     [/sk-[a-zA-Z0-9]{20,}/,'OpenAI系APIキー'],
     [/github_pat_[a-zA-Z0-9_]{20,}/,'GitHubトークン'],
@@ -481,17 +471,13 @@ function inspectProject(){
   const hits=[];
   Object.entries(F).forEach(([p,f])=>{
     if(f.bin)return;
-    for(const[re,label]of secretPatterns)
-      if(re.test(f.text))hits.push(`${p}(${label})`);
+    for(const[re,label]of secretPatterns)if(re.test(f.text))hits.push(`${p}(${label})`);
   });
-  if(hits.length)rep('warn','🔑 秘密情報の疑いを検出!',
-    `${[...new Set(hits)].slice(0,5).join(' / ')}<br>公開リポジトリは全世界から見えます。本当にこのまま公開していいか確認してください`);
-
+  if(hits.length)rep('warn','🔑 秘密情報の疑い!',`${[...new Set(hits)].slice(0,5).join(' / ')}<br>公開前に必ず確認を`);
   const bins=Object.values(F).filter(f=>f.bin).length;
-  rep('info','構成サマリー',`全${Object.keys(F).length}ファイル(テキスト${Object.keys(F).length-bins}、バイナリ${bins})/ 種別: ${label}`);
+  rep('info','構成サマリー',`全${Object.keys(F).length}ファイル / 種別: ${label}`);
 }
 
-/* ========== WS確定 ========== */
 function setWS(name,files){
   WS.name=(name||'project').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'project';
   WS.files=files;
@@ -500,15 +486,201 @@ function setWS(name,files){
   document.getElementById('wsName').textContent=WS.name;
   document.getElementById('wsCount').textContent=`${Object.keys(files).length}ファイル`;
   const warns=WS.report.filter(r=>r.cls==='warn').length;
-  toast(warns?`📦 読み込み完了(⚠️ 検品で${warns}件の注意あり → 🕵️ボタン)`:`📦 読み込み完了!検品オールクリア✨`);
+  toast(warns?`📦 読み込み完了(⚠️ ${warns}件の注意 → 🕵️)`:`📦 読み込み完了!検品オールクリア✨`);
+  renderDeploy();
 }
 function clearWS(){WS={name:null,files:{},type:null,report:[],extras:{}};
-  document.getElementById('wsBar').classList.remove('show');toast('🗑️ クリアしました');}
+  document.getElementById('wsBar').classList.remove('show');renderDeploy();toast('🗑️ クリアしました');}
 
-/* ========== ツリー表示(階層構造版!) ========== */
+/* ================================================
+   🚀 STEP 4の心臓部:デプロイエンジン
+   ================================================ */
+function renderDeploy(){
+  const no=document.getElementById('dNoWs'),ready=document.getElementById('dReady');
+  if(!WS.name){no.style.display='block';ready.style.display='none';return;}
+  no.style.display='none';ready.style.display='block';
+  const fixes=WS.report.filter(r=>r.cls==='fix').length;
+  document.getElementById('dSummary').innerHTML=
+    `プロジェクト: <b>${WS.name}</b><br>`+
+    `種別: <b>${document.getElementById('wsType').textContent}</b> / ファイル数: <b>${Object.keys(WS.files).length}</b><br>`+
+    `自動修正予定: <b>${fixes}件</b>`+
+    (WS.extras.workflow?`<br>🏭 GitHub Actionsビルド設定を自動同梱します`:'<br>📄 ビルド不要でそのまま公開できます');
+  document.getElementById('repoName').value=WS.name;
+}
+
+const dlog=(msg,cls='lin')=>{
+  const el=document.getElementById('deployLog');
+  el.classList.add('show');
+  el.innerHTML+=`<div class="${cls}">${msg}</div>`;
+  el.scrollTop=el.scrollHeight;
+};
+const prog=p=>{
+  document.getElementById('progWrap').classList.add('show');
+  document.getElementById('progBar').style.width=p+'%';
+};
+
+/* ビルド指示書(workflow)生成 */
+function makeWorkflow(kind){
+  const dist={vite:'dist',cra:'build',next:'out',generic:'dist'}[kind];
+  return `name: Deploy to Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci || npm install
+      - run: npm run build
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${dist}
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: \${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+`;
+}
+
+/* デプロイ用ファイル準備(自動修正を適用) */
+function prepareFiles(){
+  const out={};
+  Object.entries(WS.files).forEach(([p,f])=>out[p]={...f});
+  /* 絶対パス修正 */
+  if(WS.extras.fixAbsPaths){
+    Object.entries(out).forEach(([p,f])=>{
+      if(p.endsWith('.html')&&!f.bin)
+        f.text=f.text.replace(/(src|href)=["']\/(?!\/)([^"']*)["']/g,'$1="./$2"');
+    });
+    dlog('🔧 絶対パス→相対パス変換を適用','lok');
+  }
+  /* vite base注入 */
+  if(WS.extras.injectViteBase){
+    const p=WS.extras.injectViteBase;
+    const t=out[p].text;
+    if(/defineConfig\s*\(\s*\{/.test(t)){
+      out[p].text=t.replace(/defineConfig\s*\(\s*\{/,'defineConfig({\n  base: "./",');
+      dlog(`🔧 ${p} に base:"./" を注入`,'lok');
+    }
+  }
+  /* CRA homepage注入 */
+  if(WS.extras.injectCRAHomepage&&out['package.json']){
+    try{
+      const pkg=JSON.parse(out['package.json'].text);
+      pkg.homepage='./';
+      out['package.json'].text=JSON.stringify(pkg,null,2);
+      dlog('🔧 package.json に homepage:"./" を注入','lok');
+    }catch{}
+  }
+  /* workflow同梱 */
+  if(WS.extras.workflow){
+    out['.github/workflows/deploy.yml']={text:makeWorkflow(WS.extras.workflow)};
+    dlog('🏭 ビルド指示書(.github/workflows/deploy.yml)を同梱','lok');
+  }
+  /* Jekyll無効化(静的サイトの_付きフォルダ対策) */
+  if(!WS.extras.workflow)out['.nojekyll']={text:''};
+  return out;
+}
+
+/* 本体 */
+async function deploy(){
+  const repo=document.getElementById('repoName').value.trim();
+  if(!/^[a-zA-Z0-9._-]+$/.test(repo))return toast('😵 リポジトリ名は英数字とハイフンで');
+  const btn=document.getElementById('deployBtn');
+  btn.disabled=true;btn.textContent='🚀 実行中...';
+  document.getElementById('deployLog').innerHTML='';
+  prog(0);
+  try{
+    /* 1) リポジトリ確認 or 作成 */
+    let exists=true;
+    try{await gh(`/repos/${USER}/${repo}`);}catch{exists=false;}
+    if(!exists){
+      dlog(`📦 リポジトリ「${repo}」を作成中...`);
+      await gh('/user/repos',{method:'POST',body:JSON.stringify({
+        name:repo,auto_init:true,description:'🍰 Deployed with ShortCake'})});
+      dlog('✅ 作成完了','lok');
+    }else{
+      dlog(`📦 既存リポジトリ「${repo}」へ上書きデプロイします`);
+    }
+    prog(10);
+    /* 2) mainブランチのref取得(新規作成直後はリトライ) */
+    let ref=null,branch='main';
+    for(let i=0;i<10;i++){
+      try{ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/main`);break;}
+      catch{
+        try{ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/master`);branch='master';break;}
+        catch{await new Promise(r=>setTimeout(r,900));}
+      }
+    }
+    if(!ref)throw new Error('ブランチの準備がタイムアウトしました。もう一度お試しください');
+    prog(15);
+    /* 3) ファイル準備+blob作成 */
+    const files=prepareFiles();
+    const paths=Object.keys(files);
+    dlog(`📤 ${paths.length}ファイルを送信中...`);
+    const tree=[];
+    let done=0;
+    for(let i=0;i<paths.length;i+=6){
+      const batch=paths.slice(i,i+6);
+      await Promise.all(batch.map(async p=>{
+        const f=files[p];
+        const body=f.bin?{content:f.base64,encoding:'base64'}
+          :{content:f.text,encoding:'utf-8'};
+        const blob=await gh(`/repos/${USER}/${repo}/git/blobs`,{method:'POST',body:JSON.stringify(body)});
+        tree.push({path:p,mode:'100644',type:'blob',sha:blob.sha});
+        done++;prog(15+Math.round(done/paths.length*60));
+      }));
+      dlog(`　...${Math.min(i+6,paths.length)}/${paths.length}`);
+    }
+    /* 4) tree→commit→ref更新 */
+    dlog('🌳 ファイルツリーを構築中...');
+    const newTree=await gh(`/repos/${USER}/${repo}/git/trees`,{method:'POST',
+      body:JSON.stringify({tree})});
+    prog(85);
+    const commit=await gh(`/repos/${USER}/${repo}/git/commits`,{method:'POST',
+      body:JSON.stringify({message:'🍰 deploy via ShortCake',tree:newTree.sha,parents:[ref.object.sha]})});
+    await gh(`/repos/${USER}/${repo}/git/refs/heads/${branch}`,{method:'PATCH',
+      body:JSON.stringify({sha:commit.sha,force:true})});
+    prog(100);
+    dlog('✅ プッシュ完了!','lok');
+    dlog(`📂 リポジトリ: <a href="https://github.com/${USER}/${repo}" target="_blank">github.com/${USER}/${repo}</a>`,'lok');
+    if(WS.extras.workflow)
+      dlog(`🏭 ビルド状況: <a href="https://github.com/${USER}/${repo}/actions" target="_blank">Actionsタブ</a>で確認できます`,'lin');
+    dlog('🌐 公開設定(Pages有効化)は次のSTEP 5で自動化します。今すぐ見たい場合はSettings→Pages→main→Saveで!','lin');
+    /* 履歴保存 */
+    const hist=JSON.parse(localStorage.getItem(LS_HIST)||'[]');
+    hist.unshift({repo,user:USER,type:WS.type,at:new Date().toISOString()});
+    localStorage.setItem(LS_HIST,JSON.stringify(hist.slice(0,30)));
+    toast('🎉 デプロイ成功!');
+  }catch(e){
+    dlog(`❌ エラー: ${e.message}`,'lng');
+    dlog('💡 このエラー文をそのままAIに貼れば診断できます(いつものやつ)','lin');
+    toast('😵 デプロイ失敗。ログを確認してください');
+  }
+  btn.disabled=false;btn.textContent='🚀 デプロイ!';
+}
+
+/* ========== ツリー/検品/UI(STEP3と同じ) ========== */
 function openTree(){
   const list=document.getElementById('treeList');list.innerHTML='';
-  /* パス一覧 → 階層ツリー構築 */
   const root={dirs:{},files:[]};
   Object.keys(WS.files).sort().forEach(p=>{
     const parts=p.split('/');let node=root;
@@ -522,22 +694,17 @@ function openTree(){
 function renderNode(node,container,depth){
   Object.keys(node.dirs).sort().forEach(d=>{
     const el=document.createElement('div');
-    el.className='tdir';
-    el.style.paddingLeft=(8+depth*16)+'px';
+    el.className='tdir';el.style.paddingLeft=(8+depth*16)+'px';
     el.innerHTML=`<span class="arrow">▾</span>📁 ${d}`;
     container.appendChild(el);
-    const box=document.createElement('div');
-    container.appendChild(box);
+    const box=document.createElement('div');container.appendChild(box);
     renderNode(node.dirs[d],box,depth+1);
-    el.onclick=()=>{
-      el.classList.toggle('closed');
-      box.style.display=el.classList.contains('closed')?'none':'';
-    };
+    el.onclick=()=>{el.classList.toggle('closed');
+      box.style.display=el.classList.contains('closed')?'none':'';};
   });
   node.files.forEach(f=>{
     const el=document.createElement('div');
-    el.className='tnode';
-    el.style.paddingLeft=(24+depth*16)+'px';
+    el.className='tnode';el.style.paddingLeft=(24+depth*16)+'px';
     el.innerHTML=`📄 ${f.name}`+(WS.files[f.full].bin?'<span class="badge bin">bin</span>':'');
     el.onclick=()=>{
       document.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
@@ -548,8 +715,6 @@ function renderNode(node,container,depth){
     container.appendChild(el);
   });
 }
-
-/* ========== 検品レポート表示 ========== */
 function openInspect(){
   const body=document.getElementById('inspectBody');body.innerHTML='';
   const icon={info:'ℹ️',ok:'✅',warn:'⚠️',fix:'🔧'};
@@ -561,12 +726,11 @@ function openInspect(){
   });
   document.getElementById('inspectModal').classList.add('show');
 }
-
-/* ========== UI ========== */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   if(t.disabled)return;
   document.querySelectorAll('.tab,.pane').forEach(e=>e.classList.remove('on'));
   t.classList.add('on');document.getElementById(t.dataset.p).classList.add('on');
+  if(t.dataset.p==='deployPane')renderDeploy();
 });
 function toast(m){
   const t=document.getElementById('toast');
