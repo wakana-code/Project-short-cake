@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🍰 ShortCake</title>
+<style>
+*{margin:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Hiragino Sans',sans-serif;background:#16141c;color:#e8e2ee;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+/* ===== ヘッダー ===== */
+header{display:flex;align-items:center;gap:12px;padding:12px 18px;background:#211d2b;border-bottom:1px solid #322c40}
+header .logo{font-size:20px;font-weight:bold;color:#ff9eb5}
+header .sub{font-size:11px;color:#776b85}
+#userBox{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px}
+#userBox img{width:30px;height:30px;border-radius:50%;border:2px solid #ff9eb5;display:none}
+#connState{padding:4px 12px;border-radius:12px;font-size:11px;background:#3a2430;color:#ff8f8f}
+#connState.ok{background:#243a2c;color:#8fd8a0}
+/* ===== タブ ===== */
+#tabs{display:flex;gap:4px;padding:10px 14px 0;background:#1b1824}
+.tab{padding:9px 22px;border:none;border-radius:10px 10px 0 0;background:#242030;color:#998aa8;cursor:pointer;font-size:14px}
+.tab.on{background:#2e2940;color:#fff;font-weight:bold}
+.tab:disabled{opacity:.35;cursor:not-allowed}
+.pane{flex:1;display:none;overflow-y:auto;padding:22px}
+.pane.on{display:block}
+/* ===== 設定(接続)画面 ===== */
+.card{background:#211d2b;border:1px solid #322c40;border-radius:14px;padding:20px;max-width:640px;margin:0 auto 16px}
+.card h2{font-size:16px;color:#ff9eb5;margin-bottom:12px}
+.card p,.card li{font-size:13px;line-height:1.9;color:#c9bfd6}
+.card ol{padding-left:22px;margin:8px 0}
+.card code{background:#2e2940;padding:2px 8px;border-radius:6px;font-size:12px;color:#ffd3a3}
+.card a{color:#8fc7ff}
+.steps{background:#1b1824;border-radius:10px;padding:14px 18px;margin:10px 0}
+input[type=password],input[type=text]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #3a3348;background:#17141f;color:#eee;font-size:14px;outline:none;font-family:Consolas,monospace}
+input:focus{border-color:#ff9eb5}
+.btn{padding:11px 24px;border:none;border-radius:10px;background:#3a3348;color:#ddd;cursor:pointer;font-size:14px;margin-top:12px}
+.btn:hover{background:#453d55}
+.btn.pink{background:linear-gradient(135deg,#ff9eb5,#e0709a);color:#2b1520;font-weight:bold}
+.btn.pink:disabled{opacity:.5;cursor:wait}
+#connResult{margin-top:14px;padding:12px 16px;border-radius:10px;font-size:13px;display:none;line-height:1.7}
+#connResult.ok{display:block;background:#243a2c;color:#a7e8b5}
+#connResult.ng{display:block;background:#3a2430;color:#ffb0b0}
+/* プレースホルダのペイン */
+.placeholder{display:flex;height:100%;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#665a75;font-size:14px}
+.placeholder .big{font-size:44px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#2e2940;padding:11px 26px;border-radius:22px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:99;border:1px solid #453d55}
+#toast.show{opacity:1}
+.danger{font-size:11px;color:#8d7a99;margin-top:10px;line-height:1.7}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">🍰 ShortCake</span>
+  <span class="sub">AIの回答 → GitHub Pages 最短ルート</span>
+  <div id="userBox">
+    <span id="connState">未接続</span>
+    <img id="avatar" alt="">
+    <span id="uname"></span>
+  </div>
+</header>
+
+<div id="tabs">
+  <button class="tab" data-p="pastePane" id="tabPaste" disabled>📋 貼り付け</button>
+  <button class="tab" data-p="folderPane" id="tabFolder" disabled>📁 フォルダ</button>
+  <button class="tab" data-p="deployPane" id="tabDeploy" disabled>🚀 デプロイ</button>
+  <button class="tab on" data-p="setupPane">⚙️ 接続設定</button>
+</div>
+
+<!-- ===== 接続設定ペイン ===== -->
+<div class="pane on" id="setupPane">
+  <div class="card">
+    <h2>🔑 STEP 1: GitHubと接続する(初回のみ)</h2>
+    <p>ShortCakeはあなたのブラウザから直接GitHubを操作します。そのための「合鍵」<b>(Personal Access Token)</b>を1回だけ作ってもらいます。<b>3分で終わります。</b></p>
+    <div class="steps">
+      <ol>
+        <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank"><b>ここをクリック</b></a>してGitHubのトークン作成ページを開く(要ログイン)</li>
+        <li><b>Token name</b>: <code>shortcake</code> と入力</li>
+        <li><b>Expiration</b>: <code>90 days</code> のままでOK(切れたらまた作ればOK)</li>
+        <li><b>Repository access</b>: <code>All repositories</code> を選択</li>
+        <li><b>Permissions → Repository permissions</b> を開き、次の4つを <code>Read and write</code> にする:<br>
+          ✅ <code>Administration</code>(リポジトリ作成用)<br>
+          ✅ <code>Contents</code>(ファイルアップ用)<br>
+          ✅ <code>Pages</code>(公開設定用)<br>
+          ✅ <code>Workflows</code>(自動ビルド用)</li>
+        <li>一番下の <b>Generate token</b> を押す</li>
+        <li>表示された <code>github_pat_...</code> で始まる文字列をコピーして、下に貼る</li>
+      </ol>
+    </div>
+    <input type="password" id="tokenInput" placeholder="github_pat_XXXXXXXX... をここに貼り付け">
+    <button class="btn pink" id="connectBtn" onclick="connect()">🤝 接続テスト</button>
+    <div id="connResult"></div>
+    <p class="danger">🔒 トークンはあなたのブラウザ(localStorage)にのみ保存され、外部には一切送信されません(通信相手はgithub.comだけです)。心配になったらGitHub側でいつでも無効化できます。</p>
+  </div>
+  <div class="card" id="disconnectCard" style="display:none">
+    <h2>🔌 接続解除</h2>
+    <p>トークンをこのブラウザから削除します。</p>
+    <button class="btn" onclick="disconnect()">接続を解除する</button>
+  </div>
+</div>
+
+<!-- ===== 未実装ペイン(STEP 2以降で埋める) ===== -->
+<div class="pane" id="pastePane"><div class="placeholder"><span class="big">📋</span>STEP 2で実装予定:AIの回答を貼るだけでファイル構造化</div></div>
+<div class="pane" id="folderPane"><div class="placeholder"><span class="big">📁</span>STEP 2で実装予定:青いフォルダをドラッグで読み込み</div></div>
+<div class="pane" id="deployPane"><div class="placeholder"><span class="big">🚀</span>STEP 4で実装予定:ボタン1回でGitHubへ</div></div>
+
+<div id="toast"></div>
+
+<script>
+/* ================================================
+   🍰 ShortCake — STEP 1: 土台 & GitHub接続
+   ================================================ */
+const LS_TOKEN='sc_token';
+
+/* ---------- GitHub API 共通呼び出し ---------- */
+async function gh(path,opt={}){
+  const token=localStorage.getItem(LS_TOKEN);
+  const res=await fetch('https://api.github.com'+path,{
+    ...opt,
+    headers:{
+      'Authorization':'Bearer '+token,
+      'Accept':'application/vnd.github+json',
+      'X-GitHub-Api-Version':'2022-11-28',
+      ...(opt.headers||{})
+    }
+  });
+  if(!res.ok){
+    const body=await res.text();
+    throw new Error(`GitHub API ${res.status}: ${body.slice(0,200)}`);
+  }
+  return res.status===204?null:res.json();
+}
+
+/* ---------- 接続処理 ---------- */
+async function connect(){
+  const t=document.getElementById('tokenInput').value.trim();
+  const btn=document.getElementById('connectBtn');
+  const out=document.getElementById('connResult');
+  if(!t){toast('😵 トークンを貼ってください');return;}
+  localStorage.setItem(LS_TOKEN,t);
+  btn.disabled=true;btn.textContent='🤝 確認中...';
+  out.className='';out.style.display='none';
+  try{
+    const user=await gh('/user');
+    // 権限チェック(リポジトリ一覧が読めるか)
+    await gh('/user/repos?per_page=1');
+    onConnected(user);
+    out.className='ok';
+    out.innerHTML=`✅ 接続成功!こんにちは、<b>${user.login}</b> さん🍰<br>公開リポジトリ数: ${user.public_repos} / アカウント作成: ${new Date(user.created_at).getFullYear()}年`;
+  }catch(e){
+    localStorage.removeItem(LS_TOKEN);
+    out.className='ng';
+    out.innerHTML=`❌ 接続失敗:<br><code style="font-size:11px">${e.message}</code><br><br>
+      よくある原因:<br>
+      ・トークンのコピーが途中で切れている(もう一度全部コピー)<br>
+      ・Permissionsの設定漏れ(手順5の4つを確認)<br>
+      ・Expirationが切れている`;
+  }
+  btn.disabled=false;btn.textContent='🤝 接続テスト';
+}
+
+function onConnected(user){
+  document.getElementById('connState').textContent='接続済み';
+  document.getElementById('connState').className='ok';
+  document.getElementById('uname').textContent=user.login;
+  const av=document.getElementById('avatar');
+  av.src=user.avatar_url;av.style.display='block';
+  document.getElementById('disconnectCard').style.display='block';
+  // タブ解禁
+  ['tabPaste','tabFolder','tabDeploy'].forEach(id=>document.getElementById(id).disabled=false);
+  toast(`🎉 ようこそ、${user.login}さん!`);
+}
+
+function disconnect(){
+  localStorage.removeItem(LS_TOKEN);
+  location.reload();
+}
+
+/* ---------- 起動時:保存済みトークンで自動接続 ---------- */
+(async()=>{
+  if(localStorage.getItem(LS_TOKEN)){
+    try{
+      const user=await gh('/user');
+      onConnected(user);
+      document.getElementById('connResult').className='ok';
+      document.getElementById('connResult').innerHTML=`✅ 保存済みトークンで自動接続しました(${user.login})`;
+    }catch{
+      localStorage.removeItem(LS_TOKEN);
+      toast('⚠️ 保存済みトークンが無効でした。再設定してください');
+    }
+  }
+})();
+
+/* ---------- UI ---------- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  if(t.disabled)return;
+  document.querySelectorAll('.tab,.pane').forEach(e=>e.classList.remove('on'));
+  t.classList.add('on');document.getElementById(t.dataset.p).classList.add('on');
+});
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
