@@ -100,7 +100,6 @@ textarea:focus{border-color:#ff9eb5}
 #progWrap{display:none;height:10px;background:#2a2536;border-radius:5px;overflow:hidden;margin-top:8px}
 #progWrap.show{display:block}
 #progBar{height:100%;width:0%;background:linear-gradient(90deg,#ff9eb5,#e0709a);transition:width .2s}
-/* 🎉 完成カード */
 #doneCard{display:none;background:linear-gradient(135deg,#2a2338,#241f31);border:2px solid #ff9eb5;border-radius:16px;padding:22px;text-align:center}
 #doneCard.show{display:block}
 #doneCard h3{color:#ff9eb5;font-size:18px;margin-bottom:10px}
@@ -109,6 +108,11 @@ textarea:focus{border-color:#ff9eb5}
 #doneCard .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 #doneCard .btn{margin-top:6px}
 #qr{margin:12px auto 0;display:none;background:#fff;padding:8px;border-radius:10px;width:fit-content}
+/* 履歴 */
+.histItem{padding:14px 16px;border:1px solid #322c40;border-radius:12px;margin-bottom:10px;font-size:13px;line-height:2}
+.histItem b{color:#ffd3a3}
+.histItem .date{color:#776b85;font-size:11px;margin-left:8px}
+.histItem a{color:#8fc7ff;margin-right:14px;text-decoration:none}
 </style>
 </head>
 <body>
@@ -126,6 +130,7 @@ textarea:focus{border-color:#ff9eb5}
   <button class="tab" data-p="pastePane" id="tabPaste" disabled>📋 貼り付け</button>
   <button class="tab" data-p="folderPane" id="tabFolder" disabled>📁 フォルダ</button>
   <button class="tab" data-p="deployPane" id="tabDeploy" disabled>🚀 デプロイ</button>
+  <button class="tab" data-p="histPane">📚 履歴</button>
   <button class="tab on" data-p="setupPane">⚙️ 接続設定</button>
 </div>
 
@@ -179,6 +184,13 @@ textarea:focus{border-color:#ff9eb5}
   </div>
 </div>
 
+<div class="pane" id="histPane">
+  <div class="card">
+    <h2>📚 デプロイ履歴</h2>
+    <div id="histList"></div>
+  </div>
+</div>
+
 <div class="pane on" id="setupPane">
   <div class="card">
     <h2>🔑 GitHubと接続する(初回のみ)</h2>
@@ -226,7 +238,7 @@ textarea:focus{border-color:#ff9eb5}
 
 <script>
 /* ================================================
-   🍰 ShortCake — STEP 5: Pages自動化+見届け係
+   🍰 ShortCake v1.0 — 完全版
    ================================================ */
 const LS_TOKEN='sc_token',LS_HIST='sc_history';
 let WS={name:null,files:{},type:null,report:[],extras:{}};
@@ -561,7 +573,6 @@ jobs:
         uses: actions/deploy-pages@v4
 `;
 }
-/* 静的サイト用workflow(ビルドなし直公開) */
 function makeStaticWorkflow(){
   return `name: Deploy static to Pages
 on:
@@ -616,7 +627,6 @@ function prepareFiles(){
       dlog('🔧 homepage:"./" 注入','lok');
     }catch{}
   }
-  /* ★全種別でworkflow同梱(Pages自動化の鍵) */
   out['.github/workflows/deploy.yml']={text:WS.extras.workflow?makeWorkflow(WS.extras.workflow):makeStaticWorkflow()};
   dlog('🏭 デプロイ指示書を同梱','lok');
   return out;
@@ -670,8 +680,6 @@ async function deploy(){
       body:JSON.stringify({sha:commit.sha,force:true})});
     prog(60);
     dlog('✅ プッシュ完了','lok');
-
-    /* ★★ STEP 5: Pages自動有効化(Actions方式) ★★ */
     dlog('📡 GitHub Pagesを自動設定中...');
     try{
       await gh(`/repos/${USER}/${repo}/pages`,{method:'POST',
@@ -679,17 +687,14 @@ async function deploy(){
       dlog('✅ Pages有効化(Actions方式)','lok');
     }catch(e){
       if(e.message.includes('409')){
-        /* 既に有効 → workflow方式に更新 */
         try{
           await gh(`/repos/${USER}/${repo}/pages`,{method:'PUT',
             body:JSON.stringify({build_type:'workflow'})});
           dlog('✅ Pages設定をActions方式に更新','lok');
-        }catch{dlog('⚠️ Pages設定は既存のまま(問題ない場合が多い)','lin');}
+        }catch{dlog('⚠️ Pages設定は既存のまま','lin');}
       }else throw e;
     }
     prog(70);
-
-    /* ★★ 見届け係:Actionsの完了を監視 ★★ */
     dlog('🏭 ビルド&公開を見届け中...(数十秒〜数分)');
     const url=`https://${USER}.github.io/${repo}/`;
     let published=false;
@@ -709,7 +714,7 @@ async function deploy(){
               break;
             }
           }
-          if(i%6===5)dlog(`　...まだ${run.status}です(${Math.round(i*5/60*10)/10}分経過)`);
+          if(i%6===5)dlog(`　...まだ${run.status}です`);
         }
       }catch{}
     }
@@ -740,6 +745,19 @@ function copyUrl(){
 function toggleQR(){
   const q=document.getElementById('qr');
   q.style.display=q.style.display==='block'?'none':'block';
+}
+
+/* ========== 履歴 ========== */
+function renderHist(){
+  const el=document.getElementById('histList');
+  const hist=JSON.parse(localStorage.getItem(LS_HIST)||'[]');
+  if(!hist.length){el.innerHTML='<p style="color:#776b85">まだ履歴がありません。最初のデプロイをどうぞ🍰</p>';return;}
+  el.innerHTML=hist.map(h=>
+    `<div class="histItem">🍰 <b>${h.repo}</b><span class="date">${new Date(h.at).toLocaleString()}</span><br>`+
+    `<a href="${h.url||`https://${h.user}.github.io/${h.repo}/`}" target="_blank">🌐 サイトを開く</a>`+
+    `<a href="https://github.com/${h.user}/${h.repo}" target="_blank">📂 リポジトリ</a>`+
+    `<a href="https://github.com/${h.user}/${h.repo}/actions" target="_blank">🏭 ビルド状況</a></div>`
+  ).join('');
 }
 
 /* ========== ツリー/検品/UI ========== */
@@ -795,6 +813,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   document.querySelectorAll('.tab,.pane').forEach(e=>e.classList.remove('on'));
   t.classList.add('on');document.getElementById(t.dataset.p).classList.add('on');
   if(t.dataset.p==='deployPane')renderDeploy();
+  if(t.dataset.p==='histPane')renderHist();
 });
 function toast(m){
   const t=document.getElementById('toast');
