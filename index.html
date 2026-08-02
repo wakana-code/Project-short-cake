@@ -28,7 +28,7 @@ header .sub{font-size:11px;color:#776b85}
 .card code{background:#2e2940;padding:2px 8px;border-radius:6px;font-size:12px;color:#ffd3a3}
 .card a{color:#8fc7ff}
 .steps{background:#1b1824;border-radius:10px;padding:14px 18px;margin:10px 0}
-input[type=password],input[type=text]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #3a3348;background:#17141f;color:#eee;font-size:14px;outline:none;font-family:Consolas,monospace}
+input[type=password]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #3a3348;background:#17141f;color:#eee;font-size:14px;outline:none;font-family:Consolas,monospace}
 input:focus{border-color:#ff9eb5}
 .btn{padding:11px 24px;border:none;border-radius:10px;background:#3a3348;color:#ddd;cursor:pointer;font-size:14px;margin-top:12px}
 .btn:hover{background:#453d55}
@@ -42,38 +42,49 @@ input:focus{border-color:#ff9eb5}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#2e2940;padding:11px 26px;border-radius:22px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:99;border:1px solid #453d55}
 #toast.show{opacity:1}
 .danger{font-size:11px;color:#8d7a99;margin-top:10px;line-height:1.7}
-/* ===== STEP2: 貼り付け ===== */
-#pastePane{display:none;flex-direction:column;gap:12px;padding:18px}
-#pastePane.on{display:flex}
+#pastePane.on{display:flex;flex-direction:column;gap:12px;padding:18px}
 textarea{flex:1;min-height:200px;background:#12101a;color:#d8cfe4;border:1px solid #3a3348;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:13px;resize:none;outline:none}
 textarea:focus{border-color:#ff9eb5}
 .hint{font-size:12px;color:#9b8dae;background:#221e2e;border:1px solid #322c40;border-radius:10px;padding:10px 14px;line-height:1.7}
-/* ===== STEP2: フォルダドロップ ===== */
 #folderPane.on{display:flex;flex-direction:column;padding:18px;gap:12px}
-#dropZone{flex:1;border:3px dashed #453d55;border-radius:18px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#8d7a99;font-size:15px;transition:.2s;min-height:260px}
+#dropZone{flex:1;border:3px dashed #453d55;border-radius:18px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#8d7a99;font-size:15px;transition:.2s;min-height:230px}
 #dropZone.over{border-color:#ff9eb5;background:#241f31;color:#ff9eb5}
 #dropZone .big{font-size:52px}
-/* ===== ワークスペース(共通の結果表示) ===== */
-#wsBar{display:none;align-items:center;gap:12px;padding:10px 18px;background:#241f31;border-top:1px solid #322c40;font-size:13px}
+#pickRow{display:flex;gap:10px;justify-content:center}
+#pickRow .btn{margin-top:0}
+#wsBar{display:none;align-items:center;gap:12px;padding:10px 18px;background:#241f31;border-top:1px solid #322c40;font-size:13px;flex-wrap:wrap}
 #wsBar.show{display:flex}
 #wsName{font-weight:bold;color:#ffd3a3}
 #wsCount{color:#9b8dae;font-size:12px}
+#wsType{padding:3px 12px;border-radius:10px;font-size:11px;background:#2c3a4a;color:#8fc7ff;font-weight:bold}
 #wsBar .btn{margin:0;padding:8px 18px;font-size:13px}
-#treeModal{position:fixed;inset:0;background:rgba(10,7,14,.75);display:none;align-items:center;justify-content:center;z-index:60}
-#treeModal.show{display:flex}
-#treeBox{background:#211d2b;border:1px solid #453d55;border-radius:16px;width:min(860px,94vw);height:min(600px,88vh);display:flex;flex-direction:column;overflow:hidden}
-#treeHead{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #322c40}
-#treeHead b{color:#ff9eb5}
-#treeHead .btn{margin:0 0 0 auto;padding:7px 16px;font-size:12px}
+#treeModal,#inspectModal{position:fixed;inset:0;background:rgba(10,7,14,.75);display:none;align-items:center;justify-content:center;z-index:60}
+#treeModal.show,#inspectModal.show{display:flex}
+.modalBox{background:#211d2b;border:1px solid #453d55;border-radius:16px;width:min(880px,94vw);height:min(620px,88vh);display:flex;flex-direction:column;overflow:hidden}
+.modalHead{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #322c40}
+.modalHead b{color:#ff9eb5}
+.modalHead .btn{margin:0 0 0 auto;padding:7px 16px;font-size:12px}
 #treeBody{flex:1;display:flex;overflow:hidden}
-#treeList{width:280px;overflow-y:auto;border-right:1px solid #322c40;padding:8px}
-.tnode{padding:6px 10px;font-size:12.5px;font-family:Consolas,monospace;cursor:pointer;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#treeList{width:300px;overflow-y:auto;border-right:1px solid #322c40;padding:8px 4px}
+.tnode{padding:4px 8px;font-size:12.5px;font-family:Consolas,monospace;cursor:pointer;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#cfc5dd}
 .tnode:hover{background:#2c2740}
 .tnode.sel{background:#332d4a;color:#ff9eb5}
-.tnode.dir{color:#8fc7ff;cursor:default}
+.tdir{padding:4px 8px;font-size:12.5px;font-family:Consolas,monospace;color:#8fc7ff;cursor:pointer;border-radius:6px;white-space:nowrap;user-select:none}
+.tdir:hover{background:#2c2740}
+.tdir .arrow{display:inline-block;transition:.15s;width:14px}
+.tdir.closed .arrow{transform:rotate(-90deg)}
 #treeView{flex:1;overflow:auto;padding:14px;font-family:Consolas,monospace;font-size:12.5px;color:#cfc5dd;white-space:pre;background:#12101a}
 .badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;margin-left:8px}
 .badge.bin{background:#3a3020;color:#ffd3a3}
+/* 検品レポート */
+#inspectBody{flex:1;overflow-y:auto;padding:18px}
+.rep{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:10px;line-height:1.8}
+.rep b{display:block;margin-bottom:2px}
+.rep.info{background:#22293a;color:#a9c8e8}
+.rep.ok{background:#20301f;color:#a7d8a0}
+.rep.warn{background:#332b1c;color:#e0c890}
+.rep.fix{background:#2a2338;color:#c9b3e8}
+.rep small{color:#889;display:block;margin-top:4px}
 </style>
 </head>
 <body>
@@ -94,46 +105,45 @@ textarea:focus{border-color:#ff9eb5}
   <button class="tab on" data-p="setupPane">⚙️ 接続設定</button>
 </div>
 
-<!-- ===== 貼り付けペイン ===== -->
 <div class="pane" id="pastePane">
-  <div class="hint">💡 AIの回答を丸ごと貼ってください(説明文が混ざっていてOK)。<b>MANIFEST+FILE書式</b>と<b>ゆるい書式(### 📄 パス+コードブロック等)</b>の両方に対応。PATCHは読み込み済みプロジェクトに適用されます。</div>
+  <div class="hint">💡 AIの回答を丸ごと貼ってください。契約書式(MANIFEST/FILE/PATCH/DELETE)+ゆるい書式対応。</div>
   <textarea id="ta" placeholder="ここにAIの回答をペースト..."></textarea>
   <button class="btn pink" onclick="importPaste()">🍰 取り込む(自動判別)</button>
 </div>
 
-<!-- ===== フォルダペイン ===== -->
 <div class="pane" id="folderPane">
-  <div class="hint">💡 <b>青いフォルダ</b>をそのまま下にドラッグ&ドロップ。ZIPファイルもOK(ブラウザ内で解凍します)。<code>node_modules</code>や<code>.git</code>は自動で除外されます。</div>
+  <div class="hint">💡 青いフォルダ/ZIPをドロップ、またはボタンから選択。<code>node_modules</code>等は自動除外。</div>
   <div id="dropZone">
     <span class="big">📁</span>
     <span>ここにフォルダ or ZIP をドロップ</span>
-    <span style="font-size:12px">(ファイル選択ダイアログとの戦いは、もう終わりです)</span>
   </div>
+  <div id="pickRow">
+    <button class="btn" onclick="document.getElementById('dirPicker').click()">📂 Finderからフォルダを選ぶ</button>
+    <button class="btn" onclick="document.getElementById('zipPicker').click()">🤐 ZIPファイルを選ぶ</button>
+  </div>
+  <input type="file" id="dirPicker" webkitdirectory hidden>
+  <input type="file" id="zipPicker" accept=".zip" hidden>
 </div>
 
-<!-- ===== デプロイペイン(STEP 4予定) ===== -->
 <div class="pane" id="deployPane"><div class="placeholder"><span class="big">🚀</span>STEP 4で実装予定:ボタン1回でGitHubへ</div></div>
 
-<!-- ===== 接続設定ペイン(STEP 1のまま) ===== -->
 <div class="pane on" id="setupPane">
   <div class="card">
     <h2>🔑 GitHubと接続する(初回のみ)</h2>
-    <p>合鍵(Personal Access Token)を作って貼るだけ。<b>3分で終わります。</b></p>
     <div class="steps">
       <ol>
         <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank"><b>ここをクリック</b></a>してトークン作成ページへ</li>
-        <li><b>Token name</b>: <code>shortcake</code></li>
-        <li><b>Expiration</b>: <code>90 days</code>のまま</li>
+        <li><b>Token name</b>: <code>shortcake</code> / <b>Expiration</b>: <code>90 days</code></li>
         <li><b>Repository access</b>: <code>All repositories</code></li>
-        <li><b>Permissions → Repository permissions</b>で4つを<code>Read and write</code>に:<br>
-        ✅ <code>Administration</code> ✅ <code>Contents</code> ✅ <code>Pages</code> ✅ <code>Workflows</code></li>
-        <li><b>Generate token</b>→表示された文字列をコピーして下へ</li>
+        <li><b>Repository permissions</b>で4つを<code>Read and write</code>に:
+        ✅<code>Administration</code> ✅<code>Contents</code> ✅<code>Pages</code> ✅<code>Workflows</code></li>
+        <li><b>Generate token</b>→コピーして下へ</li>
       </ol>
     </div>
     <input type="password" id="tokenInput" placeholder="github_pat_XXXXXXXX...">
     <button class="btn pink" id="connectBtn" onclick="connect()">🤝 接続テスト</button>
     <div id="connResult"></div>
-    <p class="danger">🔒 トークンはこのブラウザにのみ保存。通信相手はgithub.comだけです。</p>
+    <p class="danger">🔒 トークンはこのブラウザにのみ保存。通信相手はgithub.comだけ。</p>
   </div>
   <div class="card" id="disconnectCard" style="display:none">
     <h2>🔌 接続解除</h2>
@@ -141,45 +151,41 @@ textarea:focus{border-color:#ff9eb5}
   </div>
 </div>
 
-<!-- ===== ワークスペースバー ===== -->
 <div id="wsBar">
-  <span>📦</span><span id="wsName">-</span><span id="wsCount"></span>
-  <button class="btn" onclick="openTree()">🔍 中身を確認</button>
-  <button class="btn" onclick="clearWS()">🗑️ クリア</button>
-  <span style="margin-left:auto;font-size:12px;color:#8d7a99">→ 次は🚀デプロイタブへ(STEP 4)</span>
+  <span>📦</span><span id="wsName">-</span><span id="wsType">判定中...</span><span id="wsCount"></span>
+  <button class="btn" onclick="openTree()">🔍 中身</button>
+  <button class="btn" onclick="openInspect()">🕵️ 検品レポート</button>
+  <button class="btn" onclick="clearWS()">🗑️</button>
 </div>
 
-<!-- ===== ツリー確認モーダル ===== -->
-<div id="treeModal">
-  <div id="treeBox">
-    <div id="treeHead"><b>🔍 読み込んだファイル</b>
-      <button class="btn" onclick="document.getElementById('treeModal').classList.remove('show')">閉じる</button>
-    </div>
-    <div id="treeBody">
-      <div id="treeList"></div>
-      <div id="treeView">← ファイルを選択</div>
-    </div>
-  </div>
-</div>
+<div id="treeModal"><div class="modalBox">
+  <div class="modalHead"><b>🔍 ファイル構造</b>
+    <button class="btn" onclick="document.getElementById('treeModal').classList.remove('show')">閉じる</button></div>
+  <div id="treeBody"><div id="treeList"></div><div id="treeView">← ファイルを選択</div></div>
+</div></div>
+
+<div id="inspectModal"><div class="modalBox">
+  <div class="modalHead"><b>🕵️ 検品レポート</b>
+    <button class="btn" onclick="document.getElementById('inspectModal').classList.remove('show')">閉じる</button></div>
+  <div id="inspectBody"></div>
+</div></div>
 
 <div id="toast"></div>
 
 <script>
 /* ================================================
-   🍰 ShortCake — STEP 2: 入力エンジン
+   🍰 ShortCake — STEP 3: 判定エンジン + UI改善
    ================================================ */
 const LS_TOKEN='sc_token';
-/* ワークスペース = 現在読み込んでいるプロジェクト
-   files: { "path": {text:"..."} または {base64:"...", bin:true} } */
-let WS={name:null,files:{}};
+let WS={name:null,files:{},type:null,report:[],extras:{}};
 
-/* ========== GitHub API(STEP1と同じ) ========== */
+/* ========== GitHub API ========== */
 async function gh(path,opt={}){
   const token=localStorage.getItem(LS_TOKEN);
   const res=await fetch('https://api.github.com'+path,{...opt,headers:{
     'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json',
     'X-GitHub-Api-Version':'2022-11-28',...(opt.headers||{})}});
-  if(!res.ok){throw new Error(`GitHub API ${res.status}: ${(await res.text()).slice(0,200)}`);}
+  if(!res.ok)throw new Error(`GitHub API ${res.status}: ${(await res.text()).slice(0,200)}`);
   return res.status===204?null:res.json();
 }
 async function connect(){
@@ -187,7 +193,6 @@ async function connect(){
   const btn=document.getElementById('connectBtn'),out=document.getElementById('connResult');
   if(!t){toast('😵 トークンを貼ってください');return;}
   localStorage.setItem(LS_TOKEN,t);btn.disabled=true;btn.textContent='🤝 確認中...';
-  out.className='';out.style.display='none';
   try{
     const user=await gh('/user');await gh('/user/repos?per_page=1');
     onConnected(user);out.className='ok';
@@ -207,14 +212,11 @@ function onConnected(user){
   ['tabPaste','tabFolder','tabDeploy'].forEach(id=>document.getElementById(id).disabled=false);
 }
 function disconnect(){localStorage.removeItem(LS_TOKEN);location.reload();}
-(async()=>{
-  if(localStorage.getItem(LS_TOKEN)){
-    try{const u=await gh('/user');onConnected(u);}
-    catch{localStorage.removeItem(LS_TOKEN);toast('⚠️ トークンが無効でした。再設定を');}
-  }
-})();
+(async()=>{if(localStorage.getItem(LS_TOKEN)){
+  try{onConnected(await gh('/user'));}
+  catch{localStorage.removeItem(LS_TOKEN);toast('⚠️ トークン無効。再設定を');}}})();
 
-/* ========== 貼り付けパーサー ========== */
+/* ========== パーサー(STEP2と同じ) ========== */
 function parseManifest(text){
   const mm=text.match(/####\s*MANIFEST\s*```\w*\n([\s\S]*?)```/);
   if(!mm)return null;
@@ -238,117 +240,109 @@ function parsePatches(text){
   return ps;
 }
 function parseDeletes(text){
-  const ds=[];
-  for(const m of text.matchAll(/####\s*DELETE:\s*([\w\-./]+)/g))ds.push(m[1].trim());
-  return ds;
+  const ds=[];for(const m of text.matchAll(/####\s*DELETE:\s*([\w\-./]+)/g))ds.push(m[1].trim());return ds;
 }
-/* ゆるい書式(### 📄 path + コードブロック)のフォールバック */
 function parseLoose(text){
-  const files={};
-  const fence=/```[\w+-]*\n([\s\S]*?)```/g;let m,pos=0;
+  const files={};const fence=/```[\w+-]*\n([\s\S]*?)```/g;let m,pos=0;
   while((m=fence.exec(text))!==null){
-    const before=text.slice(pos,m.index).trim().split('\n').slice(-3);
-    let path=null;
+    const before=text.slice(pos,m.index).trim().split('\n').slice(-3);let path=null;
     for(const line of before.reverse()){
       const clean=line.replace(/[#*`📄📁🗂️✨:：]+/g,' ').trim();
       for(const c of clean.split(/\s+/))
         if(/^[\w\-./]+\.[a-zA-Z0-9]{1,10}$/.test(c)&&!c.startsWith('http')){path=c;break;}
-      if(path)break;
-    }
-    if(path)files[path]={text:m[1]};
-    pos=fence.lastIndex;
-  }
+      if(path)break;}
+    if(path)files[path]={text:m[1]};pos=fence.lastIndex;}
   return files;
 }
 function normalize(s){return s.replace(/\r\n?/g,'\n').split('\n').map(l=>l.replace(/\s+$/,'')).join('\n');}
-function applyPatch(fileText,patch){
-  let idx=fileText.indexOf(patch.old);
-  if(idx>=0)return{text:fileText.replace(patch.old,patch.neu)};
-  const nf=normalize(fileText),no=normalize(patch.old);
-  if(nf.indexOf(no)>=0)return{text:nf.replace(no,normalize(patch.neu)),warn:'空白差を吸収して適用'};
+function applyPatch(ft,p){
+  if(ft.indexOf(p.old)>=0)return{text:ft.replace(p.old,p.neu)};
+  const nf=normalize(ft),no=normalize(p.old);
+  if(nf.indexOf(no)>=0)return{text:nf.replace(no,normalize(p.neu))};
   return{text:null};
 }
-
 function importPaste(){
   const text=document.getElementById('ta').value;
   if(!text.trim())return toast('😵 何も貼られていません');
-  const man=parseManifest(text);
-  let files=parseFiles(text);
+  const man=parseManifest(text);let files=parseFiles(text);
   const patches=parsePatches(text),deletes=parseDeletes(text);
-
-  if(man){ // 新規プロジェクト
+  if(man){
     const missing=man.FILES.filter(f=>!(f in files));
-    if(missing.length&&!confirm(`⚠️ 本体がないファイル: ${missing.join(', ')}\nこのまま取り込む?`))return;
-    WS={name:man.PROJECT||'unnamed',files};
-    afterLoad(`💾 「${WS.name}」を取り込みました`);
-    return;
+    if(missing.length&&!confirm(`⚠️ 本体がないファイル: ${missing.join(', ')}\n続ける?`))return;
+    setWS(man.PROJECT||'unnamed',files);return;
   }
-  if(patches.length||deletes.length||Object.keys(files).length){ // 修正モード
-    if(!WS.name&&(patches.length||deletes.length))return toast('😵 修正対象のプロジェクトが未読み込みです');
-    if(!WS.name)WS={name:'pasted-project',files:{}};
-    let rep=[];
-    Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;rep.push(`📄${p}`);});
-    deletes.forEach(p=>{if(p in WS.files){delete WS.files[p];rep.push(`🗑️${p}`);}});
+  if(patches.length||deletes.length||Object.keys(files).length){
+    if(!WS.name&&(patches.length||deletes.length))return toast('😵 修正対象が未読み込みです');
+    if(!WS.name)WS={name:'pasted-project',files:{},type:null,report:[],extras:{}};
     let fail=0;
+    Object.entries(files).forEach(([p,c])=>WS.files[p]=c);
+    deletes.forEach(p=>delete WS.files[p]);
     patches.forEach(pt=>{
       const f=WS.files[pt.path];
       if(!f||f.bin){fail++;return;}
       const r=applyPatch(f.text,pt);
-      if(r.text===null)fail++;else{WS.files[pt.path]={text:r.text};rep.push(`🩹${pt.path}`);}
-    });
-    afterLoad(fail?`⚠️ 適用完了(PATCH失敗${fail}件。oldブロック不一致の疑い)`:`✅ 適用: ${rep.slice(0,5).join(' ')}${rep.length>5?' 他':''}`);
+      if(r.text===null)fail++;else WS.files[pt.path]={text:r.text};});
+    setWS(WS.name,WS.files);
+    if(fail)toast(`⚠️ PATCH失敗${fail}件(old不一致の疑い)`);
     return;
   }
-  // ゆるい書式フォールバック
   files=parseLoose(text);
-  if(Object.keys(files).length){
-    WS={name:'pasted-project',files};
-    afterLoad(`💾 ゆるい書式から${Object.keys(files).length}ファイル取り込みました(パスの正確性は要確認)`);
-    return;
-  }
+  if(Object.keys(files).length){setWS('pasted-project',files);return;}
   toast('😵 コードブロックが見つかりません');
 }
 
-/* ========== フォルダ/ZIPドロップ ========== */
-const SKIP_RE=/(^|\/)(node_modules|\.git|\.DS_Store|dist|\.next|__pycache__|\.cache)(\/|$)/;
-const TEXT_EXT=/\.(html?|css|js|mjs|ts|tsx|jsx|json|md|txt|svg|xml|yml|yaml|toml|py|rb|sh|env|gitignore|csv)$/i;
+/* ========== フォルダ読み込み(ドロップ+ピッカー) ========== */
+const SKIP_RE=/(^|\/)(node_modules|\.git|\.DS_Store|dist|build|\.next|__pycache__|\.cache)(\/|$)/;
+const TEXT_EXT=/\.(html?|css|js|mjs|cjs|ts|tsx|jsx|json|md|txt|svg|xml|yml|yaml|toml|py|rb|sh|env|gitignore|csv|vue|svelte)$/i;
 const zone=document.getElementById('dropZone');
 ['dragover','dragenter'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('over');}));
 ['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('over');}));
 zone.addEventListener('drop',async e=>{
-  const items=[...e.dataTransfer.items];
-  // ZIP?
   const zipFile=[...e.dataTransfer.files].find(f=>f.name.endsWith('.zip'));
   if(zipFile){await loadZip(zipFile);return;}
-  // フォルダ走査(webkitGetAsEntry)
-  const entries=items.map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(Boolean);
+  const entries=[...e.dataTransfer.items].map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(Boolean);
   if(!entries.length)return toast('😵 フォルダかZIPをドロップしてください');
   toast('📥 読み込み中...');
   const files={};
-  let rootName=entries.length===1&&entries[0].isDirectory?entries[0].name:'dropped-project';
+  const rootName=entries.length===1&&entries[0].isDirectory?entries[0].name:'dropped-project';
   for(const en of entries)await walkEntry(en,'',files,entries.length===1&&en.isDirectory);
   finishFolderLoad(rootName,files);
+});
+/* 📂 Finderピッカー(webkitdirectory) */
+document.getElementById('dirPicker').addEventListener('change',async e=>{
+  const list=[...e.target.files];
+  if(!list.length)return;
+  toast('📥 読み込み中...');
+  const files={};
+  // webkitRelativePath = "フォルダ名/sub/file.js" → ルートを剥がす
+  for(const f of list){
+    const rel=f.webkitRelativePath.split('/').slice(1).join('/');
+    if(!rel||SKIP_RE.test(rel)||f.size>3*1024*1024)continue;
+    files[rel]=await readFileSmart(f,rel);
+  }
+  const rootName=list[0].webkitRelativePath.split('/')[0];
+  finishFolderLoad(rootName,files);
+  e.target.value='';
+});
+document.getElementById('zipPicker').addEventListener('change',async e=>{
+  if(e.target.files[0])await loadZip(e.target.files[0]);
+  e.target.value='';
 });
 function walkEntry(entry,prefix,files,stripRoot){
   return new Promise(resolve=>{
     if(entry.isFile){
       entry.file(async f=>{
         const path=prefix+entry.name;
-        if(!SKIP_RE.test(path)&&f.size<2*1024*1024*1.5){ // 3MB上限/ファイル
-          files[path]=await readFileSmart(f,path);
-        }
+        if(!SKIP_RE.test(path)&&f.size<3*1024*1024)files[path]=await readFileSmart(f,path);
         resolve();
       },()=>resolve());
     }else if(entry.isDirectory){
-      const newPrefix=stripRoot?'':(prefix+entry.name+'/');
       if(SKIP_RE.test(prefix+entry.name)){resolve();return;}
-      const reader=entry.createReader();
-      const all=[];
+      const newPrefix=stripRoot?'':(prefix+entry.name+'/');
+      const reader=entry.createReader();const all=[];
       const readBatch=()=>reader.readEntries(async batch=>{
-        if(!batch.length){
-          for(const c of all)await walkEntry(c,newPrefix,files,false);
-          resolve();
-        }else{all.push(...batch);readBatch();}
+        if(!batch.length){for(const c of all)await walkEntry(c,newPrefix,files,false);resolve();}
+        else{all.push(...batch);readBatch();}
       },()=>resolve());
       readBatch();
     }else resolve();
@@ -357,13 +351,8 @@ function walkEntry(entry,prefix,files,stripRoot){
 function readFileSmart(f,path){
   return new Promise(res=>{
     const r=new FileReader();
-    if(TEXT_EXT.test(path)){
-      r.onload=()=>res({text:r.result});
-      r.readAsText(f);
-    }else{
-      r.onload=()=>res({base64:r.result.split(',')[1],bin:true});
-      r.readAsDataURL(f);
-    }
+    if(TEXT_EXT.test(path)){r.onload=()=>res({text:r.result});r.readAsText(f);}
+    else{r.onload=()=>res({base64:r.result.split(',')[1],bin:true});r.readAsDataURL(f);}
   });
 }
 async function loadZip(file){
@@ -371,51 +360,206 @@ async function loadZip(file){
   const zip=await JSZip.loadAsync(file);
   const files={};
   const names=Object.keys(zip.files).filter(n=>!zip.files[n].dir&&!SKIP_RE.test(n));
-  // 全ファイルが同じルートフォルダ内なら1階層剥がす(二重フォルダ対策!)
   let strip='';
   const roots=new Set(names.map(n=>n.split('/')[0]));
   if(roots.size===1&&names.every(n=>n.includes('/')))strip=[...roots][0]+'/';
   for(const n of names){
-    const path=n.slice(strip.length);
-    if(!path)continue;
+    const path=n.slice(strip.length);if(!path)continue;
     if(TEXT_EXT.test(path))files[path]={text:await zip.files[n].async('string')};
     else files[path]={base64:await zip.files[n].async('base64'),bin:true};
   }
   finishFolderLoad(file.name.replace(/\.zip$/,''),files);
 }
 function finishFolderLoad(name,files){
-  const n=Object.keys(files).length;
-  if(!n)return toast('😵 読み込めるファイルがありませんでした');
-  WS={name:name.toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'project',files};
-  afterLoad(`📁 「${WS.name}」として${n}ファイル読み込みました`);
+  if(!Object.keys(files).length)return toast('😵 読み込めるファイルがありません');
+  setWS(name,files);
 }
 
-/* ========== 読み込み完了処理 ========== */
-function afterLoad(msg){
-  toast(msg);
+/* ================================================
+   🕵️ STEP 3の心臓部:プロジェクト判定エンジン
+   ================================================ */
+function inspectProject(){
+  WS.report=[];WS.extras={};
+  const F=WS.files;
+  const has=p=>p in F;
+  const rep=(cls,title,msg)=>WS.report.push({cls,title,msg});
+
+  /* ---- 種別判定 ---- */
+  let type='static';
+  let pkg=null;
+  if(has('package.json')){
+    try{pkg=JSON.parse(F['package.json'].text);}catch{rep('warn','package.jsonが壊れています','JSONとして読めませんでした。静的サイトとして扱います');}
+  }
+  if(pkg){
+    const deps={...pkg.dependencies,...pkg.devDependencies};
+    if(deps['vite'])type='vite';
+    else if(deps['react-scripts'])type='cra';
+    else if(deps['next'])type='next';
+    else if(pkg.scripts&&pkg.scripts.build)type='node-build';
+    else type='node-unknown';
+  }
+  /* tsx/jsxがあるのにpackage.jsonがない事故(今日のやつ!) */
+  if(!pkg&&Object.keys(F).some(p=>/\.(tsx|jsx|ts)$/.test(p)&&!p.endsWith('.d.ts'))){
+    type='broken-react';
+  }
+  WS.type=type;
+
+  /* ---- 種別ごとの処理 ---- */
+  const label={static:'📄 静的サイト',vite:'⚡ Vite(React等)',cra:'⚛️ Create React App',
+    next:'▲ Next.js',['node-build']:'🔧 Node系ビルド',['node-unknown']:'❓ Node系(build無)',
+    ['broken-react']:'💥 React断片'}[type];
+  document.getElementById('wsType').textContent=label;
+
+  if(type==='static'){
+    rep('ok','静的サイトと判定','ビルド不要。そのままGitHub Pagesで動きます');
+    /* index.html検品 */
+    if(!has('index.html')){
+      const found=Object.keys(F).find(p=>p.endsWith('/index.html'));
+      if(found){
+        rep('warn','index.htmlが深い場所にあります',`${found} にあります。公開URLの直下では404になるため、デプロイ時にサブフォルダごと公開するか、ルートへの移動を検討してください`);
+      }else{
+        rep('warn','index.htmlがありません','公開してもトップページは404になります(README表示になります)');
+      }
+    }
+    /* 先頭スラッシュ検査(真っ白ドーンの犯人その2) */
+    let absCount=0;
+    Object.entries(F).forEach(([p,f])=>{
+      if(!p.endsWith('.html')||f.bin)return;
+      const m=f.text.match(/(?:src|href)=["']\/(?!\/)[^"']*["']/g);
+      if(m)absCount+=m.length;
+    });
+    if(absCount){
+      rep('fix',`絶対パス参照を${absCount}件検出`,
+        `src="/..." 形式はGitHub Pagesで404になります。デプロイ時に自動で相対パスへ変換します(src="/x" → src="./x")`);
+      WS.extras.fixAbsPaths=true;
+    }
+  }
+
+  if(type==='vite'){
+    rep('ok','Viteプロジェクトと判定','GitHub Actionsでの自動ビルド設定を同梱します(あなたのビルド作業は不要)');
+    /* base設定チェック */
+    const cfgPath=Object.keys(F).find(p=>/^vite\.config\.(js|ts|mjs)$/.test(p));
+    if(cfgPath&&!/base\s*:/.test(F[cfgPath].text)){
+      rep('fix','vite.configにbase設定がありません',
+        `base:'./' が無いと公開後に真っ白になります。デプロイ時に自動で注入します`);
+      WS.extras.injectViteBase=cfgPath;
+    }else if(!cfgPath){
+      rep('warn','vite.configが見つかりません','標準構成と仮定してビルド設定を作ります');
+    }
+    WS.extras.workflow='vite';
+  }
+  if(type==='cra'){
+    rep('ok','Create React Appと判定','Actionsで自動ビルドします');
+    rep('fix','homepage設定をデプロイ時に自動注入します','package.jsonに homepage:"./" が必要なため');
+    WS.extras.injectCRAHomepage=true;WS.extras.workflow='cra';
+  }
+  if(type==='next'){
+    rep('warn','Next.jsを検出',
+      'Pagesで動かすには静的エクスポート(output:"export")が必要です。サーバー機能(API Routes等)は動きません。設定があるか確認の上、Actionsビルドを試みます');
+    WS.extras.workflow='next';
+  }
+  if(type==='node-build'){
+    rep('warn','ビルドスクリプト付きNodeプロジェクト',`"npm run build" を実行し、dist/ または build/ を公開する汎用設定を同梱します。出力先が違う場合は失敗する可能性があります`);
+    WS.extras.workflow='generic';
+  }
+  if(type==='node-unknown'){
+    rep('warn','Node系だがbuildスクリプトがありません','サーバーアプリ(Express等)の場合、GitHub Pagesでは動きません(静的ファイルのみ公開されます)');
+  }
+  if(type==='broken-react'){
+    rep('warn','React/TSファイルがあるのにpackage.jsonがありません',
+      '今日どこかで見た事故です!ビルドに必要な情報が足りないため、このままでは動きません。AIに「package.jsonとvite.config.tsを含む完全なVite構成で出し直して」と依頼するのが確実です');
+  }
+
+  /* ---- 共通検品 ---- */
+  /* 秘密情報スキャン(例の全世界公開事件の教訓) */
+  const secretPatterns=[
+    [/sk-[a-zA-Z0-9]{20,}/,'OpenAI系APIキー'],
+    [/github_pat_[a-zA-Z0-9_]{20,}/,'GitHubトークン'],
+    [/AIza[a-zA-Z0-9_-]{30,}/,'Google APIキー'],
+    [/(?:api[_-]?key|secret|password)\s*[:=]\s*["'][^"']{8,}["']/i,'キー/パスワードらしき記述'],
+  ];
+  const hits=[];
+  Object.entries(F).forEach(([p,f])=>{
+    if(f.bin)return;
+    for(const[re,label]of secretPatterns)
+      if(re.test(f.text))hits.push(`${p}(${label})`);
+  });
+  if(hits.length)rep('warn','🔑 秘密情報の疑いを検出!',
+    `${[...new Set(hits)].slice(0,5).join(' / ')}<br>公開リポジトリは全世界から見えます。本当にこのまま公開していいか確認してください`);
+
+  const bins=Object.values(F).filter(f=>f.bin).length;
+  rep('info','構成サマリー',`全${Object.keys(F).length}ファイル(テキスト${Object.keys(F).length-bins}、バイナリ${bins})/ 種別: ${label}`);
+}
+
+/* ========== WS確定 ========== */
+function setWS(name,files){
+  WS.name=(name||'project').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'project';
+  WS.files=files;
+  inspectProject();
   document.getElementById('wsBar').classList.add('show');
   document.getElementById('wsName').textContent=WS.name;
-  const n=Object.keys(WS.files).length;
-  const bins=Object.values(WS.files).filter(f=>f.bin).length;
-  document.getElementById('wsCount').textContent=`${n}ファイル${bins?`(うち画像等${bins})`:''}`;
+  document.getElementById('wsCount').textContent=`${Object.keys(files).length}ファイル`;
+  const warns=WS.report.filter(r=>r.cls==='warn').length;
+  toast(warns?`📦 読み込み完了(⚠️ 検品で${warns}件の注意あり → 🕵️ボタン)`:`📦 読み込み完了!検品オールクリア✨`);
 }
-function clearWS(){WS={name:null,files:{}};document.getElementById('wsBar').classList.remove('show');toast('🗑️ クリアしました');}
+function clearWS(){WS={name:null,files:{},type:null,report:[],extras:{}};
+  document.getElementById('wsBar').classList.remove('show');toast('🗑️ クリアしました');}
 
-/* ========== ツリー確認モーダル ========== */
+/* ========== ツリー表示(階層構造版!) ========== */
 function openTree(){
   const list=document.getElementById('treeList');list.innerHTML='';
+  /* パス一覧 → 階層ツリー構築 */
+  const root={dirs:{},files:[]};
   Object.keys(WS.files).sort().forEach(p=>{
-    const d=document.createElement('div');d.className='tnode';
-    d.innerHTML=p+(WS.files[p].bin?'<span class="badge bin">binary</span>':'');
-    d.onclick=()=>{
-      list.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
-      d.classList.add('sel');
-      document.getElementById('treeView').textContent=
-        WS.files[p].bin?'(バイナリファイル: プレビュー省略)':WS.files[p].text;
-    };
-    list.appendChild(d);
+    const parts=p.split('/');let node=root;
+    parts.slice(0,-1).forEach(d=>{node=node.dirs[d]=node.dirs[d]||{dirs:{},files:[]};});
+    node.files.push({name:parts.at(-1),full:p});
   });
+  renderNode(root,list,0);
+  document.getElementById('treeView').textContent='← ファイルを選択';
   document.getElementById('treeModal').classList.add('show');
+}
+function renderNode(node,container,depth){
+  Object.keys(node.dirs).sort().forEach(d=>{
+    const el=document.createElement('div');
+    el.className='tdir';
+    el.style.paddingLeft=(8+depth*16)+'px';
+    el.innerHTML=`<span class="arrow">▾</span>📁 ${d}`;
+    container.appendChild(el);
+    const box=document.createElement('div');
+    container.appendChild(box);
+    renderNode(node.dirs[d],box,depth+1);
+    el.onclick=()=>{
+      el.classList.toggle('closed');
+      box.style.display=el.classList.contains('closed')?'none':'';
+    };
+  });
+  node.files.forEach(f=>{
+    const el=document.createElement('div');
+    el.className='tnode';
+    el.style.paddingLeft=(24+depth*16)+'px';
+    el.innerHTML=`📄 ${f.name}`+(WS.files[f.full].bin?'<span class="badge bin">bin</span>':'');
+    el.onclick=()=>{
+      document.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel');
+      document.getElementById('treeView').textContent=
+        WS.files[f.full].bin?'(バイナリ: プレビュー省略)':WS.files[f.full].text;
+    };
+    container.appendChild(el);
+  });
+}
+
+/* ========== 検品レポート表示 ========== */
+function openInspect(){
+  const body=document.getElementById('inspectBody');body.innerHTML='';
+  const icon={info:'ℹ️',ok:'✅',warn:'⚠️',fix:'🔧'};
+  WS.report.forEach(r=>{
+    const d=document.createElement('div');
+    d.className='rep '+r.cls;
+    d.innerHTML=`<b>${icon[r.cls]} ${r.title}</b>${r.msg}`;
+    body.appendChild(d);
+  });
+  document.getElementById('inspectModal').classList.add('show');
 }
 
 /* ========== UI ========== */
@@ -427,7 +571,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 function toast(m){
   const t=document.getElementById('toast');
   t.textContent=m;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3400);
+  setTimeout(()=>t.classList.remove('show'),3800);
 }
 </script>
 </body>
