@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>🍰 ShortCake</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 *{margin:0;box-sizing:border-box}
 body{font-family:'Segoe UI','Hiragino Sans',sans-serif;background:#16141c;color:#e8e2ee;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-/* ===== ヘッダー ===== */
 header{display:flex;align-items:center;gap:12px;padding:12px 18px;background:#211d2b;border-bottom:1px solid #322c40}
 header .logo{font-size:20px;font-weight:bold;color:#ff9eb5}
 header .sub{font-size:11px;color:#776b85}
@@ -15,15 +15,13 @@ header .sub{font-size:11px;color:#776b85}
 #userBox img{width:30px;height:30px;border-radius:50%;border:2px solid #ff9eb5;display:none}
 #connState{padding:4px 12px;border-radius:12px;font-size:11px;background:#3a2430;color:#ff8f8f}
 #connState.ok{background:#243a2c;color:#8fd8a0}
-/* ===== タブ ===== */
 #tabs{display:flex;gap:4px;padding:10px 14px 0;background:#1b1824}
 .tab{padding:9px 22px;border:none;border-radius:10px 10px 0 0;background:#242030;color:#998aa8;cursor:pointer;font-size:14px}
 .tab.on{background:#2e2940;color:#fff;font-weight:bold}
 .tab:disabled{opacity:.35;cursor:not-allowed}
 .pane{flex:1;display:none;overflow-y:auto;padding:22px}
 .pane.on{display:block}
-/* ===== 設定(接続)画面 ===== */
-.card{background:#211d2b;border:1px solid #322c40;border-radius:14px;padding:20px;max-width:640px;margin:0 auto 16px}
+.card{background:#211d2b;border:1px solid #322c40;border-radius:14px;padding:20px;max-width:680px;margin:0 auto 16px}
 .card h2{font-size:16px;color:#ff9eb5;margin-bottom:12px}
 .card p,.card li{font-size:13px;line-height:1.9;color:#c9bfd6}
 .card ol{padding-left:22px;margin:8px 0}
@@ -39,12 +37,43 @@ input:focus{border-color:#ff9eb5}
 #connResult{margin-top:14px;padding:12px 16px;border-radius:10px;font-size:13px;display:none;line-height:1.7}
 #connResult.ok{display:block;background:#243a2c;color:#a7e8b5}
 #connResult.ng{display:block;background:#3a2430;color:#ffb0b0}
-/* プレースホルダのペイン */
 .placeholder{display:flex;height:100%;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#665a75;font-size:14px}
 .placeholder .big{font-size:44px}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#2e2940;padding:11px 26px;border-radius:22px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:99;border:1px solid #453d55}
 #toast.show{opacity:1}
 .danger{font-size:11px;color:#8d7a99;margin-top:10px;line-height:1.7}
+/* ===== STEP2: 貼り付け ===== */
+#pastePane{display:none;flex-direction:column;gap:12px;padding:18px}
+#pastePane.on{display:flex}
+textarea{flex:1;min-height:200px;background:#12101a;color:#d8cfe4;border:1px solid #3a3348;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:13px;resize:none;outline:none}
+textarea:focus{border-color:#ff9eb5}
+.hint{font-size:12px;color:#9b8dae;background:#221e2e;border:1px solid #322c40;border-radius:10px;padding:10px 14px;line-height:1.7}
+/* ===== STEP2: フォルダドロップ ===== */
+#folderPane.on{display:flex;flex-direction:column;padding:18px;gap:12px}
+#dropZone{flex:1;border:3px dashed #453d55;border-radius:18px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#8d7a99;font-size:15px;transition:.2s;min-height:260px}
+#dropZone.over{border-color:#ff9eb5;background:#241f31;color:#ff9eb5}
+#dropZone .big{font-size:52px}
+/* ===== ワークスペース(共通の結果表示) ===== */
+#wsBar{display:none;align-items:center;gap:12px;padding:10px 18px;background:#241f31;border-top:1px solid #322c40;font-size:13px}
+#wsBar.show{display:flex}
+#wsName{font-weight:bold;color:#ffd3a3}
+#wsCount{color:#9b8dae;font-size:12px}
+#wsBar .btn{margin:0;padding:8px 18px;font-size:13px}
+#treeModal{position:fixed;inset:0;background:rgba(10,7,14,.75);display:none;align-items:center;justify-content:center;z-index:60}
+#treeModal.show{display:flex}
+#treeBox{background:#211d2b;border:1px solid #453d55;border-radius:16px;width:min(860px,94vw);height:min(600px,88vh);display:flex;flex-direction:column;overflow:hidden}
+#treeHead{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #322c40}
+#treeHead b{color:#ff9eb5}
+#treeHead .btn{margin:0 0 0 auto;padding:7px 16px;font-size:12px}
+#treeBody{flex:1;display:flex;overflow:hidden}
+#treeList{width:280px;overflow-y:auto;border-right:1px solid #322c40;padding:8px}
+.tnode{padding:6px 10px;font-size:12.5px;font-family:Consolas,monospace;cursor:pointer;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tnode:hover{background:#2c2740}
+.tnode.sel{background:#332d4a;color:#ff9eb5}
+.tnode.dir{color:#8fc7ff;cursor:default}
+#treeView{flex:1;overflow:auto;padding:14px;font-family:Consolas,monospace;font-size:12.5px;color:#cfc5dd;white-space:pre;background:#12101a}
+.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;margin-left:8px}
+.badge.bin{background:#3a3020;color:#ffd3a3}
 </style>
 </head>
 <body>
@@ -65,131 +94,331 @@ input:focus{border-color:#ff9eb5}
   <button class="tab on" data-p="setupPane">⚙️ 接続設定</button>
 </div>
 
-<!-- ===== 接続設定ペイン ===== -->
+<!-- ===== 貼り付けペイン ===== -->
+<div class="pane" id="pastePane">
+  <div class="hint">💡 AIの回答を丸ごと貼ってください(説明文が混ざっていてOK)。<b>MANIFEST+FILE書式</b>と<b>ゆるい書式(### 📄 パス+コードブロック等)</b>の両方に対応。PATCHは読み込み済みプロジェクトに適用されます。</div>
+  <textarea id="ta" placeholder="ここにAIの回答をペースト..."></textarea>
+  <button class="btn pink" onclick="importPaste()">🍰 取り込む(自動判別)</button>
+</div>
+
+<!-- ===== フォルダペイン ===== -->
+<div class="pane" id="folderPane">
+  <div class="hint">💡 <b>青いフォルダ</b>をそのまま下にドラッグ&ドロップ。ZIPファイルもOK(ブラウザ内で解凍します)。<code>node_modules</code>や<code>.git</code>は自動で除外されます。</div>
+  <div id="dropZone">
+    <span class="big">📁</span>
+    <span>ここにフォルダ or ZIP をドロップ</span>
+    <span style="font-size:12px">(ファイル選択ダイアログとの戦いは、もう終わりです)</span>
+  </div>
+</div>
+
+<!-- ===== デプロイペイン(STEP 4予定) ===== -->
+<div class="pane" id="deployPane"><div class="placeholder"><span class="big">🚀</span>STEP 4で実装予定:ボタン1回でGitHubへ</div></div>
+
+<!-- ===== 接続設定ペイン(STEP 1のまま) ===== -->
 <div class="pane on" id="setupPane">
   <div class="card">
-    <h2>🔑 STEP 1: GitHubと接続する(初回のみ)</h2>
-    <p>ShortCakeはあなたのブラウザから直接GitHubを操作します。そのための「合鍵」<b>(Personal Access Token)</b>を1回だけ作ってもらいます。<b>3分で終わります。</b></p>
+    <h2>🔑 GitHubと接続する(初回のみ)</h2>
+    <p>合鍵(Personal Access Token)を作って貼るだけ。<b>3分で終わります。</b></p>
     <div class="steps">
       <ol>
-        <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank"><b>ここをクリック</b></a>してGitHubのトークン作成ページを開く(要ログイン)</li>
-        <li><b>Token name</b>: <code>shortcake</code> と入力</li>
-        <li><b>Expiration</b>: <code>90 days</code> のままでOK(切れたらまた作ればOK)</li>
-        <li><b>Repository access</b>: <code>All repositories</code> を選択</li>
-        <li><b>Permissions → Repository permissions</b> を開き、次の4つを <code>Read and write</code> にする:<br>
-          ✅ <code>Administration</code>(リポジトリ作成用)<br>
-          ✅ <code>Contents</code>(ファイルアップ用)<br>
-          ✅ <code>Pages</code>(公開設定用)<br>
-          ✅ <code>Workflows</code>(自動ビルド用)</li>
-        <li>一番下の <b>Generate token</b> を押す</li>
-        <li>表示された <code>github_pat_...</code> で始まる文字列をコピーして、下に貼る</li>
+        <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank"><b>ここをクリック</b></a>してトークン作成ページへ</li>
+        <li><b>Token name</b>: <code>shortcake</code></li>
+        <li><b>Expiration</b>: <code>90 days</code>のまま</li>
+        <li><b>Repository access</b>: <code>All repositories</code></li>
+        <li><b>Permissions → Repository permissions</b>で4つを<code>Read and write</code>に:<br>
+        ✅ <code>Administration</code> ✅ <code>Contents</code> ✅ <code>Pages</code> ✅ <code>Workflows</code></li>
+        <li><b>Generate token</b>→表示された文字列をコピーして下へ</li>
       </ol>
     </div>
-    <input type="password" id="tokenInput" placeholder="github_pat_XXXXXXXX... をここに貼り付け">
+    <input type="password" id="tokenInput" placeholder="github_pat_XXXXXXXX...">
     <button class="btn pink" id="connectBtn" onclick="connect()">🤝 接続テスト</button>
     <div id="connResult"></div>
-    <p class="danger">🔒 トークンはあなたのブラウザ(localStorage)にのみ保存され、外部には一切送信されません(通信相手はgithub.comだけです)。心配になったらGitHub側でいつでも無効化できます。</p>
+    <p class="danger">🔒 トークンはこのブラウザにのみ保存。通信相手はgithub.comだけです。</p>
   </div>
   <div class="card" id="disconnectCard" style="display:none">
     <h2>🔌 接続解除</h2>
-    <p>トークンをこのブラウザから削除します。</p>
     <button class="btn" onclick="disconnect()">接続を解除する</button>
   </div>
 </div>
 
-<!-- ===== 未実装ペイン(STEP 2以降で埋める) ===== -->
-<div class="pane" id="pastePane"><div class="placeholder"><span class="big">📋</span>STEP 2で実装予定:AIの回答を貼るだけでファイル構造化</div></div>
-<div class="pane" id="folderPane"><div class="placeholder"><span class="big">📁</span>STEP 2で実装予定:青いフォルダをドラッグで読み込み</div></div>
-<div class="pane" id="deployPane"><div class="placeholder"><span class="big">🚀</span>STEP 4で実装予定:ボタン1回でGitHubへ</div></div>
+<!-- ===== ワークスペースバー ===== -->
+<div id="wsBar">
+  <span>📦</span><span id="wsName">-</span><span id="wsCount"></span>
+  <button class="btn" onclick="openTree()">🔍 中身を確認</button>
+  <button class="btn" onclick="clearWS()">🗑️ クリア</button>
+  <span style="margin-left:auto;font-size:12px;color:#8d7a99">→ 次は🚀デプロイタブへ(STEP 4)</span>
+</div>
+
+<!-- ===== ツリー確認モーダル ===== -->
+<div id="treeModal">
+  <div id="treeBox">
+    <div id="treeHead"><b>🔍 読み込んだファイル</b>
+      <button class="btn" onclick="document.getElementById('treeModal').classList.remove('show')">閉じる</button>
+    </div>
+    <div id="treeBody">
+      <div id="treeList"></div>
+      <div id="treeView">← ファイルを選択</div>
+    </div>
+  </div>
+</div>
 
 <div id="toast"></div>
 
 <script>
 /* ================================================
-   🍰 ShortCake — STEP 1: 土台 & GitHub接続
+   🍰 ShortCake — STEP 2: 入力エンジン
    ================================================ */
 const LS_TOKEN='sc_token';
+/* ワークスペース = 現在読み込んでいるプロジェクト
+   files: { "path": {text:"..."} または {base64:"...", bin:true} } */
+let WS={name:null,files:{}};
 
-/* ---------- GitHub API 共通呼び出し ---------- */
+/* ========== GitHub API(STEP1と同じ) ========== */
 async function gh(path,opt={}){
   const token=localStorage.getItem(LS_TOKEN);
-  const res=await fetch('https://api.github.com'+path,{
-    ...opt,
-    headers:{
-      'Authorization':'Bearer '+token,
-      'Accept':'application/vnd.github+json',
-      'X-GitHub-Api-Version':'2022-11-28',
-      ...(opt.headers||{})
-    }
-  });
-  if(!res.ok){
-    const body=await res.text();
-    throw new Error(`GitHub API ${res.status}: ${body.slice(0,200)}`);
-  }
+  const res=await fetch('https://api.github.com'+path,{...opt,headers:{
+    'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json',
+    'X-GitHub-Api-Version':'2022-11-28',...(opt.headers||{})}});
+  if(!res.ok){throw new Error(`GitHub API ${res.status}: ${(await res.text()).slice(0,200)}`);}
   return res.status===204?null:res.json();
 }
-
-/* ---------- 接続処理 ---------- */
 async function connect(){
   const t=document.getElementById('tokenInput').value.trim();
-  const btn=document.getElementById('connectBtn');
-  const out=document.getElementById('connResult');
+  const btn=document.getElementById('connectBtn'),out=document.getElementById('connResult');
   if(!t){toast('😵 トークンを貼ってください');return;}
-  localStorage.setItem(LS_TOKEN,t);
-  btn.disabled=true;btn.textContent='🤝 確認中...';
+  localStorage.setItem(LS_TOKEN,t);btn.disabled=true;btn.textContent='🤝 確認中...';
   out.className='';out.style.display='none';
   try{
-    const user=await gh('/user');
-    // 権限チェック(リポジトリ一覧が読めるか)
-    await gh('/user/repos?per_page=1');
-    onConnected(user);
-    out.className='ok';
-    out.innerHTML=`✅ 接続成功!こんにちは、<b>${user.login}</b> さん🍰<br>公開リポジトリ数: ${user.public_repos} / アカウント作成: ${new Date(user.created_at).getFullYear()}年`;
+    const user=await gh('/user');await gh('/user/repos?per_page=1');
+    onConnected(user);out.className='ok';
+    out.innerHTML=`✅ 接続成功!こんにちは、<b>${user.login}</b> さん🍰`;
   }catch(e){
-    localStorage.removeItem(LS_TOKEN);
-    out.className='ng';
-    out.innerHTML=`❌ 接続失敗:<br><code style="font-size:11px">${e.message}</code><br><br>
-      よくある原因:<br>
-      ・トークンのコピーが途中で切れている(もう一度全部コピー)<br>
-      ・Permissionsの設定漏れ(手順5の4つを確認)<br>
-      ・Expirationが切れている`;
+    localStorage.removeItem(LS_TOKEN);out.className='ng';
+    out.innerHTML=`❌ 接続失敗:<br><code style="font-size:11px">${e.message}</code>`;
   }
   btn.disabled=false;btn.textContent='🤝 接続テスト';
 }
-
 function onConnected(user){
   document.getElementById('connState').textContent='接続済み';
   document.getElementById('connState').className='ok';
   document.getElementById('uname').textContent=user.login;
-  const av=document.getElementById('avatar');
-  av.src=user.avatar_url;av.style.display='block';
+  const av=document.getElementById('avatar');av.src=user.avatar_url;av.style.display='block';
   document.getElementById('disconnectCard').style.display='block';
-  // タブ解禁
   ['tabPaste','tabFolder','tabDeploy'].forEach(id=>document.getElementById(id).disabled=false);
-  toast(`🎉 ようこそ、${user.login}さん!`);
 }
-
-function disconnect(){
-  localStorage.removeItem(LS_TOKEN);
-  location.reload();
-}
-
-/* ---------- 起動時:保存済みトークンで自動接続 ---------- */
+function disconnect(){localStorage.removeItem(LS_TOKEN);location.reload();}
 (async()=>{
   if(localStorage.getItem(LS_TOKEN)){
-    try{
-      const user=await gh('/user');
-      onConnected(user);
-      document.getElementById('connResult').className='ok';
-      document.getElementById('connResult').innerHTML=`✅ 保存済みトークンで自動接続しました(${user.login})`;
-    }catch{
-      localStorage.removeItem(LS_TOKEN);
-      toast('⚠️ 保存済みトークンが無効でした。再設定してください');
-    }
+    try{const u=await gh('/user');onConnected(u);}
+    catch{localStorage.removeItem(LS_TOKEN);toast('⚠️ トークンが無効でした。再設定を');}
   }
 })();
 
-/* ---------- UI ---------- */
+/* ========== 貼り付けパーサー ========== */
+function parseManifest(text){
+  const mm=text.match(/####\s*MANIFEST\s*```\w*\n([\s\S]*?)```/);
+  if(!mm)return null;
+  const man={FILES:[]};
+  mm[1].split('\n').forEach(l=>{l=l.trim();
+    if(l.startsWith('- '))man.FILES.push(l.slice(2).trim());
+    else if(l.includes(':')){let[k,...v]=l.split(':');k=k.trim().toUpperCase();
+      if(k!=='FILES'&&k!=='FILE')man[k]=v.join(':').trim();}});
+  return man;
+}
+function parseFiles(text){
+  const files={};
+  for(const m of text.matchAll(/####\s*FILE:\s*([\w\-./]+)\s*\n```[\w+-]*\n([\s\S]*?)```/g))
+    files[m[1].trim()]={text:m[2]};
+  return files;
+}
+function parsePatches(text){
+  const ps=[];
+  for(const m of text.matchAll(/####\s*PATCH:\s*([\w\-./]+)\s*\n```old\s*\n([\s\S]*?)```\s*\n+```new\s*\n([\s\S]*?)```/g))
+    ps.push({path:m[1].trim(),old:m[2],neu:m[3]});
+  return ps;
+}
+function parseDeletes(text){
+  const ds=[];
+  for(const m of text.matchAll(/####\s*DELETE:\s*([\w\-./]+)/g))ds.push(m[1].trim());
+  return ds;
+}
+/* ゆるい書式(### 📄 path + コードブロック)のフォールバック */
+function parseLoose(text){
+  const files={};
+  const fence=/```[\w+-]*\n([\s\S]*?)```/g;let m,pos=0;
+  while((m=fence.exec(text))!==null){
+    const before=text.slice(pos,m.index).trim().split('\n').slice(-3);
+    let path=null;
+    for(const line of before.reverse()){
+      const clean=line.replace(/[#*`📄📁🗂️✨:：]+/g,' ').trim();
+      for(const c of clean.split(/\s+/))
+        if(/^[\w\-./]+\.[a-zA-Z0-9]{1,10}$/.test(c)&&!c.startsWith('http')){path=c;break;}
+      if(path)break;
+    }
+    if(path)files[path]={text:m[1]};
+    pos=fence.lastIndex;
+  }
+  return files;
+}
+function normalize(s){return s.replace(/\r\n?/g,'\n').split('\n').map(l=>l.replace(/\s+$/,'')).join('\n');}
+function applyPatch(fileText,patch){
+  let idx=fileText.indexOf(patch.old);
+  if(idx>=0)return{text:fileText.replace(patch.old,patch.neu)};
+  const nf=normalize(fileText),no=normalize(patch.old);
+  if(nf.indexOf(no)>=0)return{text:nf.replace(no,normalize(patch.neu)),warn:'空白差を吸収して適用'};
+  return{text:null};
+}
+
+function importPaste(){
+  const text=document.getElementById('ta').value;
+  if(!text.trim())return toast('😵 何も貼られていません');
+  const man=parseManifest(text);
+  let files=parseFiles(text);
+  const patches=parsePatches(text),deletes=parseDeletes(text);
+
+  if(man){ // 新規プロジェクト
+    const missing=man.FILES.filter(f=>!(f in files));
+    if(missing.length&&!confirm(`⚠️ 本体がないファイル: ${missing.join(', ')}\nこのまま取り込む?`))return;
+    WS={name:man.PROJECT||'unnamed',files};
+    afterLoad(`💾 「${WS.name}」を取り込みました`);
+    return;
+  }
+  if(patches.length||deletes.length||Object.keys(files).length){ // 修正モード
+    if(!WS.name&&(patches.length||deletes.length))return toast('😵 修正対象のプロジェクトが未読み込みです');
+    if(!WS.name)WS={name:'pasted-project',files:{}};
+    let rep=[];
+    Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;rep.push(`📄${p}`);});
+    deletes.forEach(p=>{if(p in WS.files){delete WS.files[p];rep.push(`🗑️${p}`);}});
+    let fail=0;
+    patches.forEach(pt=>{
+      const f=WS.files[pt.path];
+      if(!f||f.bin){fail++;return;}
+      const r=applyPatch(f.text,pt);
+      if(r.text===null)fail++;else{WS.files[pt.path]={text:r.text};rep.push(`🩹${pt.path}`);}
+    });
+    afterLoad(fail?`⚠️ 適用完了(PATCH失敗${fail}件。oldブロック不一致の疑い)`:`✅ 適用: ${rep.slice(0,5).join(' ')}${rep.length>5?' 他':''}`);
+    return;
+  }
+  // ゆるい書式フォールバック
+  files=parseLoose(text);
+  if(Object.keys(files).length){
+    WS={name:'pasted-project',files};
+    afterLoad(`💾 ゆるい書式から${Object.keys(files).length}ファイル取り込みました(パスの正確性は要確認)`);
+    return;
+  }
+  toast('😵 コードブロックが見つかりません');
+}
+
+/* ========== フォルダ/ZIPドロップ ========== */
+const SKIP_RE=/(^|\/)(node_modules|\.git|\.DS_Store|dist|\.next|__pycache__|\.cache)(\/|$)/;
+const TEXT_EXT=/\.(html?|css|js|mjs|ts|tsx|jsx|json|md|txt|svg|xml|yml|yaml|toml|py|rb|sh|env|gitignore|csv)$/i;
+const zone=document.getElementById('dropZone');
+['dragover','dragenter'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('over');}));
+zone.addEventListener('drop',async e=>{
+  const items=[...e.dataTransfer.items];
+  // ZIP?
+  const zipFile=[...e.dataTransfer.files].find(f=>f.name.endsWith('.zip'));
+  if(zipFile){await loadZip(zipFile);return;}
+  // フォルダ走査(webkitGetAsEntry)
+  const entries=items.map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(Boolean);
+  if(!entries.length)return toast('😵 フォルダかZIPをドロップしてください');
+  toast('📥 読み込み中...');
+  const files={};
+  let rootName=entries.length===1&&entries[0].isDirectory?entries[0].name:'dropped-project';
+  for(const en of entries)await walkEntry(en,'',files,entries.length===1&&en.isDirectory);
+  finishFolderLoad(rootName,files);
+});
+function walkEntry(entry,prefix,files,stripRoot){
+  return new Promise(resolve=>{
+    if(entry.isFile){
+      entry.file(async f=>{
+        const path=prefix+entry.name;
+        if(!SKIP_RE.test(path)&&f.size<2*1024*1024*1.5){ // 3MB上限/ファイル
+          files[path]=await readFileSmart(f,path);
+        }
+        resolve();
+      },()=>resolve());
+    }else if(entry.isDirectory){
+      const newPrefix=stripRoot?'':(prefix+entry.name+'/');
+      if(SKIP_RE.test(prefix+entry.name)){resolve();return;}
+      const reader=entry.createReader();
+      const all=[];
+      const readBatch=()=>reader.readEntries(async batch=>{
+        if(!batch.length){
+          for(const c of all)await walkEntry(c,newPrefix,files,false);
+          resolve();
+        }else{all.push(...batch);readBatch();}
+      },()=>resolve());
+      readBatch();
+    }else resolve();
+  });
+}
+function readFileSmart(f,path){
+  return new Promise(res=>{
+    const r=new FileReader();
+    if(TEXT_EXT.test(path)){
+      r.onload=()=>res({text:r.result});
+      r.readAsText(f);
+    }else{
+      r.onload=()=>res({base64:r.result.split(',')[1],bin:true});
+      r.readAsDataURL(f);
+    }
+  });
+}
+async function loadZip(file){
+  toast('🤐 ZIP解凍中...');
+  const zip=await JSZip.loadAsync(file);
+  const files={};
+  const names=Object.keys(zip.files).filter(n=>!zip.files[n].dir&&!SKIP_RE.test(n));
+  // 全ファイルが同じルートフォルダ内なら1階層剥がす(二重フォルダ対策!)
+  let strip='';
+  const roots=new Set(names.map(n=>n.split('/')[0]));
+  if(roots.size===1&&names.every(n=>n.includes('/')))strip=[...roots][0]+'/';
+  for(const n of names){
+    const path=n.slice(strip.length);
+    if(!path)continue;
+    if(TEXT_EXT.test(path))files[path]={text:await zip.files[n].async('string')};
+    else files[path]={base64:await zip.files[n].async('base64'),bin:true};
+  }
+  finishFolderLoad(file.name.replace(/\.zip$/,''),files);
+}
+function finishFolderLoad(name,files){
+  const n=Object.keys(files).length;
+  if(!n)return toast('😵 読み込めるファイルがありませんでした');
+  WS={name:name.toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'project',files};
+  afterLoad(`📁 「${WS.name}」として${n}ファイル読み込みました`);
+}
+
+/* ========== 読み込み完了処理 ========== */
+function afterLoad(msg){
+  toast(msg);
+  document.getElementById('wsBar').classList.add('show');
+  document.getElementById('wsName').textContent=WS.name;
+  const n=Object.keys(WS.files).length;
+  const bins=Object.values(WS.files).filter(f=>f.bin).length;
+  document.getElementById('wsCount').textContent=`${n}ファイル${bins?`(うち画像等${bins})`:''}`;
+}
+function clearWS(){WS={name:null,files:{}};document.getElementById('wsBar').classList.remove('show');toast('🗑️ クリアしました');}
+
+/* ========== ツリー確認モーダル ========== */
+function openTree(){
+  const list=document.getElementById('treeList');list.innerHTML='';
+  Object.keys(WS.files).sort().forEach(p=>{
+    const d=document.createElement('div');d.className='tnode';
+    d.innerHTML=p+(WS.files[p].bin?'<span class="badge bin">binary</span>':'');
+    d.onclick=()=>{
+      list.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
+      d.classList.add('sel');
+      document.getElementById('treeView').textContent=
+        WS.files[p].bin?'(バイナリファイル: プレビュー省略)':WS.files[p].text;
+    };
+    list.appendChild(d);
+  });
+  document.getElementById('treeModal').classList.add('show');
+}
+
+/* ========== UI ========== */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   if(t.disabled)return;
   document.querySelectorAll('.tab,.pane').forEach(e=>e.classList.remove('on'));
@@ -198,7 +427,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 function toast(m){
   const t=document.getElementById('toast');
   t.textContent=m;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
+  setTimeout(()=>t.classList.remove('show'),3400);
 }
 </script>
 </body>
