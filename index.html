@@ -540,10 +540,11 @@ function renderWorkStatus(){
 function promptLink(repo,isSwitch=false){
   const url=prompt(isSwitch
     ?'🔄 新しい会話のURLを貼ってください。\n(保存後、次の依頼文に契約書と最新コードが自動同梱され、簡単に引き継げます)'
-    :'📎 AIとの会話URL(アドレス欄)を貼ってください:');
+    :'📎 AIとの会話URL(アドレス欄)を貼ってください:\n(この会話は契約書・コードを把握済みとして扱います。未把握なら保存後に🆘フル再送を使ってください)');
   if(!url)return;
-  addLink(repo,url.trim(),{c:false,s:false});
-  toast(isSwitch?'🔄 乗り換え完了!次の依頼文に引き継ぎ資料を自動同梱します':'📎 リンク保存!');
+  /* リンクあり=把握済みとみなす。乗り換えだけは新会話なので未送信扱い(次回フル同梱) */
+  addLink(repo,url.trim(),isSwitch?{c:false,s:false}:{c:true,s:true});
+  toast(isSwitch?'🔄 乗り換え完了!次の依頼文に引き継ぎ資料を自動同梱します':'📎 リンク保存!以後の依頼文は最小構成になります');
   renderWork();
 }
 
@@ -858,7 +859,10 @@ async function copyHandover(){
 function finishHandover(){
   const url=document.getElementById('hoLink').value.trim();
   if(!url)return toast('😵 会話リンクを貼ってください');
-  addLink(FLOW.repo,url,FLOW.sent);
+  /* コピー未実行でもチェックボックスの状態から送信済みを判定 */
+  const sent=(FLOW.sent&&(FLOW.sent.c||FLOW.sent.s))?FLOW.sent
+    :{c:document.getElementById('hoContract').checked,s:document.getElementById('hoCode').checked};
+  addLink(FLOW.repo,url,sent);
   toast('🔗 リンク完了!次回からは一覧から直接ここに来られます');
   openWorkTab(FLOW.repo);
 }
@@ -1167,7 +1171,10 @@ async function deploy(){
     {
       const pend=getPend();
       const lurl=FLOW.link||(pend&&pend.url);
-      const lsent=(FLOW.sent&&(FLOW.sent.c||FLOW.sent.s))?FLOW.sent:((pend&&pend.sent)||{});
+      /* 新規フローの依頼文には契約書が必ず同梱されるので、既定は送信済み扱い */
+      let lsent={c:true,s:true};
+      if(FLOW.sent&&(FLOW.sent.c||FLOW.sent.s))lsent=FLOW.sent;
+      else if(pend&&pend.sent&&(pend.sent.c||pend.sent.s))lsent=pend.sent;
       if(lurl){
         addLink(repo,lurl,lsent);
         dlog(`📎 会話リンクを紐づけました(${lsent.c?'契約書✅':''}${lsent.s?' 構造✅':''})`,'lok');
