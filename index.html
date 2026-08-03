@@ -445,13 +445,54 @@ async function commitChanges(){
     refreshLinkedUI();refreshWSBar();
     document.getElementById('commitMsg').value='';
     clog(`✅ コミット完了: 「${msg}」`,'lok');
-    clog(`📂 <a href="https://github.com/${USER}/${repo}/commit/${commit.sha}" target="_blank">コミットを見る</a> / Pagesが有効なら自動で再ビルドされます`,'lin');
+    clog(`📂 <a href="https://github.com/${USER}/${repo}/commit/${commit.sha}" target="_blank">コミットを見る</a>`,'lin');
     toast('✅ コミット&プッシュ完了!');
+    await watchPagesAfterCommit(repo,commit.sha,clog);
   }catch(e){
     clog(`❌ ${e.message}`,'lng');
     clog('💡 このエラーをそのままAIに(いつものやつ)','lin');
   }
   btn.disabled=false;btn.textContent='💾 コミット&プッシュ';
+}
+
+/* ========== コミット後の見届け係 ========== */
+async function watchPagesAfterCommit(repo,sha,clog){
+  clog('🏭 サイトの自動更新を見届け中...(数十秒〜数分)');
+  const url=`https://${USER}.github.io/${repo}/`;
+  let run=null;
+  /* このコミットに紐づくビルドを探す(最大40秒) */
+  for(let i=0;i<8;i++){
+    await new Promise(w=>setTimeout(w,5000));
+    try{
+      const runs=await gh(`/repos/${USER}/${repo}/actions/runs?per_page=5`);
+      run=runs.workflow_runs.find(x=>x.head_sha===sha);
+      if(run)break;
+    }catch{}
+  }
+  if(!run){
+    clog('⚠️ 自動ビルドが起動しませんでした。このリポジトリにはデプロイ指示書(deploy.yml)が無い可能性があります','lng');
+    clog('💡 🚀デプロイタブから<b>同じリポジトリ名で一度デプロイ</b>すると指示書が入り、以後は💾コミットだけで自動更新されます','lin');
+    return;
+  }
+  clog(`🔍 ビルド起動を確認(<a href="${run.html_url}" target="_blank">進行状況</a>)`);
+  /* 完了まで監視(最大5分) */
+  for(let i=0;i<60;i++){
+    if(run.status==='completed')break;
+    await new Promise(w=>setTimeout(w,5000));
+    try{run=await gh(`/repos/${USER}/${repo}/actions/runs/${run.id}`);}catch{}
+    if(i%6===5)clog(`　...まだ${run.status}です`);
+  }
+  if(run.conclusion==='success'){
+    clog('🎉 サイト更新完了!','lok');
+    clog(`🌐 <a href="${url}" target="_blank">${url}</a>`,'lok');
+    clog('💡 見た目が変わらない時はキャッシュです。⌘+Shift+R でスーパーリロード!','lin');
+    toast('🎉 サイトが更新されました!');
+  }else if(run.status!=='completed'){
+    clog('⏳ 5分経ってもビルド中です。上の「進行状況」リンクから直接確認してください','lin');
+  }else{
+    clog(`❌ ビルド失敗(${run.conclusion})`,'lng');
+    clog(`🔍 <a href="${run.html_url}" target="_blank">Actionsログ</a>の赤い部分をAIに貼れば診断できます(いつものやつ)`,'lin');
+  }
 }
 
 /* ========== パーサー ========== */
