@@ -16,7 +16,7 @@ header .sub{font-size:11px;color:#776b85}
 #connState{padding:4px 12px;border-radius:12px;font-size:11px;background:#3a2430;color:#ff8f8f}
 #connState.ok{background:#243a2c;color:#8fd8a0}
 #tabs{display:flex;gap:4px;padding:10px 14px 0;background:#1b1824}
-.tab{padding:9px 22px;border:none;border-radius:10px 10px 0 0;background:#242030;color:#998aa8;cursor:pointer;font-size:14px}
+.tab{padding:9px 20px;border:none;border-radius:10px 10px 0 0;background:#242030;color:#998aa8;cursor:pointer;font-size:14px}
 .tab.on{background:#2e2940;color:#fff;font-weight:bold}
 .tab:disabled{opacity:.35;cursor:not-allowed}
 .pane{flex:1;display:none;overflow-y:auto;padding:22px}
@@ -37,13 +37,12 @@ input:focus{border-color:#ff9eb5}
 #connResult{margin-top:14px;padding:12px 16px;border-radius:10px;font-size:13px;display:none;line-height:1.7}
 #connResult.ok{display:block;background:#243a2c;color:#a7e8b5}
 #connResult.ng{display:block;background:#3a2430;color:#ffb0b0}
-.placeholder{display:flex;height:100%;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#665a75;font-size:14px}
-.placeholder .big{font-size:44px}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#2e2940;padding:11px 26px;border-radius:22px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:99;border:1px solid #453d55}
 #toast.show{opacity:1}
 .danger{font-size:11px;color:#8d7a99;margin-top:10px;line-height:1.7}
 #pastePane.on{display:flex;flex-direction:column;gap:12px;padding:18px}
-textarea{flex:1;min-height:200px;background:#12101a;color:#d8cfe4;border:1px solid #3a3348;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:13px;resize:none;outline:none}
+textarea{background:#12101a;color:#d8cfe4;border:1px solid #3a3348;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:13px;resize:none;outline:none}
+#ta{flex:1;min-height:200px}
 textarea:focus{border-color:#ff9eb5}
 .hint{font-size:12px;color:#9b8dae;background:#221e2e;border:1px solid #322c40;border-radius:10px;padding:10px 14px;line-height:1.7}
 #folderPane.on{display:flex;flex-direction:column;padding:18px;gap:12px}
@@ -52,28 +51,35 @@ textarea:focus{border-color:#ff9eb5}
 #dropZone .big{font-size:52px}
 #pickRow{display:flex;gap:10px;justify-content:center}
 #pickRow .btn{margin-top:0}
-#wsBar{display:none;align-items:center;gap:12px;padding:10px 18px;background:#241f31;border-top:1px solid #322c40;font-size:13px;flex-wrap:wrap}
+#wsBar{display:none;align-items:center;gap:10px;padding:10px 18px;background:#241f31;border-top:1px solid #322c40;font-size:13px;flex-wrap:wrap}
 #wsBar.show{display:flex}
 #wsName{font-weight:bold;color:#ffd3a3}
 #wsCount{color:#9b8dae;font-size:12px}
 #wsType{padding:3px 12px;border-radius:10px;font-size:11px;background:#2c3a4a;color:#8fc7ff;font-weight:bold}
+#wsLink{display:none;padding:3px 12px;border-radius:10px;font-size:11px;background:#3a2a20;color:#ffc98f;font-weight:bold}
 #wsBar .btn{margin:0;padding:8px 18px;font-size:13px}
 #treeModal,#inspectModal{position:fixed;inset:0;background:rgba(10,7,14,.75);display:none;align-items:center;justify-content:center;z-index:60}
 #treeModal.show,#inspectModal.show{display:flex}
-.modalBox{background:#211d2b;border:1px solid #453d55;border-radius:16px;width:min(880px,94vw);height:min(620px,88vh);display:flex;flex-direction:column;overflow:hidden}
-.modalHead{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #322c40}
+.modalBox{background:#211d2b;border:1px solid #453d55;border-radius:16px;width:min(920px,95vw);height:min(640px,90vh);display:flex;flex-direction:column;overflow:hidden}
+.modalHead{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid #322c40}
 .modalHead b{color:#ff9eb5}
-.modalHead .btn{margin:0 0 0 auto;padding:7px 16px;font-size:12px}
+.modalHead .btn{margin:0;padding:7px 16px;font-size:12px}
+.modalHead .spacer{flex:1}
 #treeBody{flex:1;display:flex;overflow:hidden}
-#treeList{width:300px;overflow-y:auto;border-right:1px solid #322c40;padding:8px 4px}
+#treeList{width:290px;overflow-y:auto;border-right:1px solid #322c40;padding:8px 4px}
 .tnode{padding:4px 8px;font-size:12.5px;font-family:Consolas,monospace;cursor:pointer;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#cfc5dd}
 .tnode:hover{background:#2c2740}
 .tnode.sel{background:#332d4a;color:#ff9eb5}
+.tnode.dirty::after{content:'●';color:#ffc98f;margin-left:6px}
 .tdir{padding:4px 8px;font-size:12.5px;font-family:Consolas,monospace;color:#8fc7ff;cursor:pointer;border-radius:6px;white-space:nowrap;user-select:none}
 .tdir:hover{background:#2c2740}
 .tdir .arrow{display:inline-block;transition:.15s;width:14px}
 .tdir.closed .arrow{transform:rotate(-90deg)}
+#viewWrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
 #treeView{flex:1;overflow:auto;padding:14px;font-family:Consolas,monospace;font-size:12.5px;color:#cfc5dd;white-space:pre;background:#12101a}
+#editArea{flex:1;display:none;border-radius:0;border:none;background:#12101a}
+#editFoot{display:none;gap:10px;padding:10px 14px;background:#1b1824;border-top:1px solid #322c40}
+#editFoot .btn{margin:0}
 .badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;margin-left:8px}
 .badge.bin{background:#3a3020;color:#ffd3a3}
 #inspectBody{flex:1;overflow-y:auto;padding:18px}
@@ -91,12 +97,10 @@ textarea:focus{border-color:#ff9eb5}
 #repoRow{display:flex;gap:10px;align-items:center}
 #repoRow input{flex:1}
 #repoRow .btn{margin:0;white-space:nowrap}
-#deployLog{background:#12101a;border:1px solid #322c40;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:12.5px;line-height:1.9;min-height:120px;max-height:300px;overflow-y:auto;display:none}
-#deployLog.show{display:block}
-#deployLog .lok{color:#8fd8a0}
-#deployLog .lng{color:#ff9d9d}
-#deployLog .lin{color:#9b8dae}
-#deployLog a{color:#8fc7ff}
+#deployLog,#commitLog{background:#12101a;border:1px solid #322c40;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:12.5px;line-height:1.9;max-height:280px;overflow-y:auto;display:none}
+#deployLog.show,#commitLog.show{display:block;margin-top:10px}
+.lok{color:#8fd8a0}.lng{color:#ff9d9d}.lin{color:#9b8dae}
+#deployLog a,#commitLog a{color:#8fc7ff}
 #progWrap{display:none;height:10px;background:#2a2536;border-radius:5px;overflow:hidden;margin-top:8px}
 #progWrap.show{display:block}
 #progBar{height:100%;width:0%;background:linear-gradient(90deg,#ff9eb5,#e0709a);transition:width .2s}
@@ -108,11 +112,15 @@ textarea:focus{border-color:#ff9eb5}
 #doneCard .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 #doneCard .btn{margin-top:6px}
 #qr{margin:12px auto 0;display:none;background:#fff;padding:8px;border-radius:10px;width:fit-content}
-/* 履歴 */
 .histItem{padding:14px 16px;border:1px solid #322c40;border-radius:12px;margin-bottom:10px;font-size:13px;line-height:2}
 .histItem b{color:#ffd3a3}
 .histItem .date{color:#776b85;font-size:11px;margin-left:8px}
 .histItem a{color:#8fc7ff;margin-right:14px;text-decoration:none}
+.repoItem{padding:12px 16px;border:1px solid #322c40;border-radius:12px;margin-bottom:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.repoItem:hover{background:#2a2536;border-color:#453d55}
+.repoItem b{color:#ffd3a3}
+.repoItem span{color:#776b85;font-size:11px;margin-left:auto}
+#dirtyList{font-size:12.5px;font-family:Consolas,monospace;line-height:2;color:#ffc98f;background:#1b1824;border-radius:10px;padding:10px 14px;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -129,19 +137,20 @@ textarea:focus{border-color:#ff9eb5}
 <div id="tabs">
   <button class="tab" data-p="pastePane" id="tabPaste" disabled>📋 貼り付け</button>
   <button class="tab" data-p="folderPane" id="tabFolder" disabled>📁 フォルダ</button>
+  <button class="tab" data-p="repoPane" id="tabRepo" disabled>📂 リポジトリ</button>
   <button class="tab" data-p="deployPane" id="tabDeploy" disabled>🚀 デプロイ</button>
   <button class="tab" data-p="histPane">📚 履歴</button>
-  <button class="tab on" data-p="setupPane">⚙️ 接続設定</button>
+  <button class="tab on" data-p="setupPane">⚙️ 接続</button>
 </div>
 
 <div class="pane" id="pastePane">
-  <div class="hint">💡 AIの回答を丸ごと貼ってください。契約書式(MANIFEST/FILE/PATCH/DELETE)+ゆるい書式対応。</div>
+  <div class="hint">💡 AIの回答を丸ごと貼ってください。<b>📂リポジトリ読み込み中ならPATCH/FILEが直接適用</b>され、コミット待ちになります。MANIFESTがあれば新規プロジェクトとして扱います。</div>
   <textarea id="ta" placeholder="ここにAIの回答をペースト..."></textarea>
   <button class="btn pink" onclick="importPaste()">🍰 取り込む(自動判別)</button>
 </div>
 
 <div class="pane" id="folderPane">
-  <div class="hint">💡 青いフォルダ/ZIPをドロップ、またはボタンから選択。<code>node_modules</code>等は自動除外。</div>
+  <div class="hint">💡 フォルダ/ZIPをドロップorボタン選択。<b>📂リポジトリ読み込み中なら差分だけ検出</b>して更新ファイルをコミット待ちにします。</div>
   <div id="dropZone"><span class="big">📁</span><span>ここにフォルダ or ZIP をドロップ</span></div>
   <div id="pickRow">
     <button class="btn" onclick="document.getElementById('dirPicker').click()">📂 Finderからフォルダを選ぶ</button>
@@ -151,16 +160,36 @@ textarea:focus{border-color:#ff9eb5}
   <input type="file" id="zipPicker" accept=".zip" hidden>
 </div>
 
+<!-- ===== リポジトリペイン ===== -->
+<div class="pane" id="repoPane">
+  <div class="card" id="repoListCard">
+    <h2>📂 リポジトリを選んで読み込む</h2>
+    <p>読み込むと「貼り付け(PATCH)」「フォルダ(差分)」「手動編集」が全部このリポジトリに向きます。</p>
+    <button class="btn" onclick="loadRepoList()">🔄 一覧を更新</button>
+    <div id="repoList" style="margin-top:12px"></div>
+  </div>
+  <div class="card" id="repoLoadedCard" style="display:none">
+    <h2>🔗 <span id="lnkName"></span></h2>
+    <p id="lnkInfo"></p>
+    <button class="btn" onclick="openTree()">🔍 中身を見る / ✏️ 手動編集</button>
+    <button class="btn" onclick="unlinkRepo()">↩️ 一覧に戻る(リンク解除)</button>
+  </div>
+  <div class="card" id="commitCard" style="display:none">
+    <h2>💾 変更をコミット <span id="dirtyCount" style="font-size:13px;color:#ffc98f"></span></h2>
+    <div id="dirtyList"></div>
+    <input type="text" id="commitMsg" placeholder="コミットメッセージ(空欄なら「🍰 update via ShortCake」)">
+    <button class="btn pink" id="commitBtn" onclick="commitChanges()">💾 コミット&プッシュ</button>
+    <div id="commitLog"></div>
+  </div>
+</div>
+
 <div class="pane" id="deployPane">
   <div class="dcard" id="dNoWs" style="display:none">
     <h3>📭 プロジェクトが未読み込みです</h3>
-    <p style="font-size:13px;color:#c9bfd6">先に📋か📁タブから読み込んでください。</p>
+    <p style="font-size:13px;color:#c9bfd6">先に📋/📁/📂タブから読み込んでください。</p>
   </div>
   <div id="dReady" style="display:none">
-    <div class="dcard">
-      <h3>📦 デプロイ内容の確認</h3>
-      <div id="dSummary"></div>
-    </div>
+    <div class="dcard"><h3>📦 デプロイ内容の確認</h3><div id="dSummary"></div></div>
     <div class="dcard">
       <h3>🏷️ リポジトリ名</h3>
       <div id="repoRow">
@@ -185,10 +214,7 @@ textarea:focus{border-color:#ff9eb5}
 </div>
 
 <div class="pane" id="histPane">
-  <div class="card">
-    <h2>📚 デプロイ履歴</h2>
-    <div id="histList"></div>
-  </div>
+  <div class="card"><h2>📚 デプロイ履歴</h2><div id="histList"></div></div>
 </div>
 
 <div class="pane on" id="setupPane">
@@ -216,20 +242,34 @@ textarea:focus{border-color:#ff9eb5}
 </div>
 
 <div id="wsBar">
-  <span>📦</span><span id="wsName">-</span><span id="wsType">判定中...</span><span id="wsCount"></span>
+  <span>📦</span><span id="wsName">-</span><span id="wsType">判定中...</span>
+  <span id="wsLink"></span><span id="wsCount"></span>
   <button class="btn" onclick="openTree()">🔍 中身</button>
-  <button class="btn" onclick="openInspect()">🕵️ 検品レポート</button>
+  <button class="btn" onclick="openInspect()">🕵️ 検品</button>
+  <button class="btn" id="wsCommitBtn" style="display:none" onclick="gotoCommit()">💾 コミットへ</button>
   <button class="btn" onclick="clearWS()">🗑️</button>
 </div>
 
 <div id="treeModal"><div class="modalBox">
   <div class="modalHead"><b>🔍 ファイル構造</b>
-    <button class="btn" onclick="document.getElementById('treeModal').classList.remove('show')">閉じる</button></div>
-  <div id="treeBody"><div id="treeList"></div><div id="treeView">← ファイルを選択</div></div>
+    <span class="spacer"></span>
+    <button class="btn" id="editBtn" style="display:none" onclick="startEdit()">✏️ このファイルを編集</button>
+    <button class="btn" onclick="document.getElementById('treeModal').classList.remove('show');exitEdit()">閉じる</button></div>
+  <div id="treeBody">
+    <div id="treeList"></div>
+    <div id="viewWrap">
+      <div id="treeView">← ファイルを選択</div>
+      <textarea id="editArea"></textarea>
+      <div id="editFoot">
+        <button class="btn pink" onclick="saveEdit()">💾 保存(コミット待ちに追加)</button>
+        <button class="btn" onclick="exitEdit()">キャンセル</button>
+      </div>
+    </div>
+  </div>
 </div></div>
 
 <div id="inspectModal"><div class="modalBox">
-  <div class="modalHead"><b>🕵️ 検品レポート</b>
+  <div class="modalHead"><b>🕵️ 検品レポート</b><span class="spacer"></span>
     <button class="btn" onclick="document.getElementById('inspectModal').classList.remove('show')">閉じる</button></div>
   <div id="inspectBody"></div>
 </div></div>
@@ -238,10 +278,10 @@ textarea:focus{border-color:#ff9eb5}
 
 <script>
 /* ================================================
-   🍰 ShortCake v1.0 — 完全版
+   🍰 ShortCake v1.1 — リポジトリ直結編集対応・完全版
    ================================================ */
 const LS_TOKEN='sc_token',LS_HIST='sc_history';
-let WS={name:null,files:{},type:null,report:[],extras:{}};
+let WS={name:null,files:{},type:null,report:[],extras:{},linked:null,dirty:new Set(),deleted:new Set()};
 let USER=null;
 
 async function gh(path,opt={}){
@@ -274,12 +314,145 @@ function onConnected(user){
   document.getElementById('uname').textContent=user.login;
   const av=document.getElementById('avatar');av.src=user.avatar_url;av.style.display='block';
   document.getElementById('disconnectCard').style.display='block';
-  ['tabPaste','tabFolder','tabDeploy'].forEach(id=>document.getElementById(id).disabled=false);
+  ['tabPaste','tabFolder','tabRepo','tabDeploy'].forEach(id=>document.getElementById(id).disabled=false);
 }
 function disconnect(){localStorage.removeItem(LS_TOKEN);location.reload();}
 (async()=>{if(localStorage.getItem(LS_TOKEN)){
   try{onConnected(await gh('/user'));}
   catch{localStorage.removeItem(LS_TOKEN);toast('⚠️ トークン無効。再設定を');}}})();
+
+/* ========== 共通ユーティリティ ========== */
+const b64decode=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+const SKIP_RE=/(^|\/)(node_modules|\.git|\.DS_Store|dist|build|\.next|__pycache__|\.cache)(\/|$)/;
+const TEXT_EXT=/\.(html?|css|js|mjs|cjs|ts|tsx|jsx|json|md|txt|svg|xml|yml|yaml|toml|py|rb|sh|env|gitignore|csv|vue|svelte)$/i;
+
+/* lazyファイル(リポジトリから未取得)の中身を取得 */
+async function ensureFile(path,fobj){
+  const f=fobj||WS.files[path];
+  if(!f||!f.lazy)return f;
+  if(!WS.linked)throw new Error('lazyファイルなのにリポジトリ未リンク');
+  const blob=await gh(`/repos/${USER}/${WS.linked.repo}/git/blobs/${f.sha}`);
+  if(f.bin)f.base64=blob.content.replace(/\n/g,'');
+  else f.text=b64decode(blob.content);
+  delete f.lazy;
+  return f;
+}
+function markDirty(p){if(WS.linked){WS.dirty.add(p);WS.deleted.delete(p);refreshLinkedUI();}}
+function markDeleted(p){if(WS.linked){WS.deleted.add(p);WS.dirty.delete(p);refreshLinkedUI();}}
+
+/* ========== リポジトリ読み込み ========== */
+async function loadRepoList(){
+  const el=document.getElementById('repoList');
+  el.innerHTML='読み込み中...';
+  try{
+    const repos=await gh('/user/repos?sort=updated&per_page=100');
+    el.innerHTML='';
+    repos.forEach(r=>{
+      const d=document.createElement('div');
+      d.className='repoItem';
+      d.innerHTML=`📦 <b>${r.name}</b>${r.private?'🔒':''}<span>${new Date(r.pushed_at).toLocaleDateString()}</span>`;
+      d.onclick=()=>loadRepo(r.name);
+      el.appendChild(d);
+    });
+  }catch(e){el.innerHTML=`❌ ${e.message}`;}
+}
+async function loadRepo(repo){
+  toast(`📂 「${repo}」を読み込み中...`);
+  try{
+    const info=await gh(`/repos/${USER}/${repo}`);
+    const branch=info.default_branch;
+    const ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/${branch}`);
+    const headCommit=await gh(`/repos/${USER}/${repo}/git/commits/${ref.object.sha}`);
+    const tree=await gh(`/repos/${USER}/${repo}/git/trees/${headCommit.tree.sha}?recursive=1`);
+    const files={};
+    tree.tree.forEach(t=>{
+      if(t.type!=='blob'||SKIP_RE.test(t.path))return;
+      files[t.path]={sha:t.sha,lazy:true,bin:!TEXT_EXT.test(t.path)};
+    });
+    WS={name:repo,files,type:null,report:[],extras:{},
+      linked:{repo,branch,headSha:ref.object.sha},dirty:new Set(),deleted:new Set()};
+    /* 検品に必要な主要ファイルだけ先に取得 */
+    for(const p of ['package.json','vite.config.js','vite.config.ts','vite.config.mjs'])
+      if(WS.files[p])await ensureFile(p);
+    inspectProject();
+    refreshWSBar();
+    if(tree.truncated)toast('⚠️ 巨大リポジトリのため一部ファイルが省略されています');
+    else toast(`🔗 「${repo}」をリンクしました(${Object.keys(files).length}ファイル)`);
+  }catch(e){toast('😵 読み込み失敗: '+e.message.slice(0,80));}
+}
+function unlinkRepo(){clearWS();}
+function gotoCommit(){
+  document.querySelectorAll('.tab,.pane').forEach(e=>e.classList.remove('on'));
+  document.getElementById('tabRepo').classList.add('on');
+  document.getElementById('repoPane').classList.add('on');
+}
+function refreshLinkedUI(){
+  const n=WS.dirty.size+WS.deleted.size;
+  const lk=document.getElementById('wsLink'),cb=document.getElementById('wsCommitBtn');
+  if(WS.linked){
+    lk.style.display='inline-block';
+    lk.textContent=`🔗 ${WS.linked.repo}@${WS.linked.branch}${n?` ● 未コミット${n}件`:''}`;
+    cb.style.display=n?'inline-block':'none';
+  }else{lk.style.display='none';cb.style.display='none';}
+  /* リポジトリペイン */
+  document.getElementById('repoListCard').style.display=WS.linked?'none':'block';
+  document.getElementById('repoLoadedCard').style.display=WS.linked?'block':'none';
+  document.getElementById('commitCard').style.display=(WS.linked&&n)?'block':'none';
+  if(WS.linked){
+    document.getElementById('lnkName').textContent=`${WS.linked.repo} (${WS.linked.branch})`;
+    document.getElementById('lnkInfo').textContent=`${Object.keys(WS.files).length}ファイル読み込み済み`;
+    document.getElementById('dirtyCount').textContent=n?`(${n}件)`:'';
+    document.getElementById('dirtyList').innerHTML=
+      [...WS.dirty].map(p=>`✏️ ${p}`).concat([...WS.deleted].map(p=>`🗑️ ${p}`)).join('<br>')||'';
+  }
+}
+
+/* ========== コミット ========== */
+async function commitChanges(){
+  if(!WS.linked)return;
+  const paths=[...WS.dirty],dels=[...WS.deleted];
+  if(!paths.length&&!dels.length)return toast('変更がありません');
+  const btn=document.getElementById('commitBtn');
+  const log=document.getElementById('commitLog');
+  const clog=(m,c='lin')=>{log.classList.add('show');log.innerHTML+=`<div class="${c}">${m}</div>`;log.scrollTop=log.scrollHeight;};
+  btn.disabled=true;btn.textContent='💾 実行中...';log.innerHTML='';
+  const msg=document.getElementById('commitMsg').value.trim()||'🍰 update via ShortCake';
+  try{
+    const{repo,branch}=WS.linked;
+    const ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/${branch}`);
+    const headSha=ref.object.sha;
+    const headCommit=await gh(`/repos/${USER}/${repo}/git/commits/${headSha}`);
+    clog(`📤 変更${paths.length}件+削除${dels.length}件を送信中...`);
+    const tree=[];
+    for(const p of paths){
+      const f=WS.files[p];
+      await ensureFile(p);
+      const body=f.bin?{content:f.base64,encoding:'base64'}:{content:f.text,encoding:'utf-8'};
+      const blob=await gh(`/repos/${USER}/${repo}/git/blobs`,{method:'POST',body:JSON.stringify(body)});
+      tree.push({path:p,mode:'100644',type:'blob',sha:blob.sha});
+      clog(`　✏️ ${p}`);
+    }
+    for(const p of dels){tree.push({path:p,mode:'100644',type:'blob',sha:null});clog(`　🗑️ ${p}`);}
+    const newTree=await gh(`/repos/${USER}/${repo}/git/trees`,{method:'POST',
+      body:JSON.stringify({base_tree:headCommit.tree.sha,tree})});
+    const commit=await gh(`/repos/${USER}/${repo}/git/commits`,{method:'POST',
+      body:JSON.stringify({message:msg,tree:newTree.sha,parents:[headSha]})});
+    await gh(`/repos/${USER}/${repo}/git/refs/heads/${branch}`,{method:'PATCH',
+      body:JSON.stringify({sha:commit.sha})});
+    WS.linked.headSha=commit.sha;
+    WS.dirty.clear();WS.deleted.clear();
+    dels.forEach(p=>delete WS.files[p]);
+    refreshLinkedUI();refreshWSBar();
+    document.getElementById('commitMsg').value='';
+    clog(`✅ コミット完了: 「${msg}」`,'lok');
+    clog(`📂 <a href="https://github.com/${USER}/${repo}/commit/${commit.sha}" target="_blank">コミットを見る</a> / Pagesが有効なら自動で再ビルドされます`,'lin');
+    toast('✅ コミット&プッシュ完了!');
+  }catch(e){
+    clog(`❌ ${e.message}`,'lng');
+    clog('💡 このエラーをそのままAIに(いつものやつ)','lin');
+  }
+  btn.disabled=false;btn.textContent='💾 コミット&プッシュ';
+}
 
 /* ========== パーサー ========== */
 function parseManifest(text){
@@ -326,39 +499,52 @@ function applyPatch(ft,p){
   if(nf.indexOf(no)>=0)return{text:nf.replace(no,normalize(p.neu))};
   return{text:null};
 }
-function importPaste(){
+
+async function importPaste(){
   const text=document.getElementById('ta').value;
   if(!text.trim())return toast('😵 何も貼られていません');
   const man=parseManifest(text);let files=parseFiles(text);
   const patches=parsePatches(text),deletes=parseDeletes(text);
-  if(man){
+
+  if(man){ /* 新規プロジェクト(リンク解除して展開) */
     const missing=man.FILES.filter(f=>!(f in files));
     if(missing.length&&!confirm(`⚠️ 本体がないファイル: ${missing.join(', ')}\n続ける?`))return;
     setWS(man.PROJECT||'unnamed',files);return;
   }
+
   if(patches.length||deletes.length||Object.keys(files).length){
-    if(!WS.name&&(patches.length||deletes.length))return toast('😵 修正対象が未読み込みです');
-    if(!WS.name)WS={name:'pasted-project',files:{},type:null,report:[],extras:{}};
-    let fail=0;
-    Object.entries(files).forEach(([p,c])=>WS.files[p]=c);
-    deletes.forEach(p=>delete WS.files[p]);
-    patches.forEach(pt=>{
+    if(!WS.name)return toast('😵 適用先がありません。先にプロジェクトかリポジトリを読み込んでください');
+    let fail=0,rep=[];
+    Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;markDirty(p);rep.push(`📄${p}`);});
+    deletes.forEach(p=>{if(p in WS.files){delete WS.files[p];markDeleted(p);rep.push(`🗑️${p}`);}});
+    for(const pt of patches){
       const f=WS.files[pt.path];
-      if(!f||f.bin){fail++;return;}
+      if(!f||f.bin){fail++;continue;}
+      try{await ensureFile(pt.path);}catch{fail++;continue;}
       const r=applyPatch(f.text,pt);
-      if(r.text===null)fail++;else WS.files[pt.path]={text:r.text};});
-    setWS(WS.name,WS.files);
-    if(fail)toast(`⚠️ PATCH失敗${fail}件(old不一致の疑い)`);
+      if(r.text===null)fail++;
+      else{WS.files[pt.path]={text:r.text};markDirty(pt.path);rep.push(`🩹${pt.path}`);}
+    }
+    refreshWSBar();
+    if(fail)toast(`⚠️ 適用${rep.length}件 / PATCH失敗${fail}件(old不一致疑い)`);
+    else if(WS.linked)toast(`✅ 適用${rep.length}件!📂タブか💾ボタンからコミットしてください`);
+    else toast(`✅ 適用${rep.length}件`);
     return;
   }
+
   files=parseLoose(text);
-  if(Object.keys(files).length){setWS('pasted-project',files);return;}
+  if(Object.keys(files).length){
+    if(WS.linked){ /* リンク中はゆるい書式も更新扱い */
+      Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;markDirty(p);});
+      refreshWSBar();
+      toast(`✅ ${Object.keys(files).length}ファイル更新(コミット待ち)`);
+    }else setWS('pasted-project',files);
+    return;
+  }
   toast('😵 コードブロックが見つかりません');
 }
 
 /* ========== フォルダ読み込み ========== */
-const SKIP_RE=/(^|\/)(node_modules|\.git|\.DS_Store|dist|build|\.next|__pycache__|\.cache)(\/|$)/;
-const TEXT_EXT=/\.(html?|css|js|mjs|cjs|ts|tsx|jsx|json|md|txt|svg|xml|yml|yaml|toml|py|rb|sh|env|gitignore|csv|vue|svelte)$/i;
 const zone=document.getElementById('dropZone');
 ['dragover','dragenter'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('over');}));
 ['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('over');}));
@@ -430,8 +616,26 @@ async function loadZip(file){
   }
   finishFolderLoad(file.name.replace(/\.zip$/,''),files);
 }
-function finishFolderLoad(name,files){
+/* ★リンク中なら差分マージ、でなければ新規WS */
+async function finishFolderLoad(name,files){
   if(!Object.keys(files).length)return toast('😵 読み込めるファイルがありません');
+  if(WS.linked){
+    if(!confirm(`🔗 リンク中の「${WS.linked.repo}」への差分として取り込みますか?\n(キャンセル→新規プロジェクトとして読み込み)`))
+      {setWS(name,files);return;}
+    toast('🔍 差分を検出中...');
+    let changed=0,added=0,same=0;
+    for(const[p,f]of Object.entries(files)){
+      const ex=WS.files[p];
+      if(!ex){WS.files[p]=f;markDirty(p);added++;continue;}
+      try{await ensureFile(p);}catch{}
+      const differ=ex.bin?(ex.base64!==f.base64):(normalize(ex.text||'')!==normalize(f.text||''));
+      if(differ){WS.files[p]=f;markDirty(p);changed++;}
+      else same++;
+    }
+    refreshWSBar();
+    toast(`🔍 差分: 変更${changed} / 追加${added} / 同一${same} → ${changed+added?'💾コミットへ!':'変更なし'}`);
+    return;
+  }
   setWS(name,files);
 }
 
@@ -442,7 +646,7 @@ function inspectProject(){
   const has=p=>p in F;
   const rep=(cls,title,msg)=>WS.report.push({cls,title,msg});
   let type='static',pkg=null;
-  if(has('package.json')){
+  if(has('package.json')&&!F['package.json'].lazy){
     try{pkg=JSON.parse(F['package.json'].text);}catch{rep('warn','package.json破損','静的として扱います');}
   }
   if(pkg){
@@ -453,7 +657,7 @@ function inspectProject(){
     else if(pkg.scripts&&pkg.scripts.build)type='node-build';
     else type='node-unknown';
   }
-  if(!pkg&&Object.keys(F).some(p=>/\.(tsx|jsx|ts)$/.test(p)&&!p.endsWith('.d.ts')))type='broken-react';
+  if(!pkg&&!has('package.json')&&Object.keys(F).some(p=>/\.(tsx|jsx|ts)$/.test(p)&&!p.endsWith('.d.ts')))type='broken-react';
   WS.type=type;
   const label={static:'📄 静的サイト',vite:'⚡ Vite',cra:'⚛️ CRA',next:'▲ Next.js',
     ['node-build']:'🔧 Node系',['node-unknown']:'❓ Node系(build無)',['broken-react']:'💥 React断片'}[type];
@@ -467,7 +671,7 @@ function inspectProject(){
     }
     let absCount=0;
     Object.entries(F).forEach(([p,f])=>{
-      if(!p.endsWith('.html')||f.bin)return;
+      if(!p.endsWith('.html')||f.bin||f.lazy)return;
       const m=f.text.match(/(?:src|href)=["']\/(?!\/)[^"']*["']/g);
       if(m)absCount+=m.length;
     });
@@ -476,7 +680,7 @@ function inspectProject(){
   if(type==='vite'){
     rep('ok','Vite判定','Actionsで自動ビルド+Pages自動設定します');
     const cfgPath=Object.keys(F).find(p=>/^vite\.config\.(js|ts|mjs)$/.test(p));
-    if(cfgPath&&!/base\s*:/.test(F[cfgPath].text)){
+    if(cfgPath&&!F[cfgPath].lazy&&!/base\s*:/.test(F[cfgPath].text)){
       rep('fix','base設定なし',`base:'./' を自動注入します`);WS.extras.injectViteBase=cfgPath;}
     WS.extras.workflow='vite';
   }
@@ -492,27 +696,34 @@ function inspectProject(){
   ];
   const hits=[];
   Object.entries(F).forEach(([p,f])=>{
-    if(f.bin)return;
+    if(f.bin||f.lazy)return;
     for(const[re,label]of secretPatterns)if(re.test(f.text))hits.push(`${p}(${label})`);
   });
   if(hits.length)rep('warn','🔑 秘密情報の疑い!',`${[...new Set(hits)].slice(0,5).join(' / ')}`);
   rep('info','サマリー',`全${Object.keys(F).length}ファイル / ${label}`);
 }
-function setWS(name,files){
-  WS.name=(name||'project').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'project';
-  WS.files=files;
-  inspectProject();
+function refreshWSBar(){
   document.getElementById('wsBar').classList.add('show');
   document.getElementById('wsName').textContent=WS.name;
-  document.getElementById('wsCount').textContent=`${Object.keys(files).length}ファイル`;
-  const warns=WS.report.filter(r=>r.cls==='warn').length;
-  toast(warns?`📦 読み込み完了(⚠️ ${warns}件 → 🕵️)`:`📦 検品オールクリア✨`);
+  document.getElementById('wsCount').textContent=`${Object.keys(WS.files).length}ファイル`;
+  refreshLinkedUI();
   renderDeploy();
 }
-function clearWS(){WS={name:null,files:{},type:null,report:[],extras:{}};
-  document.getElementById('wsBar').classList.remove('show');renderDeploy();toast('🗑️ クリア');}
+function setWS(name,files){
+  WS={name:(name||'project').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'project',
+    files,type:null,report:[],extras:{},linked:null,dirty:new Set(),deleted:new Set()};
+  inspectProject();
+  refreshWSBar();
+  const warns=WS.report.filter(r=>r.cls==='warn').length;
+  toast(warns?`📦 読み込み完了(⚠️ ${warns}件 → 🕵️)`:`📦 検品オールクリア✨`);
+}
+function clearWS(){
+  WS={name:null,files:{},type:null,report:[],extras:{},linked:null,dirty:new Set(),deleted:new Set()};
+  document.getElementById('wsBar').classList.remove('show');
+  refreshLinkedUI();renderDeploy();toast('🗑️ クリア');
+}
 
-/* ========== デプロイ ========== */
+/* ========== デプロイ(新規公開用) ========== */
 function renderDeploy(){
   const no=document.getElementById('dNoWs'),ready=document.getElementById('dReady');
   if(!WS.name){no.style.display='block';ready.style.display='none';return;}
@@ -522,7 +733,8 @@ function renderDeploy(){
   document.getElementById('dSummary').innerHTML=
     `プロジェクト: <b>${WS.name}</b><br>種別: <b>${document.getElementById('wsType').textContent}</b> / ファイル: <b>${Object.keys(WS.files).length}</b><br>`+
     `自動修正: <b>${fixes}件</b>`+
-    (WS.extras.workflow?`<br>🏭 Actionsビルド+Pages自動設定`:'<br>📄 そのまま公開(Pages自動設定)');
+    (WS.extras.workflow?`<br>🏭 Actionsビルド+Pages自動設定`:'<br>📄 そのまま公開(Pages自動設定)')+
+    (WS.linked?`<br>🔗 リンク中: 同名なら上書き、別名なら複製デプロイ`:'');
   document.getElementById('repoName').value=WS.name;
 }
 const dlog=(msg,cls='lin')=>{
@@ -607,19 +819,19 @@ function prepareFiles(){
   Object.entries(WS.files).forEach(([p,f])=>out[p]={...f});
   if(WS.extras.fixAbsPaths){
     Object.entries(out).forEach(([p,f])=>{
-      if(p.endsWith('.html')&&!f.bin)
+      if(p.endsWith('.html')&&!f.bin&&!f.lazy)
         f.text=f.text.replace(/(src|href)=["']\/(?!\/)([^"']*)["']/g,'$1="./$2"');
     });
     dlog('🔧 絶対パス→相対パス変換','lok');
   }
   if(WS.extras.injectViteBase){
     const p=WS.extras.injectViteBase,t=out[p].text;
-    if(/defineConfig\s*\(\s*\{/.test(t)){
+    if(t&&/defineConfig\s*\(\s*\{/.test(t)){
       out[p].text=t.replace(/defineConfig\s*\(\s*\{/,'defineConfig({\n  base: "./",');
       dlog(`🔧 ${p} に base:"./" 注入`,'lok');
     }
   }
-  if(WS.extras.injectCRAHomepage&&out['package.json']){
+  if(WS.extras.injectCRAHomepage&&out['package.json']&&!out['package.json'].lazy){
     try{
       const pkg=JSON.parse(out['package.json'].text);
       pkg.homepage='./';
@@ -661,12 +873,19 @@ async function deploy(){
     prog(12);
     const files=prepareFiles();
     const paths=Object.keys(files);
+    const sameRepo=WS.linked&&WS.linked.repo===repo;
     dlog(`📤 ${paths.length}ファイル送信中...`);
     const tree=[];let done=0;
     for(let i=0;i<paths.length;i+=6){
       const batch=paths.slice(i,i+6);
       await Promise.all(batch.map(async p=>{
         const f=files[p];
+        if(f.lazy){
+          if(sameRepo){ /* 同一リポジトリなら既存blobを再利用 */
+            tree.push({path:p,mode:'100644',type:'blob',sha:f.sha});done++;return;
+          }
+          await ensureFile(p,f); /* 別リポジトリへは実体を取得して転送 */
+        }
         const body=f.bin?{content:f.base64,encoding:'base64'}:{content:f.text,encoding:'utf-8'};
         const blob=await gh(`/repos/${USER}/${repo}/git/blobs`,{method:'POST',body:JSON.stringify(body)});
         tree.push({path:p,mode:'100644',type:'blob',sha:blob.sha});
@@ -709,8 +928,7 @@ async function deploy(){
             if(run.conclusion==='success'){published=true;break;}
             else{
               dlog(`❌ ビルド失敗(${run.conclusion})`,'lng');
-              dlog(`🔍 ログ: <a href="${run.html_url}" target="_blank">Actionsで詳細を見る</a>`,'lin');
-              dlog('💡 ログの赤い部分をAIに貼れば診断できます','lin');
+              dlog(`🔍 <a href="${run.html_url}" target="_blank">Actionsログ</a>の赤い部分をAIに貼れば診断できます`,'lin');
               break;
             }
           }
@@ -751,16 +969,17 @@ function toggleQR(){
 function renderHist(){
   const el=document.getElementById('histList');
   const hist=JSON.parse(localStorage.getItem(LS_HIST)||'[]');
-  if(!hist.length){el.innerHTML='<p style="color:#776b85">まだ履歴がありません。最初のデプロイをどうぞ🍰</p>';return;}
+  if(!hist.length){el.innerHTML='<p style="color:#776b85">まだ履歴がありません🍰</p>';return;}
   el.innerHTML=hist.map(h=>
     `<div class="histItem">🍰 <b>${h.repo}</b><span class="date">${new Date(h.at).toLocaleString()}</span><br>`+
-    `<a href="${h.url||`https://${h.user}.github.io/${h.repo}/`}" target="_blank">🌐 サイトを開く</a>`+
+    `<a href="${h.url||`https://${h.user}.github.io/${h.repo}/`}" target="_blank">🌐 サイト</a>`+
     `<a href="https://github.com/${h.user}/${h.repo}" target="_blank">📂 リポジトリ</a>`+
-    `<a href="https://github.com/${h.user}/${h.repo}/actions" target="_blank">🏭 ビルド状況</a></div>`
+    `<a href="https://github.com/${h.user}/${h.repo}/actions" target="_blank">🏭 ビルド</a></div>`
   ).join('');
 }
 
-/* ========== ツリー/検品/UI ========== */
+/* ========== ツリー表示+手動編集 ========== */
+let selPath=null;
 function openTree(){
   const list=document.getElementById('treeList');list.innerHTML='';
   const root={dirs:{},files:[]};
@@ -771,6 +990,8 @@ function openTree(){
   });
   renderNode(root,list,0);
   document.getElementById('treeView').textContent='← ファイルを選択';
+  document.getElementById('editBtn').style.display='none';
+  exitEdit();
   document.getElementById('treeModal').classList.add('show');
 }
 function renderNode(node,container,depth){
@@ -786,17 +1007,57 @@ function renderNode(node,container,depth){
   });
   node.files.forEach(f=>{
     const el=document.createElement('div');
-    el.className='tnode';el.style.paddingLeft=(24+depth*16)+'px';
+    el.className='tnode'+(WS.dirty.has(f.full)?' dirty':'');
+    el.style.paddingLeft=(24+depth*16)+'px';
     el.innerHTML=`📄 ${f.name}`+(WS.files[f.full].bin?'<span class="badge bin">bin</span>':'');
-    el.onclick=()=>{
+    el.onclick=async()=>{
       document.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
       el.classList.add('sel');
-      document.getElementById('treeView').textContent=
-        WS.files[f.full].bin?'(バイナリ)':WS.files[f.full].text;
+      exitEdit();
+      selPath=f.full;
+      const file=WS.files[f.full];
+      if(file.bin){
+        document.getElementById('treeView').textContent='(バイナリ: プレビュー省略)';
+        document.getElementById('editBtn').style.display='none';
+        return;
+      }
+      if(file.lazy){
+        document.getElementById('treeView').textContent='☁️ 取得中...';
+        try{await ensureFile(f.full);}catch(e){
+          document.getElementById('treeView').textContent='❌ 取得失敗: '+e.message;return;}
+      }
+      document.getElementById('treeView').textContent=file.text;
+      document.getElementById('editBtn').style.display='inline-block';
     };
     container.appendChild(el);
   });
 }
+function startEdit(){
+  if(!selPath)return;
+  const f=WS.files[selPath];
+  if(!f||f.bin||f.lazy)return;
+  document.getElementById('treeView').style.display='none';
+  const ea=document.getElementById('editArea');
+  ea.style.display='block';ea.value=f.text;
+  document.getElementById('editFoot').style.display='flex';
+}
+function saveEdit(){
+  if(!selPath)return;
+  WS.files[selPath]={text:document.getElementById('editArea').value};
+  markDirty(selPath);
+  refreshWSBar();
+  exitEdit();
+  document.getElementById('treeView').textContent=WS.files[selPath].text;
+  document.querySelectorAll('.tnode.sel').forEach(el=>el.classList.add('dirty'));
+  toast(WS.linked?`💾 ${selPath} 保存(コミット待ち)`:`💾 ${selPath} 保存`);
+}
+function exitEdit(){
+  document.getElementById('treeView').style.display='block';
+  document.getElementById('editArea').style.display='none';
+  document.getElementById('editFoot').style.display='none';
+}
+
+/* ========== 検品表示/UI ========== */
 function openInspect(){
   const body=document.getElementById('inspectBody');body.innerHTML='';
   const icon={info:'ℹ️',ok:'✅',warn:'⚠️',fix:'🔧'};
@@ -814,6 +1075,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   t.classList.add('on');document.getElementById(t.dataset.p).classList.add('on');
   if(t.dataset.p==='deployPane')renderDeploy();
   if(t.dataset.p==='histPane')renderHist();
+  if(t.dataset.p==='repoPane'&&!WS.linked)loadRepoList();
 });
 function toast(m){
   const t=document.getElementById('toast');
