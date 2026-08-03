@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🍰 ShortCake</title>
+<title>🍰 ShortCake v2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 *{margin:0;box-sizing:border-box}
@@ -16,14 +15,17 @@ header .sub{font-size:11px;color:#776b85}
 #userBox img{width:30px;height:30px;border-radius:50%;border:2px solid #ff9eb5;display:none}
 #connState{padding:4px 12px;border-radius:12px;font-size:11px;background:#3a2430;color:#ff8f8f}
 #connState.ok{background:#243a2c;color:#8fd8a0}
-#tabs{display:flex;gap:4px;padding:10px 14px 0;background:#1b1824;flex-wrap:wrap}
-.tab{padding:9px 18px;border:none;border-radius:10px 10px 0 0;background:#242030;color:#998aa8;cursor:pointer;font-size:14px}
+#tabs{display:flex;gap:4px;padding:10px 14px 0;background:#1b1824;flex-wrap:wrap;align-items:flex-end}
+.tab{padding:9px 16px;border:none;border-radius:10px 10px 0 0;background:#242030;color:#998aa8;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:6px}
 .tab.on{background:#2e2940;color:#fff;font-weight:bold}
 .tab:disabled{opacity:.35;cursor:not-allowed}
-.pane{flex:1;display:none;overflow-y:auto;padding:22px}
+.tab .x{opacity:.5;font-size:12px;padding:0 2px}
+.tab .x:hover{opacity:1;color:#ff9d9d}
+.pane{flex:1;display:none;overflow-y:auto;padding:20px}
 .pane.on{display:block}
-.card{background:#211d2b;border:1px solid #322c40;border-radius:14px;padding:20px;max-width:680px;margin:0 auto 16px}
+.card{background:#211d2b;border:1px solid #322c40;border-radius:14px;padding:20px;max-width:720px;margin:0 auto 16px}
 .card h2{font-size:16px;color:#ff9eb5;margin-bottom:12px}
+.card h3{font-size:14px;color:#ffd3a3;margin:14px 0 8px}
 .card p,.card li{font-size:13px;line-height:1.9;color:#c9bfd6}
 .card ol{padding-left:22px;margin:8px 0}
 .card code{background:#2e2940;padding:2px 8px;border-radius:6px;font-size:12px;color:#ffd3a3}
@@ -31,40 +33,57 @@ header .sub{font-size:11px;color:#776b85}
 .steps{background:#1b1824;border-radius:10px;padding:14px 18px;margin:10px 0}
 input[type=password],input[type=text]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #3a3348;background:#17141f;color:#eee;font-size:14px;outline:none;font-family:Consolas,monospace}
 input:focus{border-color:#ff9eb5}
-.btn{padding:11px 24px;border:none;border-radius:10px;background:#3a3348;color:#ddd;cursor:pointer;font-size:14px;margin-top:12px}
+.btn{padding:11px 22px;border:none;border-radius:10px;background:#3a3348;color:#ddd;cursor:pointer;font-size:14px;margin-top:10px}
 .btn:hover{background:#453d55}
 .btn.pink{background:linear-gradient(135deg,#ff9eb5,#e0709a);color:#2b1520;font-weight:bold}
 .btn.pink:disabled{opacity:.5;cursor:wait}
+.btn.sm{padding:7px 14px;font-size:12px;margin:0}
 #connResult{margin-top:14px;padding:12px 16px;border-radius:10px;font-size:13px;display:none;line-height:1.7}
 #connResult.ok{display:block;background:#243a2c;color:#a7e8b5}
 #connResult.ng{display:block;background:#3a2430;color:#ffb0b0}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#2e2940;padding:11px 26px;border-radius:22px;font-size:13px;opacity:0;transition:.3s;pointer-events:none;z-index:99;border:1px solid #453d55}
 #toast.show{opacity:1}
 .danger{font-size:11px;color:#8d7a99;margin-top:10px;line-height:1.7}
-#pastePane.on{display:flex;flex-direction:column;gap:12px;padding:18px}
-textarea{background:#12101a;color:#d8cfe4;border:1px solid #3a3348;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:13px;resize:none;outline:none}
-#ta{flex:1;min-height:200px}
+textarea{background:#12101a;color:#d8cfe4;border:1px solid #3a3348;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:13px;resize:vertical;outline:none;width:100%}
 textarea:focus{border-color:#ff9eb5}
-.hint{font-size:12px;color:#9b8dae;background:#221e2e;border:1px solid #322c40;border-radius:10px;padding:10px 14px;line-height:1.7}
-#folderPane.on{display:flex;flex-direction:column;padding:18px;gap:12px}
-#dropZone{flex:1;border:3px dashed #453d55;border-radius:18px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#8d7a99;font-size:15px;transition:.2s;min-height:230px}
-#dropZone.over{border-color:#ff9eb5;background:#241f31;color:#ff9eb5}
-#dropZone .big{font-size:52px}
-#pickRow{display:flex;gap:10px;justify-content:center}
-#pickRow .btn{margin-top:0}
+.hint{font-size:12px;color:#9b8dae;background:#221e2e;border:1px solid #322c40;border-radius:10px;padding:10px 14px;line-height:1.7;margin-bottom:10px}
+.dropZone{border:3px dashed #453d55;border-radius:18px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#8d7a99;font-size:14px;transition:.2s;min-height:140px;padding:14px}
+.dropZone.over{border-color:#ff9eb5;background:#241f31;color:#ff9eb5}
+.dropZone .big{font-size:40px}
+.bigChoice{display:block;width:100%;text-align:left;padding:18px 20px;margin-bottom:12px;border:1px solid #322c40;border-radius:14px;background:#241f31;color:#e8e2ee;cursor:pointer;font-size:15px}
+.bigChoice:hover{border-color:#ff9eb5;background:#2a2536}
+.bigChoice small{display:block;color:#9b8dae;font-size:12px;margin-top:4px}
+.stepHead{font-size:13px;color:#ff9eb5;font-weight:bold;margin:16px 0 6px}
+.repoItem{padding:12px 16px;border:1px solid #322c40;border-radius:12px;margin-bottom:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.repoItem:hover{background:#2a2536;border-color:#453d55}
+.repoItem b{color:#ffd3a3}
+.repoItem span{color:#776b85;font-size:11px;margin-left:auto}
+.grpHead{font-size:12px;color:#8fd8a0;margin:14px 0 8px;font-weight:bold}
+.grpHead.un{color:#e0c890}
+.linkRow{display:flex;gap:8px;align-items:center}
+.linkRow input{flex:1}
+.linkRow .btn{margin:0}
+.chk{font-size:13px;color:#c9bfd6;display:block;margin:6px 0;cursor:pointer}
+/* 作業台 */
+.wkHead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.wkHead b{font-size:17px;color:#ffd3a3}
+.wkHead a{color:#8fc7ff;font-size:13px;text-decoration:none;background:#241f31;padding:6px 12px;border-radius:8px;border:1px solid #322c40}
+.wkHead a:hover{border-color:#453d55}
+.wkLog{background:#12101a;border:1px solid #322c40;border-radius:12px;padding:12px;font-family:Consolas,monospace;font-size:12.5px;line-height:1.9;max-height:220px;overflow-y:auto;display:none;margin-top:10px}
+.wkLog.show{display:block}
+.lok{color:#8fd8a0}.lng{color:#ff9d9d}.lin{color:#9b8dae}
+.wkLog a{color:#8fc7ff}
+.histLine{font-size:12.5px;color:#9b8dae;padding:4px 0;border-bottom:1px dashed #2a2536}
 #wsBar{display:none;align-items:center;gap:10px;padding:10px 18px;background:#241f31;border-top:1px solid #322c40;font-size:13px;flex-wrap:wrap}
 #wsBar.show{display:flex}
 #wsName{font-weight:bold;color:#ffd3a3}
-#wsCount{color:#9b8dae;font-size:12px}
 #wsType{padding:3px 12px;border-radius:10px;font-size:11px;background:#2c3a4a;color:#8fc7ff;font-weight:bold}
-#wsLink{display:none;padding:3px 12px;border-radius:10px;font-size:11px;background:#3a2a20;color:#ffc98f;font-weight:bold}
 #wsBar .btn{margin:0;padding:8px 16px;font-size:13px}
 #treeModal,#inspectModal{position:fixed;inset:0;background:rgba(10,7,14,.75);display:none;align-items:center;justify-content:center;z-index:60}
 #treeModal.show,#inspectModal.show{display:flex}
 .modalBox{background:#211d2b;border:1px solid #453d55;border-radius:16px;width:min(920px,95vw);height:min(640px,90vh);display:flex;flex-direction:column;overflow:hidden}
 .modalHead{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid #322c40}
 .modalHead b{color:#ff9eb5}
-.modalHead .btn{margin:0;padding:7px 16px;font-size:12px}
 .modalHead .spacer{flex:1}
 #treeBody{flex:1;display:flex;overflow:hidden}
 #treeList{width:290px;overflow-y:auto;border-right:1px solid #322c40;padding:8px 4px}
@@ -78,11 +97,10 @@ textarea:focus{border-color:#ff9eb5}
 .tdir.closed .arrow{transform:rotate(-90deg)}
 #viewWrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
 #treeView{flex:1;overflow:auto;padding:14px;font-family:Consolas,monospace;font-size:12.5px;color:#cfc5dd;white-space:pre;background:#12101a}
-#editArea{flex:1;display:none;border-radius:0;border:none;background:#12101a}
+#editArea{flex:1;display:none;border-radius:0;border:none}
 #editFoot{display:none;gap:10px;padding:10px 14px;background:#1b1824;border-top:1px solid #322c40}
 #editFoot .btn{margin:0}
-.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;margin-left:8px}
-.badge.bin{background:#3a3020;color:#ffd3a3}
+.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;margin-left:8px;background:#3a3020;color:#ffd3a3}
 #inspectBody{flex:1;overflow-y:auto;padding:18px}
 .rep{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:10px;line-height:1.8}
 .rep b{display:block;margin-bottom:2px}
@@ -90,210 +108,271 @@ textarea:focus{border-color:#ff9eb5}
 .rep.ok{background:#20301f;color:#a7d8a0}
 .rep.warn{background:#332b1c;color:#e0c890}
 .rep.fix{background:#2a2338;color:#c9b3e8}
-#deployPane.on{display:flex;flex-direction:column;gap:14px;padding:18px;max-width:760px;margin:0 auto;width:100%}
-.dcard{background:#211d2b;border:1px solid #322c40;border-radius:14px;padding:18px}
-.dcard h3{font-size:14px;color:#ff9eb5;margin-bottom:10px}
+.advNav{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.advNav .btn{margin:0}
+.advNav .btn.cur{background:#2e2940;color:#ff9eb5;font-weight:bold}
+.sub{display:none}
+.sub.on{display:block}
+#advPaste.on{display:flex;flex-direction:column;gap:10px}
+#advPaste textarea{min-height:180px}
 #dSummary{font-size:13px;line-height:2;color:#c9bfd6}
 #dSummary b{color:#ffd3a3}
 #repoRow{display:flex;gap:10px;align-items:center}
 #repoRow input{flex:1}
 #repoRow .btn{margin:0;white-space:nowrap}
-#deployLog,#commitLog{background:#12101a;border:1px solid #322c40;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:12.5px;line-height:1.9;max-height:280px;overflow-y:auto;display:none}
-#deployLog.show,#commitLog.show{display:block;margin-top:10px}
-.lok{color:#8fd8a0}.lng{color:#ff9d9d}.lin{color:#9b8dae}
-#deployLog a,#commitLog a{color:#8fc7ff}
+#deployLog{background:#12101a;border:1px solid #322c40;border-radius:12px;padding:14px;font-family:Consolas,monospace;font-size:12.5px;line-height:1.9;max-height:280px;overflow-y:auto;display:none;margin-top:10px}
+#deployLog.show{display:block}
+#deployLog a{color:#8fc7ff}
 #progWrap{display:none;height:10px;background:#2a2536;border-radius:5px;overflow:hidden;margin-top:8px}
 #progWrap.show{display:block}
 #progBar{height:100%;width:0%;background:linear-gradient(90deg,#ff9eb5,#e0709a);transition:width .2s}
-#doneCard{display:none;background:linear-gradient(135deg,#2a2338,#241f31);border:2px solid #ff9eb5;border-radius:16px;padding:22px;text-align:center}
+#doneCard{display:none;background:linear-gradient(135deg,#2a2338,#241f31);border:2px solid #ff9eb5;border-radius:16px;padding:22px;text-align:center;margin-top:14px}
 #doneCard.show{display:block}
 #doneCard h3{color:#ff9eb5;font-size:18px;margin-bottom:10px}
 #liveUrl{font-size:15px;font-family:Consolas,monospace;background:#12101a;padding:12px 18px;border-radius:10px;margin:10px 0;word-break:break-all}
 #liveUrl a{color:#8fc7ff;text-decoration:none}
 #doneCard .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-#doneCard .btn{margin-top:6px}
-#qr{margin:12px auto 0;display:none;background:#fff;padding:8px;border-radius:10px;width:fit-content}
-.histItem{padding:14px 16px;border:1px solid #322c40;border-radius:12px;margin-bottom:10px;font-size:13px;line-height:2}
-.histItem b{color:#ffd3a3}
-.histItem .date{color:#776b85;font-size:11px;margin-left:8px}
-.histItem a{color:#8fc7ff;margin-right:14px;text-decoration:none}
-.repoItem{padding:12px 16px;border:1px solid #322c40;border-radius:12px;margin-bottom:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px}
-.repoItem:hover{background:#2a2536;border-color:#453d55}
-.repoItem b{color:#ffd3a3}
-.repoItem span{color:#776b85;font-size:11px;margin-left:auto}
-#dirtyList{font-size:12.5px;font-family:Consolas,monospace;line-height:2;color:#ffc98f;background:#1b1824;border-radius:10px;padding:10px 14px;margin-bottom:6px}
-#repoSearch{margin-bottom:10px}
+.projItem{padding:14px 16px;border:1px solid #322c40;border-radius:12px;margin-bottom:10px;font-size:13px;line-height:2.2}
+.projItem b{color:#ffd3a3;font-size:14px}
+.projItem a{color:#8fc7ff;margin-right:12px;text-decoration:none}
+.projItem .btn{margin:0 8px 0 0}
 </style>
 </head>
 <body>
 <header>
-  <span class="logo">🍰 ShortCake</span>
-  <span class="sub">AIの回答 → GitHub Pages 最短ルート</span>
+  <span class="logo">🍰 ShortCake</span><span class="sub">v2 — AIと作って、直して、公開する</span>
   <div id="userBox">
-    <span id="connState">未接続</span>
-    <img id="avatar" alt="">
-    <span id="uname"></span>
+    <span id="connState">未接続</span><img id="avatar" alt=""><span id="uname"></span>
   </div>
 </header>
 
 <div id="tabs">
-  <button class="tab" data-p="pastePane" id="tabPaste" disabled>📋 貼り付け</button>
-  <button class="tab" data-p="folderPane" id="tabFolder" disabled>📁 フォルダ</button>
-  <button class="tab" data-p="repoPane" id="tabRepo" disabled>📂 リポジトリ</button>
-  <button class="tab" data-p="deployPane" id="tabDeploy" disabled>🚀 デプロイ</button>
-  <button class="tab" data-p="histPane">📚 履歴</button>
+  <button class="tab" data-p="guidePane" id="tabGuide" disabled>🧭 はじめる</button>
+  <span id="workTabs" style="display:contents"></span>
+  <button class="tab" data-p="listPane" id="tabList" disabled>📚 一覧</button>
+  <button class="tab" data-p="advPane" id="tabAdv" disabled>🛠 上級者</button>
   <button class="tab on" data-p="setupPane">⚙️ 接続</button>
 </div>
 
-<div class="pane" id="pastePane">
-  <div class="hint">💡 AIの回答を丸ごと貼ってください。📂リポジトリ読み込み中ならPATCH/FILEが直接適用されコミット待ちになります。</div>
-  <textarea id="ta" placeholder="ここにAIの回答をペースト..."></textarea>
-  <button class="btn pink" onclick="importPaste()">🍰 取り込む(自動判別)</button>
+<!-- ================= 🧭 はじめる ================= -->
+<div class="pane" id="guidePane">
+  <div class="card" id="gHome">
+    <h2>🧭 なにをする?</h2>
+    <button class="bigChoice" onclick="startFlow('new')">✨ 新しく作る(AIと)<small>アイデアを伝えてAIに作らせ、そのまま公開</small></button>
+    <button class="bigChoice" onclick="startFlow('fix')">🔧 あるものを直す<small>公開済みプロジェクトをAIと一緒に修正</small></button>
+    <button class="bigChoice" onclick="startFlow('files')">📦 手元のファイルから作る<small>フォルダやZIPをそのまま公開</small></button>
+  </div>
+
+  <!-- ✨ 新しく作る -->
+  <div class="card" id="gNew" style="display:none">
+    <h2>✨ 新しく作る <button class="btn sm" style="float:right" onclick="gBack()">← 戻る</button></h2>
+    <div class="stepHead">Step1: 何を作りたい?</div>
+    <textarea id="newDesc" rows="3" placeholder="例: 25分作業+5分休憩を繰り返すポモドーロタイマー。残り時間を大きく表示して、終わったら音を鳴らす"></textarea>
+    <button class="btn pink" onclick="copyNewPrompt()">🤖 AIへの依頼文をコピー(書式説明を自動同梱)</button>
+    <div class="stepHead">Step2: AIチャットに貼る → 会話リンクを保存</div>
+    <div class="hint">📎 <b>会話リンクとは?</b> 今AIとやりとりしているチャット画面のURL(ブラウザのアドレス欄)です。保存しておくと——<br>
+    ①後で「どの会話で作ったっけ?」と迷子にならない ②ShortCakeが「この会話には書式説明済み」と記憶し、<b>次回から依頼文が短くなります</b></div>
+    <div class="linkRow"><input type="text" id="newLink" placeholder="https://chatgpt.com/c/... など"><button class="btn sm" onclick="saveFlowLink('newLink')">保存</button></div>
+    <div class="stepHead">Step3: AIの回答を丸ごと貼る</div>
+    <textarea id="newPaste" rows="6" placeholder="AIの回答(説明文ごと全部)をここへ"></textarea>
+    <button class="btn pink" onclick="flowNewImport()">🍰 取り込んで公開へ進む</button>
+  </div>
+
+  <!-- 🔧 直す -->
+  <div class="card" id="gFix" style="display:none">
+    <h2>🔧 あるものを直す <button class="btn sm" style="float:right" onclick="gBack()">← 戻る</button></h2>
+    <input type="text" id="fixSearch" placeholder="🔍 名前で検索(多少間違ってもOK)" oninput="renderFixList()">
+    <div id="fixList" style="margin-top:10px">読み込み中...</div>
+  </div>
+
+  <!-- 🔧 お引き合わせ(未リンク初回) -->
+  <div class="card" id="gHandover" style="display:none">
+    <h2>🤝 AIとお引き合わせ: <span id="hoName"></span> <button class="btn sm" style="float:right" onclick="startFlow('fix')">← 戻る</button></h2>
+    <p>このプロジェクトはまだAIの会話と繋がっていません。<b>初回だけ</b>、AIに引き継ぎ資料を渡します(次回からこの工程は消えます)。</p>
+    <div class="stepHead">Step1: 引き継ぎ資料をコピーしてAIチャットに貼る</div>
+    <label class="chk"><input type="checkbox" id="hoContract" checked> 書式説明(契約書)を含める ※このAIと初めて話すならON</label>
+    <label class="chk"><input type="checkbox" id="hoCode" checked> ファイル構造+全コードを含める ※AIが中身を知らないならON</label>
+    <button class="btn pink" onclick="copyHandover()">🤖 引き継ぎ文をコピー</button>
+    <div class="stepHead">Step2: 会話リンクを保存</div>
+    <div class="hint">📎 AIチャット画面のURL(アドレス欄)を貼ってください。これでShortCakeが「このAIは把握済み」と記憶し、以後の修正依頼が最小限になります。</div>
+    <div class="linkRow"><input type="text" id="hoLink" placeholder="https://..."><button class="btn sm" onclick="finishHandover()">保存して作業開始 →</button></div>
+  </div>
+
+  <!-- 📦 ファイルから -->
+  <div class="card" id="gFiles" style="display:none">
+    <h2>📦 手元のファイルから作る <button class="btn sm" style="float:right" onclick="gBack()">← 戻る</button></h2>
+    <div class="dropZone" id="gDrop"><span class="big">📁</span><span>フォルダ or ZIP をここにドロップ</span></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn" onclick="document.getElementById('dirPicker').click()">📂 フォルダを選ぶ</button>
+      <button class="btn" onclick="document.getElementById('zipPicker').click()">🤐 ZIPを選ぶ</button>
+    </div>
+    <p style="margin-top:10px">読み込むと検品結果が出ます。そのまま「🚀公開へ」ボタンで公開できます。</p>
+    <div id="gFilesNext" style="display:none">
+      <button class="btn pink" onclick="advGoto('advDeploy');activate('advPane')">🚀 公開へ進む</button>
+    </div>
+  </div>
 </div>
 
-<div class="pane" id="folderPane">
-  <div class="hint">💡 フォルダ/ZIPをドロップorボタン選択。📂リポジトリ読み込み中なら差分だけ検出してコミット待ちにします。</div>
-  <div id="dropZone"><span class="big">📁</span><span>ここにフォルダ or ZIP をドロップ</span></div>
-  <div id="pickRow">
-    <button class="btn" onclick="document.getElementById('dirPicker').click()">📂 Finderからフォルダを選ぶ</button>
-    <button class="btn" onclick="document.getElementById('zipPicker').click()">🤐 ZIPファイルを選ぶ</button>
-  </div>
-  <input type="file" id="dirPicker" webkitdirectory hidden>
-  <input type="file" id="zipPicker" accept=".zip,application/zip,application/x-zip-compressed" hidden>
-</div>
+<!-- ================= 🔨 作業台(共有ペイン) ================= -->
+<div class="pane" id="workPane"><div class="card" style="max-width:780px" id="workInner"></div></div>
 
-<div class="pane" id="repoPane">
-  <div class="card" id="repoListCard">
-    <h2>📂 リポジトリを選んで読み込む</h2>
-    <input type="text" id="repoSearch" placeholder="🔍 リポジトリ名で検索(多少間違ってもOK)" oninput="renderRepoList()">
-    <div id="repoList"></div>
-    <button class="btn" onclick="loadRepoList()">🔄 一覧を更新</button>
-  </div>
-  <div class="card" id="repoLoadedCard" style="display:none">
-    <h2>🔗 <span id="lnkName"></span></h2>
-    <p id="lnkInfo"></p>
-    <button class="btn" onclick="openTree()">🔍 中身を見る / ✏️ 手動編集</button>
-    <button class="btn" onclick="exportForAI()">📤 AIに渡すテキストを生成(コピー)</button>
-    <button class="btn" onclick="unlinkRepo()">↩️ 一覧に戻る(リンク解除)</button>
-  </div>
-  <div class="card" id="commitCard" style="display:none">
-    <h2>💾 変更をコミット <span id="dirtyCount" style="font-size:13px;color:#ffc98f"></span></h2>
-    <div id="dirtyList"></div>
-    <input type="text" id="commitMsg" placeholder="コミットメッセージ(空欄なら「🍰 update via ShortCake」)">
-    <button class="btn pink" id="commitBtn" onclick="commitChanges()">💾 コミット&プッシュ</button>
-    <div id="commitLog"></div>
-  </div>
-</div>
+<!-- ================= 📚 一覧 ================= -->
+<div class="pane" id="listPane"><div class="card"><h2>📚 プロジェクト一覧</h2><div id="projList"></div></div></div>
 
-<div class="pane" id="deployPane">
-  <div class="dcard" id="dNoWs" style="display:none">
-    <h3>📭 プロジェクトが未読み込みです</h3>
-    <p style="font-size:13px;color:#c9bfd6">先に📋/📁/📂タブから読み込んでください。</p>
+<!-- ================= 🛠 上級者 ================= -->
+<div class="pane" id="advPane">
+  <div class="advNav">
+    <button class="btn sm cur" data-s="advPaste" onclick="advGoto('advPaste')">📋 貼り付け</button>
+    <button class="btn sm" data-s="advFolder" onclick="advGoto('advFolder')">📁 フォルダ</button>
+    <button class="btn sm" data-s="advRepo" onclick="advGoto('advRepo')">📂 リポジトリ</button>
+    <button class="btn sm" data-s="advDeploy" onclick="advGoto('advDeploy')">🚀 デプロイ</button>
   </div>
-  <div id="dReady" style="display:none">
-    <div class="dcard"><h3>📦 デプロイ内容の確認</h3><div id="dSummary"></div></div>
-    <div class="dcard">
-      <h3>🏷️ リポジトリ名</h3>
-      <div id="repoRow">
-        <input type="text" id="repoName" placeholder="my-project">
-        <button class="btn pink" id="deployBtn" onclick="deploy()">🚀 デプロイ!</button>
-      </div>
-      <p class="danger">⚠️ 公開リポジトリとして作成されます。🔑警告があれば必ず確認を!</p>
+  <div class="sub on" id="advPaste">
+    <div class="hint">💡 AIの回答を丸ごと貼る。リポジトリリンク中ならPATCH/FILEが直接適用されます。</div>
+    <textarea id="ta" placeholder="AIの回答をペースト..."></textarea>
+    <button class="btn pink" onclick="importPaste('ta')">🍰 取り込む(自動判別)</button>
+  </div>
+  <div class="sub" id="advFolder">
+    <div class="hint">💡 リンク中なら差分検出、でなければ新規読み込み。</div>
+    <div class="dropZone" id="advDrop" style="min-height:200px"><span class="big">📁</span><span>フォルダ or ZIP をドロップ</span></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn" onclick="document.getElementById('dirPicker').click()">📂 フォルダを選ぶ</button>
+      <button class="btn" onclick="document.getElementById('zipPicker').click()">🤐 ZIPを選ぶ</button>
+    </div>
+  </div>
+  <div class="sub" id="advRepo">
+    <div class="card" style="margin:0 0 14px">
+      <h2>📂 リポジトリを読み込む</h2>
+      <input type="text" id="repoSearch" placeholder="🔍 検索" oninput="renderRepoList()">
+      <div id="repoList" style="margin-top:10px"></div>
+      <button class="btn" onclick="loadRepoList(true)">🔄 一覧を更新</button>
+    </div>
+    <div class="card" style="margin:0" id="commitCard">
+      <h2>💾 変更をコミット <span id="dirtyCount" style="font-size:13px;color:#ffc98f"></span></h2>
+      <div id="dirtyList" style="font-size:12.5px;font-family:Consolas,monospace;line-height:2;color:#ffc98f"></div>
+      <input type="text" id="commitMsg" placeholder="コミットメッセージ(空欄OK)">
+      <button class="btn pink" onclick="commitChanges()">💾 コミット&プッシュ</button>
+      <div class="wkLog" id="commitLog"></div>
+    </div>
+  </div>
+  <div class="sub" id="advDeploy">
+    <div class="card" style="margin:0 0 14px"><h2>📦 デプロイ内容</h2><div id="dSummary">プロジェクト未読み込み</div></div>
+    <div class="card" style="margin:0">
+      <h2>🏷️ リポジトリ名</h2>
+      <div id="repoRow"><input type="text" id="repoName"><button class="btn pink" id="deployBtn" onclick="deploy()">🚀 デプロイ!</button></div>
+      <p class="danger">⚠️ 公開リポジトリになります。🔑警告があれば確認を!</p>
       <div id="progWrap"><div id="progBar"></div></div>
       <div id="deployLog"></div>
-    </div>
-    <div id="doneCard">
-      <h3>🎉 公開されました!</h3>
-      <div id="liveUrl"><a href="#" target="_blank" id="liveLink"></a></div>
-      <div class="row">
-        <button class="btn pink" onclick="window.open(document.getElementById('liveLink').href)">🌐 開く</button>
-        <button class="btn" onclick="copyUrl()">📋 URLコピー</button>
-        <button class="btn" onclick="toggleQR()">📱 QRコード</button>
+      <div id="doneCard">
+        <h3>🎉 公開されました!</h3>
+        <div id="liveUrl"><a href="#" target="_blank" id="liveLink"></a></div>
+        <div class="row">
+          <button class="btn pink" onclick="window.open(document.getElementById('liveLink').href)">🌐 開く</button>
+          <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('liveLink').href);toast('📋 コピー')">📋 URL</button>
+        </div>
       </div>
-      <div id="qr"><img id="qrImg" alt="QR"></div>
     </div>
   </div>
 </div>
 
-<div class="pane" id="histPane">
-  <div class="card"><h2>📚 デプロイ履歴</h2><div id="histList"></div></div>
-</div>
-
+<!-- ================= ⚙️ 接続 ================= -->
 <div class="pane on" id="setupPane">
   <div class="card">
     <h2>🔑 GitHubと接続する(初回のみ)</h2>
-    <div class="steps">
-      <ol>
-        <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank"><b>ここをクリック</b></a>してトークン作成ページへ</li>
-        <li><b>Token name</b>: <code>shortcake</code> / <b>Expiration</b>: <code>90 days</code></li>
-        <li><b>Repository access</b>: <code>All repositories</code></li>
-        <li><b>Repository permissions</b>で4つを<code>Read and write</code>に:
-        ✅<code>Administration</code> ✅<code>Contents</code> ✅<code>Pages</code> ✅<code>Workflows</code></li>
-        <li><b>Generate token</b>→コピーして下へ</li>
-      </ol>
-    </div>
-    <input type="password" id="tokenInput" placeholder="github_pat_XXXXXXXX...">
+    <div class="steps"><ol>
+      <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank"><b>ここをクリック</b></a>してトークン作成ページへ</li>
+      <li><b>Token name</b>: <code>shortcake</code> / <b>Expiration</b>: <code>90 days</code></li>
+      <li><b>Repository access</b>: <code>All repositories</code></li>
+      <li><b>Repository permissions</b>で4つを<code>Read and write</code>:
+      ✅<code>Administration</code> ✅<code>Contents</code> ✅<code>Pages</code> ✅<code>Workflows</code></li>
+      <li><b>Generate token</b> → コピーして下へ</li>
+    </ol></div>
+    <input type="password" id="tokenInput" placeholder="github_pat_...">
     <button class="btn pink" id="connectBtn" onclick="connect()">🤝 接続テスト</button>
     <div id="connResult"></div>
-    <p class="danger">🔒 トークンはこのブラウザにのみ保存。通信相手はgithub.comだけ。</p>
+    <p class="danger">🔒 トークンはこのブラウザにのみ保存。通信先はgithub.comだけ。</p>
   </div>
-  <div class="card" id="disconnectCard" style="display:none">
-    <h2>🔌 接続解除</h2>
-    <button class="btn" onclick="disconnect()">接続を解除する</button>
-  </div>
+  <div class="card" id="disconnectCard" style="display:none"><h2>🔌 接続解除</h2><button class="btn" onclick="disconnect()">解除する</button></div>
 </div>
 
 <div id="wsBar">
-  <span>📦</span><span id="wsName">-</span><span id="wsType">判定中...</span>
-  <span id="wsLink"></span><span id="wsCount"></span>
+  <span>📦</span><span id="wsName">-</span><span id="wsType"></span><span id="wsCount" style="color:#9b8dae;font-size:12px"></span>
   <button class="btn" onclick="openTree()">🔍 中身</button>
   <button class="btn" onclick="openInspect()">🕵️ 検品</button>
   <button class="btn" onclick="exportForAI()">📤 AIへ</button>
-  <button class="btn" id="wsCommitBtn" style="display:none" onclick="gotoCommit()">💾 コミットへ</button>
-  <button class="btn" onclick="clearWS()">🗑️</button>
 </div>
 
 <div id="treeModal"><div class="modalBox">
-  <div class="modalHead"><b>🔍 ファイル構造</b>
-    <span class="spacer"></span>
-    <button class="btn" id="editBtn" style="display:none" onclick="startEdit()">✏️ このファイルを編集</button>
-    <button class="btn" onclick="document.getElementById('treeModal').classList.remove('show');exitEdit()">閉じる</button></div>
-  <div id="treeBody">
-    <div id="treeList"></div>
-    <div id="viewWrap">
-      <div id="treeView">← ファイルを選択</div>
-      <textarea id="editArea"></textarea>
-      <div id="editFoot">
-        <button class="btn pink" onclick="saveEdit()">💾 保存(コミット待ちに追加)</button>
-        <button class="btn" onclick="exitEdit()">キャンセル</button>
-      </div>
-    </div>
-  </div>
+  <div class="modalHead"><b>🔍 ファイル構造</b><span class="spacer"></span>
+    <button class="btn sm" id="editBtn" style="display:none" onclick="startEdit()">✏️ 編集</button>
+    <button class="btn sm" onclick="document.getElementById('treeModal').classList.remove('show');exitEdit()">閉じる</button></div>
+  <div id="treeBody"><div id="treeList"></div>
+    <div id="viewWrap"><div id="treeView">← ファイルを選択</div><textarea id="editArea"></textarea>
+      <div id="editFoot"><button class="btn pink sm" onclick="saveEdit()">💾 保存</button><button class="btn sm" onclick="exitEdit()">キャンセル</button></div>
+    </div></div>
 </div></div>
-
 <div id="inspectModal"><div class="modalBox">
   <div class="modalHead"><b>🕵️ 検品レポート</b><span class="spacer"></span>
-    <button class="btn" onclick="document.getElementById('inspectModal').classList.remove('show')">閉じる</button></div>
+    <button class="btn sm" onclick="document.getElementById('inspectModal').classList.remove('show')">閉じる</button></div>
   <div id="inspectBody"></div>
 </div></div>
-
+<input type="file" id="dirPicker" webkitdirectory hidden>
+<input type="file" id="zipPicker" accept=".zip,application/zip,application/x-zip-compressed" hidden>
 <div id="toast"></div>
 
 <script>
-/* ================================================
-   🍰 ShortCake v1.3
-   新: リポジトリあいまい検索 / AIに渡すエクスポート /
-       バイナリ判定を除外方式に変更(tsx等の取りこぼし根絶) /
-       ZIP読み込みのエラー可視化
-   ================================================ */
-const LS_TOKEN='sc_token',LS_HIST='sc_history';
-let WS={name:null,files:{},type:null,report:[],extras:{},linked:null,dirty:new Set(),deleted:new Set()};
-let USER=null,REPOS=[];
+/* =====================================================
+   🍰 ShortCake v2.0 第1便
+   ===================================================== */
+const LS_TOKEN='sc_token',LS_PROJ='sc_projects';
+let USER=null,REPOS=[],WT={},WS=null,CUR_WORK=null,FLOW={};
 
+/* ---------- 契約書 ---------- */
+const CONTRACT=`これからコードを出力するときは、必ず以下の書式に従ってください。
+
+【共通ルール】
+- 説明は「#### MANIFEST」「#### FILE:」「#### PATCH:」「#### DELETE:」ブロックの外に自由に書いてよい(ツールはブロックだけを読む)
+- 「残りは同様に」「(略)」などの省略は絶対禁止
+
+【A. 新規プロジェクト】
+#### MANIFEST
+\`\`\`manifest
+PROJECT: プロジェクト名(英数字とハイフン)
+TYPE: static
+FILES:
+- index.html
+\`\`\`
+続けて各ファイルを全文:
+#### FILE: パス
+\`\`\`言語
+(全文)
+\`\`\`
+
+【B. 修正】全文を出し直さず、変更箇所ごとにPATCH形式:
+#### PATCH: 対象パス
+\`\`\`old
+(変更前コードを一字一句・インデントもそのままコピー)
+\`\`\`
+\`\`\`new
+(変更後)
+\`\`\`
+- oldは実在コードの完全コピー。記憶で書かず提示されたコードから写す
+- oldはファイル内で一意になる長さに(前後の行を含める)
+- 1修正=1PATCH。新規ファイルはFILE形式、全面書き直しもFILE形式でよい
+
+【C. 追加・削除】
+- コード追加もPATCH(oldに挿入位置周辺、newに周辺+新行)
+- コード削除もPATCH(newから該当行を除く。全部消えるならnew空)
+- ファイル削除は: #### DELETE: パス
+
+【パス】相対パスのみ。先頭 / や ../ 禁止。静的サイトの入口は必ずindex.html
+
+【補足】この会話であなた自身が出力したコードは「提示されたコード」とみなしoldに引用してよい。正確に思い出せない場合は推測せず「現在のファイル内容を貼ってください」とユーザーに求めること。`;
+
+/* ---------- GitHub API ---------- */
 async function gh(path,opt={}){
-  const token=localStorage.getItem(LS_TOKEN);
   const res=await fetch('https://api.github.com'+path,{...opt,headers:{
-    'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json',
+    'Authorization':'Bearer '+localStorage.getItem(LS_TOKEN),'Accept':'application/vnd.github+json',
     'X-GitHub-Api-Version':'2022-11-28',...(opt.headers||{})}});
   if(!res.ok)throw new Error(`GitHub API ${res.status}: ${(await res.text()).slice(0,300)}`);
   return res.status===204?null:res.json();
@@ -301,561 +380,654 @@ async function gh(path,opt={}){
 async function connect(){
   const t=document.getElementById('tokenInput').value.trim();
   const btn=document.getElementById('connectBtn'),out=document.getElementById('connResult');
-  if(!t){toast('😵 トークンを貼ってください');return;}
-  localStorage.setItem(LS_TOKEN,t);btn.disabled=true;btn.textContent='🤝 確認中...';
+  if(!t)return toast('😵 トークンを貼ってください');
+  localStorage.setItem(LS_TOKEN,t);btn.disabled=true;btn.textContent='確認中...';
   try{
-    const user=await gh('/user');await gh('/user/repos?per_page=1');
-    onConnected(user);out.className='ok';
-    out.innerHTML=`✅ 接続成功!こんにちは、<b>${user.login}</b> さん🍰`;
-  }catch(e){
-    localStorage.removeItem(LS_TOKEN);out.className='ng';
-    out.innerHTML=`❌ 接続失敗:<br><code style="font-size:11px">${e.message}</code>`;
-  }
+    const u=await gh('/user');await gh('/user/repos?per_page=1');
+    onConnected(u);out.className='ok';out.innerHTML=`✅ こんにちは、<b>${u.login}</b>さん🍰`;
+    activate('guidePane');
+  }catch(e){localStorage.removeItem(LS_TOKEN);out.className='ng';out.innerHTML=`❌ ${e.message}`;}
   btn.disabled=false;btn.textContent='🤝 接続テスト';
 }
-function onConnected(user){
-  USER=user.login;
+function onConnected(u){
+  USER=u.login;
   document.getElementById('connState').textContent='接続済み';
   document.getElementById('connState').className='ok';
-  document.getElementById('uname').textContent=user.login;
-  const av=document.getElementById('avatar');av.src=user.avatar_url;av.style.display='block';
+  document.getElementById('uname').textContent=u.login;
+  const av=document.getElementById('avatar');av.src=u.avatar_url;av.style.display='block';
   document.getElementById('disconnectCard').style.display='block';
-  ['tabPaste','tabFolder','tabRepo','tabDeploy'].forEach(id=>document.getElementById(id).disabled=false);
+  ['tabGuide','tabList','tabAdv'].forEach(id=>document.getElementById(id).disabled=false);
+  restoreWorkTabs();
 }
 function disconnect(){localStorage.removeItem(LS_TOKEN);location.reload();}
 (async()=>{if(localStorage.getItem(LS_TOKEN)){
-  try{onConnected(await gh('/user'));}
-  catch{localStorage.removeItem(LS_TOKEN);toast('⚠️ トークン無効。再設定を');}}})();
+  try{onConnected(await gh('/user'));activate('guidePane');}
+  catch{localStorage.removeItem(LS_TOKEN);toast('⚠️ トークン無効');}}})();
 
-/* ========== ユーティリティ ========== */
+/* ---------- プロジェクト記憶 ---------- */
+const loadProj=()=>JSON.parse(localStorage.getItem(LS_PROJ)||'{}');
+const saveProj=o=>localStorage.setItem(LS_PROJ,JSON.stringify(o));
+function getP(repo){const a=loadProj();return a[repo]||null;}
+function setP(repo,data){const a=loadProj();a[repo]={...(a[repo]||{links:[],hist:[],open:false}),...data};saveProj(a);return a[repo];}
+function activeLink(repo){const p=getP(repo);return p?(p.links||[]).find(l=>l.active):null;}
+function addLink(repo,url,sent){
+  const a=loadProj();const p=a[repo]||(a[repo]={links:[],hist:[],open:false});
+  (p.links||[]).forEach(l=>l.active=false);
+  p.links.push({url,at:Date.now(),active:true,sentContract:!!sent.c,sentStructure:!!sent.s});
+  saveProj(a);
+}
+function pushHist(repo,msg){const a=loadProj();const p=a[repo]||(a[repo]={links:[],hist:[],open:false});
+  p.hist.unshift({msg,at:Date.now()});p.hist=p.hist.slice(0,30);saveProj(a);}
+
+/* ---------- 共通 ---------- */
 const b64decode=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,'')),c=>c.charCodeAt(0)));
 const SKIP_RE=/(^|\/)(node_modules|\.git|\.DS_Store|dist|build|\.next|__pycache__|\.cache)(\/|$)/;
-/* ★方針転換: 「テキスト拡張子リスト」ではなく「バイナリ拡張子リスト」で判定。
-   リストにない拡張子(tsx含む未知の形式)はすべてテキストとして読む → 取りこぼし根絶 */
 const BIN_EXT=/\.(png|jpe?g|gif|webp|avif|ico|bmp|tiff?|woff2?|ttf|otf|eot|mp3|wav|ogg|m4a|mp4|webm|mov|avi|pdf|zip|gz|tar|rar|7z|jar|exe|dll|bin|dat|psd|sketch|fig)$/i;
 const isBin=p=>BIN_EXT.test(p);
-
+function newWS(name){return{name,files:{},type:null,report:[],extras:{},linked:null,dirty:new Set(),deleted:new Set()};}
 async function ensureFile(path,fobj){
   const f=fobj||WS.files[path];
   if(!f||!f.lazy)return f;
-  if(!WS.linked)throw new Error('lazyファイルなのにリポジトリ未リンク');
   const blob=await gh(`/repos/${USER}/${WS.linked.repo}/git/blobs/${f.sha}`);
-  if(f.bin)f.base64=blob.content.replace(/\n/g,'');
-  else f.text=b64decode(blob.content);
-  delete f.lazy;
-  return f;
+  if(f.bin)f.base64=blob.content.replace(/\n/g,'');else f.text=b64decode(blob.content);
+  delete f.lazy;return f;
 }
-function markDirty(p){if(WS.linked){WS.dirty.add(p);WS.deleted.delete(p);refreshLinkedUI();}}
-function markDeleted(p){if(WS.linked){WS.deleted.add(p);WS.dirty.delete(p);refreshLinkedUI();}}
+function markDirty(p){if(WS.linked){WS.dirty.add(p);WS.deleted.delete(p);}refreshWork();}
+function markDeleted(p){if(WS.linked){WS.deleted.add(p);WS.dirty.delete(p);}refreshWork();}
+function normalize(s){return s.replace(/\r\n?/g,'\n').split('\n').map(l=>l.replace(/\s+$/,'')).join('\n');}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3800);}
 
-/* ========== リポジトリ一覧+あいまい検索 ========== */
-async function loadRepoList(){
-  const el=document.getElementById('repoList');
-  el.innerHTML='読み込み中...';
-  try{
-    REPOS=await gh('/user/repos?sort=updated&per_page=100');
-    renderRepoList();
-  }catch(e){el.innerHTML=`❌ ${e.message}`;}
+/* ---------- タブ管理 ---------- */
+function activate(paneId){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  const tb=document.querySelector(`.tab[data-p="${paneId}"]`);
+  if(tb)tb.classList.add('on');
+  document.getElementById(paneId).classList.add('on');
+  if(paneId!=='workPane')CUR_WORK=null;
+  document.getElementById('wsBar').classList.toggle('show',paneId==='advPane'&&!!(WS&&WS.name&&!CUR_WORK));
+  if(paneId==='listPane')renderProjList();
 }
-/* あいまい一致: 正規化部分一致 or 文字順一致(subsequence) */
-function fuzzyMatch(name,q){
-  const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
-  name=norm(name);q=norm(q);
-  if(!q)return true;
-  if(name.includes(q))return true;
-  let i=0;
-  for(const c of name){if(c===q[i])i++;if(i===q.length)return true;}
-  return false;
+document.querySelectorAll('.tab[data-p]').forEach(t=>t.onclick=()=>{if(!t.disabled)activate(t.dataset.p);});
+function advGoto(id){
+  document.querySelectorAll('.advNav .btn').forEach(b=>b.classList.toggle('cur',b.dataset.s===id));
+  document.querySelectorAll('#advPane .sub').forEach(s=>s.classList.toggle('on',s.id===id));
+  if(id==='advRepo'&&!REPOS.length)loadRepoList();
+  if(id==='advDeploy')renderDeploy();
 }
-function renderRepoList(){
-  const el=document.getElementById('repoList');
-  const q=document.getElementById('repoSearch').value;
-  el.innerHTML='';
-  const hits=REPOS.filter(r=>fuzzyMatch(r.name,q));
-  if(!hits.length){el.innerHTML='<p style="color:#776b85;font-size:13px">該当なし。検索語を短くしてみてください</p>';return;}
-  hits.forEach(r=>{
-    const d=document.createElement('div');
-    d.className='repoItem';
-    d.innerHTML=`📦 <b>${r.name}</b>${r.private?'🔒':''}<span>${new Date(r.pushed_at).toLocaleDateString()}</span>`;
-    d.onclick=()=>loadRepo(r.name);
-    el.appendChild(d);
-  });
-}
-async function loadRepo(repo){
-  toast(`📂 「${repo}」を読み込み中...`);
-  try{
-    const info=await gh(`/repos/${USER}/${repo}`);
-    const branch=info.default_branch;
-    const ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/${branch}`);
-    const headCommit=await gh(`/repos/${USER}/${repo}/git/commits/${ref.object.sha}`);
-    const tree=await gh(`/repos/${USER}/${repo}/git/trees/${headCommit.tree.sha}?recursive=1`);
-    const files={};
-    tree.tree.forEach(t=>{
-      if(t.type!=='blob'||SKIP_RE.test(t.path))return;
-      files[t.path]={sha:t.sha,lazy:true,bin:isBin(t.path)};
-    });
-    WS={name:repo,files,type:null,report:[],extras:{},
-      linked:{repo,branch,headSha:ref.object.sha},dirty:new Set(),deleted:new Set()};
-    for(const p of ['package.json','vite.config.js','vite.config.ts','vite.config.mjs'])
-      if(WS.files[p])await ensureFile(p);
-    inspectProject();
-    refreshWSBar();
-    toast(tree.truncated?'⚠️ 巨大なため一部省略されました':`🔗 「${repo}」をリンク(${Object.keys(files).length}ファイル)`);
-  }catch(e){toast('😵 読み込み失敗: '+e.message.slice(0,80));}
-}
-function unlinkRepo(){clearWS();}
-function gotoCommit(){
-  document.querySelectorAll('.tab,.pane').forEach(e=>e.classList.remove('on'));
-  document.getElementById('tabRepo').classList.add('on');
-  document.getElementById('repoPane').classList.add('on');
-}
-function refreshLinkedUI(){
-  const n=WS.dirty.size+WS.deleted.size;
-  const lk=document.getElementById('wsLink'),cb=document.getElementById('wsCommitBtn');
-  if(WS.linked){
-    lk.style.display='inline-block';
-    lk.textContent=`🔗 ${WS.linked.repo}@${WS.linked.branch}${n?` ● 未コミット${n}件`:''}`;
-    cb.style.display=n?'inline-block':'none';
-  }else{lk.style.display='none';cb.style.display='none';}
-  document.getElementById('repoListCard').style.display=WS.linked?'none':'block';
-  document.getElementById('repoLoadedCard').style.display=WS.linked?'block':'none';
-  document.getElementById('commitCard').style.display=(WS.linked&&n)?'block':'none';
-  if(WS.linked){
-    document.getElementById('lnkName').textContent=`${WS.linked.repo} (${WS.linked.branch})`;
-    document.getElementById('lnkInfo').textContent=`${Object.keys(WS.files).length}ファイル読み込み済み`;
-    document.getElementById('dirtyCount').textContent=n?`(${n}件)`:'';
-    document.getElementById('dirtyList').innerHTML=
-      [...WS.dirty].map(p=>`✏️ ${p}`).concat([...WS.deleted].map(p=>`🗑️ ${p}`)).join('<br>')||'';
+
+/* ---------- 作業タブ ---------- */
+function openWorkTab(repo,andActivate=true){
+  setP(repo,{open:true});
+  if(!document.getElementById('wt_'+repo)){
+    const b=document.createElement('button');
+    b.className='tab';b.id='wt_'+repo;
+    b.innerHTML=`🔨 ${repo} <span class="x" onclick="event.stopPropagation();closeWorkTab('${repo}')">×</span>`;
+    b.onclick=()=>showWork(repo);
+    document.getElementById('workTabs').appendChild(b);
   }
+  if(andActivate)showWork(repo);
+}
+function closeWorkTab(repo){
+  setP(repo,{open:false});
+  const b=document.getElementById('wt_'+repo);if(b)b.remove();
+  if(CUR_WORK===repo)activate('guidePane');
+}
+function restoreWorkTabs(){
+  Object.entries(loadProj()).forEach(([r,p])=>{if(p.open)openWorkTab(r,false);});
+}
+async function showWork(repo){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('wt_'+repo).classList.add('on');
+  document.getElementById('workPane').classList.add('on');
+  document.getElementById('wsBar').classList.remove('show');
+  CUR_WORK=repo;
+  if(!WT[repo]){
+    document.getElementById('workInner').innerHTML='<p>☁️ 読み込み中...</p>';
+    try{await loadRepo(repo,false);}catch(e){
+      document.getElementById('workInner').innerHTML=`<p>❌ ${e.message}</p>`;return;}
+  }
+  WS=WT[repo];
+  renderWork();
+}
+function refreshWork(){if(CUR_WORK)renderWorkStatus();}
+function renderWork(){
+  const repo=CUR_WORK,p=getP(repo)||{links:[],hist:[]};
+  const lk=activeLink(repo);
+  const url=`https://${USER}.github.io/${repo}/`;
+  document.getElementById('workInner').innerHTML=`
+  <div class="wkHead"><b>🔨 ${repo}</b>
+    ${lk?`<a href="${lk.url}" target="_blank">💬 会話を開く</a>`:`<a href="#" onclick="promptLink('${repo}');return false">📎 会話リンク未設定(設定する)</a>`}
+    <button class="btn sm" onclick="promptLink('${repo}',true)">🔄 乗り換え</button>
+    <a href="${url}" target="_blank">🌐 サイト</a>
+    <a href="https://github.com/${USER}/${repo}" target="_blank">📂 GitHub</a>
+  </div>
+  <div class="stepHead">✏️ AIに直してもらう</div>
+  <input type="text" id="wkInst" placeholder="どう直す? 例: タイマー終了時に音を鳴らして">
+  <button class="btn pink" onclick="copyWorkPrompt()">🤖 依頼文コピー(必要なものだけ自動同梱)</button>
+  <button class="btn sm" onclick="copyFullResend()">🆘 フル再送(AIが書式を忘れた時)</button>
+  <div class="stepHead">📥 AIの回答を貼る</div>
+  <textarea id="wkPaste" rows="6" placeholder="回答を丸ごとここへ"></textarea>
+  <button class="btn pink" onclick="applyAndCommit()">🍰 適用して反映(コミット→公開まで自動)</button>
+  <div class="wkLog" id="wkLog"></div>
+  <div class="stepHead">📁 ファイルで更新 / その他</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn sm" onclick="document.getElementById('dirPicker').click()">📂 フォルダで差分更新</button>
+    <button class="btn sm" onclick="document.getElementById('zipPicker').click()">🤐 ZIPで差分更新</button>
+    <button class="btn sm" onclick="openTree()">🔍 中身を見る/手動編集</button>
+    <button class="btn sm" onclick="openInspect()">🕵️ 検品</button>
+    <button class="btn sm" id="wkCommitBtn" onclick="workManualCommit()">💾 未コミット反映</button>
+  </div>
+  <div class="stepHead">🕘 このプロジェクトの履歴</div>
+  <div id="wkHist">${(p.hist||[]).map(h=>`<div class="histLine">✏️ ${h.msg} <span style="color:#665a75">(${new Date(h.at).toLocaleString()})</span></div>`).join('')||'<div class="histLine">まだ履歴なし</div>'}</div>`;
+  renderWorkStatus();
+}
+function renderWorkStatus(){
+  const btn=document.getElementById('wkCommitBtn');
+  if(!btn||!WS)return;
+  const n=WS.dirty.size+WS.deleted.size;
+  btn.textContent=n?`💾 未コミット${n}件を反映`:'💾 未コミットなし';
+  btn.style.opacity=n?'1':'0.5';
+  const tb=document.getElementById('wt_'+CUR_WORK);
+  if(tb)tb.firstChild.textContent=`🔨 ${CUR_WORK}${n?' ●':''} `;
+}
+function promptLink(repo,isSwitch=false){
+  const url=prompt(isSwitch
+    ?'🔄 新しい会話のURLを貼ってください。\n(保存後、最初の依頼文に契約書と最新コードが自動同梱され、簡単に引き継げます)'
+    :'📎 AIとの会話URL(アドレス欄)を貼ってください:');
+  if(!url)return;
+  addLink(repo,url.trim(),{c:false,s:false});
+  toast(isSwitch?'🔄 乗り換え完了!次の依頼文に引き継ぎ資料を自動同梱します':'📎 リンク保存!');
+  renderWork();
 }
 
-/* ========== 📤 AIに渡すエクスポート ========== */
-async function exportForAI(){
-  if(!WS.name)return toast('😵 プロジェクトが未読み込みです');
-  toast('📤 テキスト生成中...(ファイル取得あり)');
+/* ---------- 依頼文ビルダー ---------- */
+async function buildExportText(){
   const paths=Object.keys(WS.files).sort();
-  /* ツリー図 */
   let treeText='';
   const root={dirs:{},files:[]};
-  paths.forEach(p=>{
-    const parts=p.split('/');let node=root;
-    parts.slice(0,-1).forEach(d=>{node=node.dirs[d]=node.dirs[d]||{dirs:{},files:[]};});
-    node.files.push(parts.at(-1));
-  });
-  const drawTree=(node,indent)=>{
-    Object.keys(node.dirs).sort().forEach(d=>{
-      treeText+=`${indent}📁 ${d}/\n`;drawTree(node.dirs[d],indent+'  ');});
-    node.files.sort().forEach(f=>treeText+=`${indent}📄 ${f}\n`);
-  };
-  drawTree(root,'');
-  /* 本文 */
-  let out=`以下は現在のプロジェクト「${WS.name}」の全ファイルです。\n`;
-  out+=`これを把握した上で、修正は必ずPATCH形式(oldブロックはこの内容から一字一句コピー)、新規ファイルはFILE形式、削除はDELETE形式で出力してください。\n\n`;
-  out+=`【ファイル構造】\n${treeText}\n`;
-  let skipped=[];
+  paths.forEach(p=>{const parts=p.split('/');let n=root;
+    parts.slice(0,-1).forEach(d=>{n=n.dirs[d]=n.dirs[d]||{dirs:{},files:[]};});
+    n.files.push(parts.at(-1));});
+  (function draw(n,ind){Object.keys(n.dirs).sort().forEach(d=>{treeText+=`${ind}📁 ${d}/\n`;draw(n.dirs[d],ind+'  ');});
+    n.files.sort().forEach(f=>treeText+=`${ind}📄 ${f}\n`);})(root,'');
+  let out=`【現在のプロジェクト「${WS.name}」の全ファイル】\n${treeText}\n`;
   for(const p of paths){
-    const f=WS.files[p];
-    if(f.bin){skipped.push(p);continue;}
-    try{await ensureFile(p);}catch{skipped.push(p+'(取得失敗)');continue;}
+    const f=WS.files[p];if(f.bin)continue;
+    try{await ensureFile(p);}catch{continue;}
     out+=`#### FILE: ${p}\n\`\`\`\n${f.text}\n\`\`\`\n\n`;
   }
-  if(skipped.length)out+=`【省略したバイナリ等】\n${skipped.join('\n')}\n`;
-  const kb=Math.round(out.length/1024);
-  try{
-    await navigator.clipboard.writeText(out);
-    toast(`📤 コピー完了!(約${kb}KB / ${paths.length}ファイル)→ AIチャットに貼ってください`);
-    if(kb>300)setTimeout(()=>toast('⚠️ サイズ大。AIのコンテキスト上限に注意(不要フォルダの除外を検討)'),4000);
-  }catch{
-    /* クリップボード失敗時はダウンロード */
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
-    a.download=WS.name+'_for_ai.txt';a.click();
-    toast('📄 コピー不可のためテキストファイルでダウンロードしました');
-  }
+  return out;
+}
+async function copyWorkPrompt(){
+  const inst=document.getElementById('wkInst').value.trim();
+  if(!inst)return toast('😵 修正内容を書いてください');
+  const lk=activeLink(CUR_WORK);
+  let parts=[],added=[];
+  if(!lk||!lk.sentContract){parts.push(CONTRACT);added.push('契約書');}
+  if(!lk||!lk.sentStructure){toast('📤 コード収集中...');parts.push(await buildExportText());added.push('全コード');}
+  parts.push(`【修正依頼】\n${inst}\n\n変更は必ずPATCH形式(oldは現行コードの完全コピー)で出力してください。新規ファイルはFILE形式で。`);
+  await navigator.clipboard.writeText(parts.join('\n\n---\n\n'));
+  if(lk){const a=loadProj();const l=a[CUR_WORK].links.find(x=>x.active);l.sentContract=true;l.sentStructure=true;saveProj(a);}
+  toast(`🤖 コピー完了!${added.length?`(${added.join('+')}を同梱)`:'(依頼文のみ・最小構成)'} → AIに貼ってください`);
+}
+async function copyFullResend(){
+  toast('📤 フル資料を収集中...');
+  const txt=CONTRACT+'\n\n---\n\n'+await buildExportText()+'\n上記を把握したら「把握しました」と返事してください。';
+  await navigator.clipboard.writeText(txt);
+  const lk=activeLink(CUR_WORK);
+  if(lk){const a=loadProj();const l=a[CUR_WORK].links.find(x=>x.active);l.sentContract=true;l.sentStructure=true;saveProj(a);}
+  toast('🆘 フル再送分をコピーしました。AIに貼ってください');
 }
 
-/* ========== コミット+見届け ========== */
-async function watchPagesAfterCommit(repo,sha,clog){
-  clog('🏭 サイトの自動更新を見届け中...(数十秒〜数分)');
-  const url=`https://${USER}.github.io/${repo}/`;
-  let run=null;
-  for(let i=0;i<8;i++){
-    await new Promise(w=>setTimeout(w,5000));
-    try{
-      const runs=await gh(`/repos/${USER}/${repo}/actions/runs?per_page=5`);
-      run=runs.workflow_runs.find(x=>x.head_sha===sha);
-      if(run)break;
-    }catch{}
-  }
-  if(!run){
-    clog('⚠️ 自動ビルドが起動しません。deploy.ymlが無い可能性があります','lng');
-    clog('💡 🚀タブから<b>同名で一度デプロイ</b>すると以後コミットだけで自動更新されます','lin');
-    return;
-  }
-  clog(`🔍 ビルド起動を確認(<a href="${run.html_url}" target="_blank">進行状況</a>)`);
-  for(let i=0;i<60;i++){
-    if(run.status==='completed')break;
-    await new Promise(w=>setTimeout(w,5000));
-    try{run=await gh(`/repos/${USER}/${repo}/actions/runs/${run.id}`);}catch{}
-    if(i%6===5)clog(`　...まだ${run.status}です`);
-  }
-  if(run.conclusion==='success'){
-    clog('🎉 サイト更新完了!','lok');
-    clog(`🌐 <a href="${url}" target="_blank">${url}</a>`,'lok');
-    clog('💡 変わってなければ ⌘+Shift+R(キャッシュ更新)','lin');
-    toast('🎉 サイトが更新されました!');
-  }else if(run.status!=='completed'){
-    clog('⏳ まだビルド中。上のリンクから確認してください','lin');
-  }else{
-    clog(`❌ ビルド失敗(${run.conclusion})`,'lng');
-    clog(`🔍 <a href="${run.html_url}" target="_blank">ログ</a>の赤い部分をAIに(いつものやつ)`,'lin');
-  }
+/* ---------- 作業台: 適用→コミット→見届け ---------- */
+async function applyAndCommit(){
+  const txt=document.getElementById('wkPaste').value;
+  if(!txt.trim())return toast('😵 回答を貼ってください');
+  const ok=await applyText(txt);
+  if(!ok)return;
+  const n=WS.dirty.size+WS.deleted.size;
+  if(!n)return toast('⚠️ 適用できた変更がありません(PATCH不一致の可能性)');
+  const inst=document.getElementById('wkInst').value.trim();
+  const msg=inst||'🍰 update via ShortCake';
+  document.getElementById('wkPaste').value='';
+  await commitCore(msg,document.getElementById('wkLog'));
 }
-async function commitChanges(){
-  if(!WS.linked)return;
-  const paths=[...WS.dirty],dels=[...WS.deleted];
-  if(!paths.length&&!dels.length)return toast('変更がありません');
-  const btn=document.getElementById('commitBtn');
-  const log=document.getElementById('commitLog');
-  const clog=(m,c='lin')=>{log.classList.add('show');log.innerHTML+=`<div class="${c}">${m}</div>`;log.scrollTop=log.scrollHeight;};
-  btn.disabled=true;btn.textContent='💾 実行中...';log.innerHTML='';
-  const msg=document.getElementById('commitMsg').value.trim()||'🍰 update via ShortCake';
-  try{
-    const{repo,branch}=WS.linked;
-    const ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/${branch}`);
-    const headSha=ref.object.sha;
-    const headCommit=await gh(`/repos/${USER}/${repo}/git/commits/${headSha}`);
-    clog(`📤 変更${paths.length}件+削除${dels.length}件を送信中...`);
-    const tree=[];
-    for(const p of paths){
-      const f=WS.files[p];
-      await ensureFile(p);
-      const body=f.bin?{content:f.base64,encoding:'base64'}:{content:f.text,encoding:'utf-8'};
-      const blob=await gh(`/repos/${USER}/${repo}/git/blobs`,{method:'POST',body:JSON.stringify(body)});
-      tree.push({path:p,mode:'100644',type:'blob',sha:blob.sha});
-      clog(`　✏️ ${p}`);
-    }
-    for(const p of dels){tree.push({path:p,mode:'100644',type:'blob',sha:null});clog(`　🗑️ ${p}`);}
-    const newTree=await gh(`/repos/${USER}/${repo}/git/trees`,{method:'POST',
-      body:JSON.stringify({base_tree:headCommit.tree.sha,tree})});
-    const commit=await gh(`/repos/${USER}/${repo}/git/commits`,{method:'POST',
-      body:JSON.stringify({message:msg,tree:newTree.sha,parents:[headSha]})});
-    await gh(`/repos/${USER}/${repo}/git/refs/heads/${branch}`,{method:'PATCH',
-      body:JSON.stringify({sha:commit.sha})});
-    WS.linked.headSha=commit.sha;
-    WS.dirty.clear();WS.deleted.clear();
-    dels.forEach(p=>delete WS.files[p]);
-    refreshLinkedUI();refreshWSBar();
-    document.getElementById('commitMsg').value='';
-    clog(`✅ コミット完了: 「${msg}」`,'lok');
-    clog(`📂 <a href="https://github.com/${USER}/${repo}/commit/${commit.sha}" target="_blank">コミットを見る</a>`,'lin');
-    toast('✅ コミット&プッシュ完了!');
-    await watchPagesAfterCommit(repo,commit.sha,clog);
-  }catch(e){
-    clog(`❌ ${e.message}`,'lng');
-    clog('💡 このエラーをそのままAIに(いつものやつ)','lin');
-  }
-  btn.disabled=false;btn.textContent='💾 コミット&プッシュ';
+async function workManualCommit(){
+  const n=WS.dirty.size+WS.deleted.size;
+  if(!n)return toast('変更がありません');
+  const msg=prompt('コミットメッセージ(空欄OK):')||'🍰 update via ShortCake';
+  await commitCore(msg,document.getElementById('wkLog'));
 }
 
-/* ========== パーサー ========== */
-function parseManifest(text){
-  const mm=text.match(/####\s*MANIFEST\s*```\w*\n([\s\S]*?)```/);
-  if(!mm)return null;
-  const man={FILES:[]};
-  mm[1].split('\n').forEach(l=>{l=l.trim();
+/* ---------- パーサー&適用 ---------- */
+function parseManifest(t){const m=t.match(/####\s*MANIFEST\s*```\w*\n([\s\S]*?)```/);if(!m)return null;
+  const man={FILES:[]};m[1].split('\n').forEach(l=>{l=l.trim();
     if(l.startsWith('- '))man.FILES.push(l.slice(2).trim());
     else if(l.includes(':')){let[k,...v]=l.split(':');k=k.trim().toUpperCase();
-      if(k!=='FILES'&&k!=='FILE')man[k]=v.join(':').trim();}});
-  return man;
-}
-function parseFiles(text){
-  const files={};
-  for(const m of text.matchAll(/####\s*FILE:\s*([\w\-./]+)\s*\n```[\w+-]*\n([\s\S]*?)```/g))
-    files[m[1].trim()]={text:m[2]};
-  return files;
-}
-function parsePatches(text){
-  const ps=[];
-  for(const m of text.matchAll(/####\s*PATCH:\s*([\w\-./]+)\s*\n```old\s*\n([\s\S]*?)```\s*\n+```new\s*\n([\s\S]*?)```/g))
-    ps.push({path:m[1].trim(),old:m[2],neu:m[3]});
-  return ps;
-}
-function parseDeletes(text){
-  const ds=[];for(const m of text.matchAll(/####\s*DELETE:\s*([\w\-./]+)/g))ds.push(m[1].trim());return ds;
-}
-function parseLoose(text){
-  const files={};const fence=/```[\w+-]*\n([\s\S]*?)```/g;let m,pos=0;
-  while((m=fence.exec(text))!==null){
-    const before=text.slice(pos,m.index).trim().split('\n').slice(-3);let path=null;
-    for(const line of before.reverse()){
-      const clean=line.replace(/[#*`📄📁🗂️✨:：]+/g,' ').trim();
-      for(const c of clean.split(/\s+/))
-        if(/^[\w\-./]+\.[a-zA-Z0-9]{1,10}$/.test(c)&&!c.startsWith('http')){path=c;break;}
-      if(path)break;}
-    if(path)files[path]={text:m[1]};pos=fence.lastIndex;}
-  return files;
-}
-function normalize(s){return s.replace(/\r\n?/g,'\n').split('\n').map(l=>l.replace(/\s+$/,'')).join('\n');}
+      if(k!=='FILES'&&k!=='FILE')man[k]=v.join(':').trim();}});return man;}
+function parseFiles(t){const f={};for(const m of t.matchAll(/####\s*FILE:\s*([\w\-./]+)\s*\n```[\w+-]*\n([\s\S]*?)```/g))f[m[1].trim()]={text:m[2]};return f;}
+function parsePatches(t){const p=[];for(const m of t.matchAll(/####\s*PATCH:\s*([\w\-./]+)\s*\n```old\s*\n([\s\S]*?)```\s*\n+```new\s*\n([\s\S]*?)```/g))p.push({path:m[1].trim(),old:m[2],neu:m[3]});return p;}
+function parseDeletes(t){const d=[];for(const m of t.matchAll(/####\s*DELETE:\s*([\w\-./]+)/g))d.push(m[1].trim());return d;}
 function applyPatch(ft,p){
   if(ft.indexOf(p.old)>=0)return{text:ft.replace(p.old,p.neu)};
   const nf=normalize(ft),no=normalize(p.old);
   if(nf.indexOf(no)>=0)return{text:nf.replace(no,normalize(p.neu))};
   return{text:null};
 }
-async function importPaste(){
-  const text=document.getElementById('ta').value;
+async function applyText(text){
+  const files=parseFiles(text),patches=parsePatches(text),deletes=parseDeletes(text);
+  if(!Object.keys(files).length&&!patches.length&&!deletes.length){
+    toast('😵 FILE/PATCH/DELETEブロックが見つかりません');return false;}
+  let fail=0;
+  Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;markDirty(p);});
+  deletes.forEach(p=>{if(p in WS.files){delete WS.files[p];markDeleted(p);}});
+  for(const pt of patches){
+    const f=WS.files[pt.path];
+    if(!f||f.bin){fail++;continue;}
+    try{await ensureFile(pt.path);}catch{fail++;continue;}
+    const r=applyPatch(f.text,pt);
+    if(r.text===null)fail++;
+    else{WS.files[pt.path]={text:r.text};markDirty(pt.path);}
+  }
+  if(fail){toast(`⚠️ PATCH失敗${fail}件。「oldブロックを現行コードから一字一句コピーして出し直して」とAIに伝えてください`);}
+  return true;
+}
+async function importPaste(srcId){
+  const text=document.getElementById(srcId).value;
   if(!text.trim())return toast('😵 何も貼られていません');
-  const man=parseManifest(text);let files=parseFiles(text);
-  const patches=parsePatches(text),deletes=parseDeletes(text);
+  const man=parseManifest(text);
   if(man){
+    const files=parseFiles(text);
     const missing=man.FILES.filter(f=>!(f in files));
     if(missing.length&&!confirm(`⚠️ 本体がないファイル: ${missing.join(', ')}\n続ける?`))return;
-    setWS(man.PROJECT||'unnamed',files);return;
+    setAdvWS(man.PROJECT||'unnamed',files);return;
   }
-  if(patches.length||deletes.length||Object.keys(files).length){
-    if(!WS.name)return toast('😵 適用先がありません。先に読み込んでください');
-    let fail=0,rep=[];
-    Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;markDirty(p);rep.push(`📄${p}`);});
-    deletes.forEach(p=>{if(p in WS.files){delete WS.files[p];markDeleted(p);rep.push(`🗑️${p}`);}});
-    for(const pt of patches){
-      const f=WS.files[pt.path];
-      if(!f||f.bin){fail++;continue;}
-      try{await ensureFile(pt.path);}catch{fail++;continue;}
-      const r=applyPatch(f.text,pt);
-      if(r.text===null)fail++;
-      else{WS.files[pt.path]={text:r.text};markDirty(pt.path);rep.push(`🩹${pt.path}`);}
-    }
-    refreshWSBar();
-    if(fail)toast(`⚠️ 適用${rep.length}件 / PATCH失敗${fail}件(old不一致疑い)`);
-    else if(WS.linked)toast(`✅ 適用${rep.length}件!💾ボタンからコミットを`);
-    else toast(`✅ 適用${rep.length}件`);
-    return;
-  }
-  files=parseLoose(text);
-  if(Object.keys(files).length){
-    if(WS.linked){
-      Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;markDirty(p);});
-      refreshWSBar();
-      toast(`✅ ${Object.keys(files).length}ファイル更新(コミット待ち)`);
-    }else setWS('pasted-project',files);
-    return;
-  }
-  toast('😵 コードブロックが見つかりません');
+  if(!WS||!WS.name)return toast('😵 適用先がありません。先に読み込みを');
+  await applyText(text);
+  toast('✅ 適用しました'+(WS.linked?'(コミットで反映されます)':''));
+}
+function setAdvWS(name,files){
+  const ws=newWS((name||'project').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'project');
+  ws.files=files;WT['__adv__']=ws;WS=ws;
+  inspectProject();
+  document.getElementById('wsBar').classList.add('show');
+  document.getElementById('wsName').textContent=ws.name;
+  document.getElementById('wsCount').textContent=`${Object.keys(files).length}ファイル`;
+  renderDeploy();
+  toast('📦 読み込み完了!🚀デプロイへどうぞ');
 }
 
-/* ========== フォルダ/ZIP読み込み ========== */
-const zone=document.getElementById('dropZone');
-['dragover','dragenter'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('over');}));
-['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('over');}));
-zone.addEventListener('drop',async e=>{
+/* ---------- リポジトリ読み込み ---------- */
+async function loadRepoList(force){
+  if(REPOS.length&&!force)return;
+  try{REPOS=await gh('/user/repos?sort=updated&per_page=100');}catch(e){toast('😵 '+e.message);}
+  renderRepoList();renderFixList();
+}
+function fuzzyMatch(name,q){
+  const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
+  name=norm(name);q=norm(q||'');
+  if(!q)return true;
+  if(name.includes(q))return true;
+  let i=0;for(const c of name){if(c===q[i])i++;if(i===q.length)return true;}
+  return false;
+}
+function renderRepoList(){
+  const el=document.getElementById('repoList');if(!el)return;
+  const q=document.getElementById('repoSearch').value;
+  el.innerHTML='';
+  REPOS.filter(r=>fuzzyMatch(r.name,q)).forEach(r=>{
+    const d=document.createElement('div');d.className='repoItem';
+    d.innerHTML=`📦 <b>${r.name}</b><span>${new Date(r.pushed_at).toLocaleDateString()}</span>`;
+    d.onclick=async()=>{await loadRepo(r.name,true);};
+    el.appendChild(d);
+  });
+}
+async function loadRepo(repo,advMode){
+  toast(`📂 「${repo}」読み込み中...`);
+  const info=await gh(`/repos/${USER}/${repo}`);
+  const branch=info.default_branch;
+  const ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/${branch}`);
+  const hc=await gh(`/repos/${USER}/${repo}/git/commits/${ref.object.sha}`);
+  const tree=await gh(`/repos/${USER}/${repo}/git/trees/${hc.tree.sha}?recursive=1`);
+  const ws=newWS(repo);
+  tree.tree.forEach(t=>{if(t.type!=='blob'||SKIP_RE.test(t.path))return;
+    ws.files[t.path]={sha:t.sha,lazy:true,bin:isBin(t.path)};});
+  ws.linked={repo,branch,headSha:ref.object.sha};
+  WT[repo]=ws;WS=ws;
+  for(const p of ['package.json','vite.config.js','vite.config.ts','vite.config.mjs'])
+    if(ws.files[p])await ensureFile(p);
+  inspectProject();
+  if(advMode){
+    document.getElementById('wsBar').classList.add('show');
+    document.getElementById('wsName').textContent=repo;
+    document.getElementById('wsCount').textContent=`${Object.keys(ws.files).length}ファイル 🔗`;
+    renderAdvCommit();
+  }
+  toast(`🔗 「${repo}」読み込み完了`);
+}
+
+/* ---------- コミット共通 ---------- */
+async function commitCore(msg,logEl){
+  const clog=(m,c='lin')=>{logEl.classList.add('show');logEl.innerHTML+=`<div class="${c}">${m}</div>`;logEl.scrollTop=logEl.scrollHeight;};
+  const paths=[...WS.dirty],dels=[...WS.deleted];
+  try{
+    const{repo,branch}=WS.linked;
+    const ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/${branch}`);
+    const hc=await gh(`/repos/${USER}/${repo}/git/commits/${ref.object.sha}`);
+    clog(`📤 変更${paths.length}+削除${dels.length}件を送信中...`);
+    const tree=[];
+    for(const p of paths){
+      const f=WS.files[p];await ensureFile(p);
+      const body=f.bin?{content:f.base64,encoding:'base64'}:{content:f.text,encoding:'utf-8'};
+      const blob=await gh(`/repos/${USER}/${repo}/git/blobs`,{method:'POST',body:JSON.stringify(body)});
+      tree.push({path:p,mode:'100644',type:'blob',sha:blob.sha});clog(`　✏️ ${p}`);
+    }
+    for(const p of dels){tree.push({path:p,mode:'100644',type:'blob',sha:null});clog(`　🗑️ ${p}`);}
+    const nt=await gh(`/repos/${USER}/${repo}/git/trees`,{method:'POST',
+      body:JSON.stringify({base_tree:hc.tree.sha,tree})});
+    const commit=await gh(`/repos/${USER}/${repo}/git/commits`,{method:'POST',
+      body:JSON.stringify({message:msg,tree:nt.sha,parents:[ref.object.sha]})});
+    await gh(`/repos/${USER}/${repo}/git/refs/heads/${branch}`,{method:'PATCH',
+      body:JSON.stringify({sha:commit.sha})});
+    WS.linked.headSha=commit.sha;
+    WS.dirty.clear();WS.deleted.clear();
+    dels.forEach(p=>delete WS.files[p]);
+    pushHist(repo,msg);refreshWork();
+    clog(`✅ コミット完了:「${msg}」`,'lok');
+    await watchPages(repo,commit.sha,clog);
+    if(CUR_WORK)renderWork();
+  }catch(e){clog(`❌ ${e.message}`,'lng');clog('💡 このエラーをそのままAIに','lin');}
+}
+async function commitChanges(){
+  if(!WS||!WS.linked)return toast('😵 リポジトリ未リンク');
+  if(!WS.dirty.size&&!WS.deleted.size)return toast('変更なし');
+  const msg=document.getElementById('commitMsg').value.trim()||'🍰 update via ShortCake';
+  document.getElementById('commitMsg').value='';
+  await commitCore(msg,document.getElementById('commitLog'));
+  renderAdvCommit();
+}
+function renderAdvCommit(){
+  const n=WS&&WS.linked?WS.dirty.size+WS.deleted.size:0;
+  document.getElementById('dirtyCount').textContent=n?`(${n}件)`:'';
+  document.getElementById('dirtyList').innerHTML=WS&&WS.linked?
+    [...WS.dirty].map(p=>`✏️ ${p}`).concat([...WS.deleted].map(p=>`🗑️ ${p}`)).join('<br>'):'';
+}
+async function watchPages(repo,sha,clog){
+  clog('🏭 サイト更新を見届け中...(数十秒〜数分)');
+  const url=`https://${USER}.github.io/${repo}/`;
+  let run=null;
+  for(let i=0;i<8;i++){
+    await new Promise(w=>setTimeout(w,5000));
+    try{const runs=await gh(`/repos/${USER}/${repo}/actions/runs?per_page=5`);
+      run=runs.workflow_runs.find(x=>x.head_sha===sha);if(run)break;}catch{}
+  }
+  if(!run){clog('⚠️ 自動ビルドが起動しません(deploy.yml未設置の可能性)','lng');
+    clog('💡 🛠上級者→🚀から同名で一度デプロイすると以後自動化されます','lin');return;}
+  clog(`🔍 ビルド起動(<a href="${run.html_url}" target="_blank">進行状況</a>)`);
+  for(let i=0;i<60;i++){
+    if(run.status==='completed')break;
+    await new Promise(w=>setTimeout(w,5000));
+    try{run=await gh(`/repos/${USER}/${repo}/actions/runs/${run.id}`);}catch{}
+  }
+  if(run.conclusion==='success'){
+    clog('🎉 サイト更新完了!','lok');clog(`🌐 <a href="${url}" target="_blank">${url}</a>`,'lok');
+    clog('💡 変わってなければ ⌘+Shift+R','lin');toast('🎉 サイトが更新されました!');
+  }else if(run.status!=='completed')clog('⏳ まだビルド中。リンクから確認を','lin');
+  else{clog(`❌ ビルド失敗(${run.conclusion})`,'lng');
+    clog(`🔍 <a href="${run.html_url}" target="_blank">ログ</a>の赤い部分をAIに`,'lin');}
+}
+
+/* ---------- 🧭 フロー ---------- */
+function gBack(){['gNew','gFix','gHandover','gFiles'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('gHome').style.display='block';}
+function startFlow(mode){
+  gBack();document.getElementById('gHome').style.display='none';FLOW={mode,sent:{},link:null};
+  if(mode==='new')document.getElementById('gNew').style.display='block';
+  if(mode==='fix'){document.getElementById('gFix').style.display='block';loadRepoList().then(renderFixList);}
+  if(mode==='files')document.getElementById('gFiles').style.display='block';
+}
+async function copyNewPrompt(){
+  const d=document.getElementById('newDesc').value.trim();
+  if(!d)return toast('😵 作りたいものを書いてください');
+  await navigator.clipboard.writeText(CONTRACT+'\n\n---\n\n上記の書式に従って、以下を作ってください:\n\n'+d);
+  FLOW.sent={c:true,s:true};
+  toast('🤖 コピー完了!AIチャットに貼ってください(書式説明も同梱済み)');
+}
+function saveFlowLink(inputId){
+  const url=document.getElementById(inputId).value.trim();
+  if(!url)return toast('😵 URLを貼ってください');
+  FLOW.link=url;
+  toast('📎 リンクを記憶しました(公開完了時にプロジェクトへ紐づけます)');
+}
+async function flowNewImport(){
+  const text=document.getElementById('newPaste').value;
+  if(!text.trim())return toast('😵 回答を貼ってください');
+  const man=parseManifest(text);
+  if(!man)return toast('😵 MANIFESTが見つかりません。依頼文を先にAIに送りましたか?');
+  const files=parseFiles(text);
+  const missing=man.FILES.filter(f=>!(f in files));
+  if(missing.length&&!confirm(`⚠️ 本体なし: ${missing.join(', ')}\n続ける?`))return;
+  setAdvWS(man.PROJECT||'unnamed',files);
+  activate('advPane');advGoto('advDeploy');
+  toast('📦 取り込みOK!🚀ボタンで公開してください(完了後、作業タブが開きます)');
+}
+function renderFixList(){
+  const el=document.getElementById('fixList');if(!el)return;
+  if(!REPOS.length){el.innerHTML='読み込み中...';return;}
+  const q=document.getElementById('fixSearch').value;
+  const hits=REPOS.filter(r=>fuzzyMatch(r.name,q));
+  const linked=hits.filter(r=>activeLink(r.name)),un=hits.filter(r=>!activeLink(r.name));
+  let html='';
+  if(linked.length){html+='<div class="grpHead">💬 会話とリンク済み(クリックで即・作業開始)</div>';
+    linked.forEach(r=>{html+=`<div class="repoItem" onclick="openWorkTab('${r.name}')">📦 <b>${r.name}</b><span>${new Date(r.pushed_at).toLocaleDateString()}</span></div>`;});}
+  if(un.length){html+='<div class="grpHead un">🔗 未リンク(初回だけAIへの引き継ぎが必要)</div>';
+    un.forEach(r=>{html+=`<div class="repoItem" onclick="startHandover('${r.name}')">📦 <b>${r.name}</b><span>${new Date(r.pushed_at).toLocaleDateString()}</span></div>`;});}
+  el.innerHTML=html||'該当なし';
+}
+async function startHandover(repo){
+  gBack();document.getElementById('gHome').style.display='none';
+  document.getElementById('gHandover').style.display='block';
+  document.getElementById('hoName').textContent=repo;
+  FLOW={mode:'fix',repo,sent:{},link:null};
+  if(!WT[repo]){toast('📂 読み込み中...');try{await loadRepo(repo,false);}catch(e){toast('😵 '+e.message);return;}}
+  WS=WT[repo];
+}
+async function copyHandover(){
+  WS=WT[FLOW.repo];
+  const c=document.getElementById('hoContract').checked,s=document.getElementById('hoCode').checked;
+  let parts=[];
+  if(c)parts.push(CONTRACT);
+  if(s){toast('📤 コード収集中...');parts.push(await buildExportText());}
+  parts.push('上記を把握したら「把握しました」と返事してください。今後このプロジェクトの修正を依頼します。');
+  await navigator.clipboard.writeText(parts.join('\n\n---\n\n'));
+  FLOW.sent={c,s};
+  toast('🤖 引き継ぎ文をコピー!AIチャットに貼ってください');
+}
+function finishHandover(){
+  const url=document.getElementById('hoLink').value.trim();
+  if(!url)return toast('😵 会話リンクを貼ってください');
+  addLink(FLOW.repo,url,FLOW.sent);
+  toast('🔗 リンク完了!次回からは一覧から直接ここに来られます');
+  openWorkTab(FLOW.repo);
+}
+
+/* ---------- 📚 一覧 ---------- */
+function renderProjList(){
+  const el=document.getElementById('projList');
+  const all=loadProj();
+  const names=Object.keys(all);
+  if(!names.length){el.innerHTML='<p style="color:#776b85">まだプロジェクトがありません。🧭はじめる からどうぞ🍰</p>';return;}
+  el.innerHTML=names.map(r=>{
+    const lk=activeLink(r);
+    return`<div class="projItem"><b>📦 ${r}</b><br>
+    <button class="btn sm pink" onclick="openWorkTab('${r}')">🔨 開く</button>
+    ${lk?`<a href="${lk.url}" target="_blank">💬 会話</a>`:''}
+    <a href="https://${USER}.github.io/${r}/" target="_blank">🌐 サイト</a>
+    <a href="https://github.com/${USER}/${r}" target="_blank">📂 GitHub</a></div>`;
+  }).join('');
+}
+
+/* ---------- フォルダ/ZIP ---------- */
+function bindDrop(el){
+  ['dragover','dragenter'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();el.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();el.classList.remove('over');}));
+  el.addEventListener('drop',handleDrop);
+}
+async function handleDrop(e){
   try{
     const zipFile=[...e.dataTransfer.files].find(f=>/\.zip$/i.test(f.name));
-    if(zipFile){await loadZip(zipFile);return;}
+    if(zipFile)return loadZip(zipFile);
     const entries=[...e.dataTransfer.items].map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(Boolean);
-    if(!entries.length)return toast('😵 フォルダかZIPをドロップしてください');
+    if(!entries.length)return toast('😵 フォルダかZIPを');
     toast('📥 読み込み中...');
     const files={};
     const rootName=entries.length===1&&entries[0].isDirectory?entries[0].name:'dropped-project';
     for(const en of entries)await walkEntry(en,'',files,entries.length===1&&en.isDirectory);
     await finishFolderLoad(rootName,files);
-  }catch(err){toast('😵 読み込みエラー: '+err.message);}
-});
+  }catch(err){toast('😵 '+err.message);}
+}
+bindDrop(document.getElementById('gDrop'));bindDrop(document.getElementById('advDrop'));
 document.getElementById('dirPicker').addEventListener('change',async e=>{
-  try{
-    const list=[...e.target.files];if(!list.length)return;
-    toast('📥 読み込み中...');
-    const files={};
-    for(const f of list){
-      const rel=f.webkitRelativePath.split('/').slice(1).join('/');
+  try{const list=[...e.target.files];if(!list.length)return;
+    toast('📥 読み込み中...');const files={};
+    for(const f of list){const rel=f.webkitRelativePath.split('/').slice(1).join('/');
       if(!rel||SKIP_RE.test(rel)||f.size>3*1024*1024)continue;
-      files[rel]=await readFileSmart(f,rel);
-    }
+      files[rel]=await readFileSmart(f,rel);}
     await finishFolderLoad(list[0].webkitRelativePath.split('/')[0],files);
-  }catch(err){toast('😵 読み込みエラー: '+err.message);}
-  e.target.value='';
-});
+  }catch(err){toast('😵 '+err.message);}e.target.value='';});
 document.getElementById('zipPicker').addEventListener('change',async e=>{
-  try{if(e.target.files[0])await loadZip(e.target.files[0]);}
-  catch(err){toast('😵 ZIPエラー: '+err.message);}
-  e.target.value='';
-});
+  try{if(e.target.files[0])await loadZip(e.target.files[0]);}catch(err){toast('😵 '+err.message);}e.target.value='';});
 function walkEntry(entry,prefix,files,stripRoot){
   return new Promise(resolve=>{
-    if(entry.isFile){
-      entry.file(async f=>{
-        const path=prefix+entry.name;
-        if(!SKIP_RE.test(path)&&f.size<3*1024*1024)files[path]=await readFileSmart(f,path);
-        resolve();
-      },()=>resolve());
-    }else if(entry.isDirectory){
+    if(entry.isFile){entry.file(async f=>{
+      const path=prefix+entry.name;
+      if(!SKIP_RE.test(path)&&f.size<3*1024*1024)files[path]=await readFileSmart(f,path);
+      resolve();},()=>resolve());}
+    else if(entry.isDirectory){
       if(SKIP_RE.test(prefix+entry.name)){resolve();return;}
-      const newPrefix=stripRoot?'':(prefix+entry.name+'/');
+      const np=stripRoot?'':(prefix+entry.name+'/');
       const reader=entry.createReader();const all=[];
-      const readBatch=()=>reader.readEntries(async batch=>{
-        if(!batch.length){for(const c of all)await walkEntry(c,newPrefix,files,false);resolve();}
-        else{all.push(...batch);readBatch();}
-      },()=>resolve());
-      readBatch();
-    }else resolve();
-  });
+      const rb=()=>reader.readEntries(async b=>{
+        if(!b.length){for(const c of all)await walkEntry(c,np,files,false);resolve();}
+        else{all.push(...b);rb();}},()=>resolve());rb();}
+    else resolve();});
 }
 function readFileSmart(f,path){
-  return new Promise(res=>{
-    const r=new FileReader();
+  return new Promise(res=>{const r=new FileReader();
     if(!isBin(path)){r.onload=()=>res({text:r.result});r.readAsText(f);}
-    else{r.onload=()=>res({base64:r.result.split(',')[1],bin:true});r.readAsDataURL(f);}
-  });
+    else{r.onload=()=>res({base64:r.result.split(',')[1],bin:true});r.readAsDataURL(f);}});
 }
 async function loadZip(file){
-  if(typeof JSZip==='undefined')return toast('😵 ZIP機能の読み込みに失敗(ネット接続を確認して再読み込み)');
-  toast('🤐 ZIP解凍中...');
+  if(typeof JSZip==='undefined')return toast('😵 ZIP機能読込失敗(要ネット接続)');
+  toast('🤐 解凍中...');
   const zip=await JSZip.loadAsync(file);
   const files={};
   const names=Object.keys(zip.files).filter(n=>!zip.files[n].dir&&!SKIP_RE.test(n)&&!n.startsWith('__MACOSX'));
-  if(!names.length)return toast('😵 ZIP内に読み込めるファイルがありません');
-  let strip='';
-  const roots=new Set(names.map(n=>n.split('/')[0]));
+  if(!names.length)return toast('😵 ZIP内が空です');
+  let strip='';const roots=new Set(names.map(n=>n.split('/')[0]));
   if(roots.size===1&&names.every(n=>n.includes('/')))strip=[...roots][0]+'/';
-  for(const n of names){
-    const path=n.slice(strip.length);if(!path)continue;
+  for(const n of names){const path=n.slice(strip.length);if(!path)continue;
     if(!isBin(path))files[path]={text:await zip.files[n].async('string')};
-    else files[path]={base64:await zip.files[n].async('base64'),bin:true};
-  }
+    else files[path]={base64:await zip.files[n].async('base64'),bin:true};}
   await finishFolderLoad(file.name.replace(/\.zip$/i,''),files);
 }
 async function finishFolderLoad(name,files){
-  if(!Object.keys(files).length)return toast('😵 読み込めるファイルがありません');
-  if(WS.linked){
-    if(!confirm(`🔗 リンク中の「${WS.linked.repo}」への差分として取り込みますか?\n(キャンセル→新規プロジェクトとして読み込み)`))
-      {setWS(name,files);return;}
-    toast('🔍 差分を検出中...');
-    let changed=0,added=0,same=0;
+  if(!Object.keys(files).length)return toast('😵 読み込めるファイルなし');
+  if(WS&&WS.linked&&(CUR_WORK||document.getElementById('advPane').classList.contains('on'))){
+    toast('🔍 差分検出中...');
+    let changed=0,added=0;
     for(const[p,f]of Object.entries(files)){
       const ex=WS.files[p];
       if(!ex){WS.files[p]=f;markDirty(p);added++;continue;}
       try{await ensureFile(p);}catch{}
       const differ=ex.bin?(ex.base64!==f.base64):(normalize(ex.text||'')!==normalize(f.text||''));
       if(differ){WS.files[p]=f;markDirty(p);changed++;}
-      else same++;
     }
-    refreshWSBar();
-    toast(`🔍 差分: 変更${changed} / 追加${added} / 同一${same} → ${changed+added?'💾コミットへ!':'変更なし'}`);
+    renderAdvCommit();refreshWork();
+    toast(`🔍 差分: 変更${changed}/追加${added} → ${changed+added?'💾で反映!':'変更なし'}`);
     return;
   }
-  setWS(name,files);
+  setAdvWS(name,files);
+  if(document.getElementById('gFiles').style.display!=='none')
+    document.getElementById('gFilesNext').style.display='block';
 }
 
-/* ========== 判定エンジン ========== */
+/* ---------- 検品 ---------- */
 function inspectProject(){
   WS.report=[];WS.extras={};
-  const F=WS.files;
-  const has=p=>p in F;
+  const F=WS.files,has=p=>p in F;
   const rep=(cls,title,msg)=>WS.report.push({cls,title,msg});
   let type='static',pkg=null;
   if(has('package.json')&&!F['package.json'].lazy){
-    try{pkg=JSON.parse(F['package.json'].text);}catch{rep('warn','package.json破損','静的として扱います');}
-  }
-  if(pkg){
-    const deps={...pkg.dependencies,...pkg.devDependencies};
-    if(deps['vite'])type='vite';
-    else if(deps['react-scripts'])type='cra';
-    else if(deps['next'])type='next';
-    else if(pkg.scripts&&pkg.scripts.build)type='node-build';
-    else type='node-unknown';
-  }
+    try{pkg=JSON.parse(F['package.json'].text);}catch{rep('warn','package.json破損','静的として扱います');}}
+  if(pkg){const deps={...pkg.dependencies,...pkg.devDependencies};
+    if(deps['vite'])type='vite';else if(deps['react-scripts'])type='cra';
+    else if(deps['next'])type='next';else if(pkg.scripts&&pkg.scripts.build)type='node-build';
+    else type='node-unknown';}
   if(!pkg&&!has('package.json')&&Object.keys(F).some(p=>/\.(tsx|jsx|ts)$/.test(p)&&!p.endsWith('.d.ts')))type='broken-react';
   WS.type=type;
-  const label={static:'📄 静的サイト',vite:'⚡ Vite',cra:'⚛️ CRA',next:'▲ Next.js',
-    ['node-build']:'🔧 Node系',['node-unknown']:'❓ Node系(build無)',['broken-react']:'💥 React断片'}[type];
-  document.getElementById('wsType').textContent=label;
-  if(type==='static'){
-    rep('ok','静的サイトと判定','ビルド不要でそのまま公開できます');
-    if(!has('index.html')){
-      const found=Object.keys(F).find(p=>p.endsWith('/index.html'));
-      rep('warn',found?`index.htmlが深い場所(${found})`:'index.htmlなし',
-        found?'公開URL直下では404の可能性':'トップは404になります');
-    }
-    let absCount=0;
-    Object.entries(F).forEach(([p,f])=>{
+  const label={static:'📄 静的',vite:'⚡ Vite',cra:'⚛️ CRA',next:'▲ Next.js',
+    'node-build':'🔧 Node','node-unknown':'❓ Node(build無)','broken-react':'💥 React断片'}[type];
+  const wt=document.getElementById('wsType');if(wt)wt.textContent=label;
+  if(type==='static'){rep('ok','静的サイト','そのまま公開OK');
+    if(!has('index.html')){const found=Object.keys(F).find(p=>p.endsWith('/index.html'));
+      rep('warn',found?`index.htmlが深い(${found})`:'index.htmlなし','404の可能性');}
+    let ac=0;Object.entries(F).forEach(([p,f])=>{
       if(!p.endsWith('.html')||f.bin||f.lazy)return;
-      const m=f.text.match(/(?:src|href)=["']\/(?!\/)[^"']*["']/g);
-      if(m)absCount+=m.length;
-    });
-    if(absCount){rep('fix',`絶対パス${absCount}件`,'デプロイ時に相対パスへ自動変換');WS.extras.fixAbsPaths=true;}
-  }
-  if(type==='vite'){
-    rep('ok','Vite判定','Actionsで自動ビルド+Pages自動設定します(tsx/ts/jsxもビルドで処理されます)');
-    const cfgPath=Object.keys(F).find(p=>/^vite\.config\.(js|ts|mjs)$/.test(p));
-    if(cfgPath&&!F[cfgPath].lazy&&!/base\s*:/.test(F[cfgPath].text)){
-      rep('fix','base設定なし',`base:'./' を自動注入します`);WS.extras.injectViteBase=cfgPath;}
-    WS.extras.workflow='vite';
-  }
-  if(type==='cra'){rep('ok','CRA判定','自動ビルド+homepage注入');WS.extras.injectCRAHomepage=true;WS.extras.workflow='cra';}
-  if(type==='next'){rep('warn','Next.js検出','静的エクスポート前提で試みます');WS.extras.workflow='next';}
-  if(type==='node-build'){rep('warn','汎用Nodeビルド','dist/公開の汎用設定を同梱');WS.extras.workflow='generic';}
-  if(type==='node-unknown')rep('warn','buildスクリプトなし','Pagesではサーバー処理は動きません');
-  if(type==='broken-react')rep('warn','React断片(package.json無し)','AIに「Vite完全構成で出し直して」と依頼してください');
-  const secretPatterns=[
-    [/sk-[a-zA-Z0-9]{20,}/,'OpenAI系キー'],[/github_pat_[a-zA-Z0-9_]{20,}/,'GitHubトークン'],
-    [/AIza[a-zA-Z0-9_-]{30,}/,'Googleキー'],
-    [/(?:api[_-]?key|secret|password)\s*[:=]\s*["'][^"']{8,}["']/i,'キー/パスワード疑い'],
-  ];
+      const m=f.text.match(/(?:src|href)=["']\/(?!\/)[^"']*["']/g);if(m)ac+=m.length;});
+    if(ac){rep('fix',`絶対パス${ac}件`,'デプロイ時に自動変換');WS.extras.fixAbsPaths=true;}}
+  if(type==='vite'){rep('ok','Vite','Actionsで自動ビルド');
+    const cp=Object.keys(F).find(p=>/^vite\.config\.(js|ts|mjs)$/.test(p));
+    if(cp&&!F[cp].lazy&&!/base\s*:/.test(F[cp].text)){rep('fix','base設定なし','自動注入します');WS.extras.injectViteBase=cp;}
+    WS.extras.workflow='vite';}
+  if(type==='cra'){rep('ok','CRA','自動ビルド');WS.extras.injectCRAHomepage=true;WS.extras.workflow='cra';}
+  if(type==='next'){rep('warn','Next.js','静的エクスポート前提');WS.extras.workflow='next';}
+  if(type==='node-build'){rep('warn','Nodeビルド','dist/公開設定を同梱');WS.extras.workflow='generic';}
+  if(type==='broken-react')rep('warn','package.json無しReact','AIに完全構成で出し直させて');
+  const sp=[[/sk-[a-zA-Z0-9]{20,}/,'APIキー'],[/github_pat_[a-zA-Z0-9_]{20,}/,'GHトークン'],
+    [/AIza[a-zA-Z0-9_-]{30,}/,'Googleキー'],[/(?:api[_-]?key|secret|password)\s*[:=]\s*["'][^"']{8,}["']/i,'秘密情報疑い']];
   const hits=[];
-  Object.entries(F).forEach(([p,f])=>{
-    if(f.bin||f.lazy)return;
-    for(const[re,label]of secretPatterns)if(re.test(f.text))hits.push(`${p}(${label})`);
-  });
-  if(hits.length)rep('warn','🔑 秘密情報の疑い!',`${[...new Set(hits)].slice(0,5).join(' / ')}`);
+  Object.entries(F).forEach(([p,f])=>{if(f.bin||f.lazy)return;
+    for(const[re,l]of sp)if(re.test(f.text))hits.push(`${p}(${l})`);});
+  if(hits.length)rep('warn','🔑 秘密情報の疑い!',[...new Set(hits)].slice(0,5).join(' / '));
   rep('info','サマリー',`全${Object.keys(F).length}ファイル / ${label}`);
 }
-function refreshWSBar(){
-  document.getElementById('wsBar').classList.add('show');
-  document.getElementById('wsName').textContent=WS.name;
-  document.getElementById('wsCount').textContent=`${Object.keys(WS.files).length}ファイル`;
-  refreshLinkedUI();
-  renderDeploy();
+function openInspect(){
+  const body=document.getElementById('inspectBody');body.innerHTML='';
+  const icon={info:'ℹ️',ok:'✅',warn:'⚠️',fix:'🔧'};
+  (WS?WS.report:[]).forEach(r=>{const d=document.createElement('div');
+    d.className='rep '+r.cls;d.innerHTML=`<b>${icon[r.cls]} ${r.title}</b>${r.msg}`;body.appendChild(d);});
+  document.getElementById('inspectModal').classList.add('show');
 }
-function setWS(name,files){
-  WS={name:(name||'project').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'project',
-    files,type:null,report:[],extras:{},linked:null,dirty:new Set(),deleted:new Set()};
-  inspectProject();
-  refreshWSBar();
-  const warns=WS.report.filter(r=>r.cls==='warn').length;
-  toast(warns?`📦 読み込み完了(⚠️ ${warns}件 → 🕵️)`:`📦 検品オールクリア✨`);
-}
-function clearWS(){
-  WS={name:null,files:{},type:null,report:[],extras:{},linked:null,dirty:new Set(),deleted:new Set()};
-  document.getElementById('wsBar').classList.remove('show');
-  refreshLinkedUI();renderDeploy();toast('🗑️ クリア');
+async function exportForAI(){
+  if(!WS||!WS.name)return toast('😵 未読み込み');
+  toast('📤 生成中...');
+  const out=await buildExportText();
+  try{await navigator.clipboard.writeText(out);toast(`📤 コピー完了(約${Math.round(out.length/1024)}KB)`);}
+  catch{const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
+    a.download=WS.name+'_for_ai.txt';a.click();toast('📄 .txtでダウンロードしました');}
 }
 
-/* ========== デプロイ ========== */
+/* ---------- デプロイ ---------- */
 function renderDeploy(){
-  const no=document.getElementById('dNoWs'),ready=document.getElementById('dReady');
-  if(!WS.name){no.style.display='block';ready.style.display='none';return;}
-  no.style.display='none';ready.style.display='block';
-  document.getElementById('doneCard').classList.remove('show');
+  if(!WS||!WS.name){document.getElementById('dSummary').textContent='プロジェクト未読み込み(📋/📁から)';return;}
   const fixes=WS.report.filter(r=>r.cls==='fix').length;
   document.getElementById('dSummary').innerHTML=
-    `プロジェクト: <b>${WS.name}</b><br>種別: <b>${document.getElementById('wsType').textContent}</b> / ファイル: <b>${Object.keys(WS.files).length}</b><br>`+
-    `自動修正: <b>${fixes}件</b>`+
-    (WS.extras.workflow?`<br>🏭 Actionsビルド+Pages自動設定`:'<br>📄 そのまま公開(Pages自動設定)')+
-    (WS.linked?`<br>🔗 リンク中: 同名なら上書き、別名なら複製`:'');
+    `プロジェクト: <b>${WS.name}</b> / ファイル: <b>${Object.keys(WS.files).length}</b><br>自動修正: <b>${fixes}件</b>`+
+    (WS.extras.workflow?'<br>🏭 Actionsビルド+Pages自動設定':'<br>📄 そのまま公開');
   document.getElementById('repoName').value=WS.name;
 }
-const dlog=(msg,cls='lin')=>{
-  const el=document.getElementById('deployLog');
-  el.classList.add('show');el.innerHTML+=`<div class="${cls}">${msg}</div>`;
-  el.scrollTop=el.scrollHeight;
-};
-const prog=p=>{
-  document.getElementById('progWrap').classList.add('show');
-  document.getElementById('progBar').style.width=p+'%';
-};
+const dlog=(m,c='lin')=>{const el=document.getElementById('deployLog');
+  el.classList.add('show');el.innerHTML+=`<div class="${c}">${m}</div>`;el.scrollTop=el.scrollHeight;};
+const prog=p=>{document.getElementById('progWrap').classList.add('show');
+  document.getElementById('progBar').style.width=p+'%';};
 function makeWorkflow(kind){
   const dist={vite:'dist',cra:'build',next:'out',generic:'dist'}[kind];
-  return `name: Deploy to Pages
+  return`name: Deploy to Pages
 on:
   push:
     branches: [main]
@@ -890,10 +1062,9 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
-`;
-}
+`;}
 function makeStaticWorkflow(){
-  return `name: Deploy static to Pages
+  return`name: Deploy static to Pages
 on:
   push:
     branches: [main]
@@ -919,64 +1090,47 @@ jobs:
           path: .
       - id: deployment
         uses: actions/deploy-pages@v4
-`;
-}
+`;}
 function prepareFiles(){
   const out={};
   Object.entries(WS.files).forEach(([p,f])=>out[p]={...f});
-  if(WS.extras.fixAbsPaths){
-    Object.entries(out).forEach(([p,f])=>{
-      if(p.endsWith('.html')&&!f.bin&&!f.lazy)
-        f.text=f.text.replace(/(src|href)=["']\/(?!\/)([^"']*)["']/g,'$1="./$2"');
-    });
-    dlog('🔧 絶対パス→相対パス変換','lok');
-  }
-  if(WS.extras.injectViteBase){
-    const p=WS.extras.injectViteBase,t=out[p].text;
+  if(WS.extras.fixAbsPaths){Object.entries(out).forEach(([p,f])=>{
+    if(p.endsWith('.html')&&!f.bin&&!f.lazy)
+      f.text=f.text.replace(/(src|href)=["']\/(?!\/)([^"']*)["']/g,'$1="./$2"');});
+    dlog('🔧 絶対パス→相対パス','lok');}
+  if(WS.extras.injectViteBase){const p=WS.extras.injectViteBase,t=out[p].text;
     if(t&&/defineConfig\s*\(\s*\{/.test(t)){
       out[p].text=t.replace(/defineConfig\s*\(\s*\{/,'defineConfig({\n  base: "./",');
-      dlog(`🔧 ${p} に base:"./" 注入`,'lok');
-    }
-  }
+      dlog(`🔧 base:"./"注入`,'lok');}}
   if(WS.extras.injectCRAHomepage&&out['package.json']&&!out['package.json'].lazy){
-    try{
-      const pkg=JSON.parse(out['package.json'].text);
-      pkg.homepage='./';
-      out['package.json'].text=JSON.stringify(pkg,null,2);
-      dlog('🔧 homepage:"./" 注入','lok');
-    }catch{}
-  }
+    try{const pkg=JSON.parse(out['package.json'].text);pkg.homepage='./';
+      out['package.json'].text=JSON.stringify(pkg,null,2);dlog('🔧 homepage注入','lok');}catch{}}
   out['.github/workflows/deploy.yml']={text:WS.extras.workflow?makeWorkflow(WS.extras.workflow):makeStaticWorkflow()};
   dlog('🏭 デプロイ指示書を同梱','lok');
   return out;
 }
 async function deploy(){
   const repo=document.getElementById('repoName').value.trim();
-  if(!/^[a-zA-Z0-9._-]+$/.test(repo))return toast('😵 リポジトリ名は英数字とハイフンで');
+  if(!/^[a-zA-Z0-9._-]+$/.test(repo))return toast('😵 英数字とハイフンで');
   const btn=document.getElementById('deployBtn');
-  btn.disabled=true;btn.textContent='🚀 実行中...';
+  btn.disabled=true;btn.textContent='実行中...';
   document.getElementById('deployLog').innerHTML='';
   document.getElementById('doneCard').classList.remove('show');
   prog(0);
   try{
     let exists=true;
     try{await gh(`/repos/${USER}/${repo}`);}catch{exists=false;}
-    if(!exists){
-      dlog(`📦 リポジトリ「${repo}」作成中...`);
-      await gh('/user/repos',{method:'POST',body:JSON.stringify({
-        name:repo,auto_init:true,description:'🍰 Deployed with ShortCake'})});
-      dlog('✅ 作成完了','lok');
-    }else dlog(`📦 既存「${repo}」へ上書きデプロイ`);
+    if(!exists){dlog(`📦 「${repo}」作成中...`);
+      await gh('/user/repos',{method:'POST',body:JSON.stringify({name:repo,auto_init:true,description:'🍰 Deployed with ShortCake'})});
+      dlog('✅ 作成完了','lok');}
+    else dlog(`📦 既存「${repo}」へ上書き`);
     prog(8);
     let ref=null,branch='main';
     for(let i=0;i<10;i++){
       try{ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/main`);break;}
-      catch{
-        try{ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/master`);branch='master';break;}
-        catch{await new Promise(r=>setTimeout(r,900));}
-      }
-    }
-    if(!ref)throw new Error('ブランチ準備タイムアウト。再実行してください');
+      catch{try{ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/master`);branch='master';break;}
+        catch{await new Promise(r=>setTimeout(r,900));}}}
+    if(!ref)throw new Error('ブランチ準備タイムアウト');
     prog(12);
     const files=prepareFiles();
     const paths=Object.keys(files);
@@ -984,115 +1138,66 @@ async function deploy(){
     dlog(`📤 ${paths.length}ファイル送信中...`);
     const tree=[];let done=0;
     for(let i=0;i<paths.length;i+=6){
-      const batch=paths.slice(i,i+6);
-      await Promise.all(batch.map(async p=>{
+      await Promise.all(paths.slice(i,i+6).map(async p=>{
         const f=files[p];
-        if(f.lazy){
-          if(sameRepo){tree.push({path:p,mode:'100644',type:'blob',sha:f.sha});done++;return;}
-          await ensureFile(p,f);
-        }
+        if(f.lazy){if(sameRepo){tree.push({path:p,mode:'100644',type:'blob',sha:f.sha});done++;return;}
+          await ensureFile(p,f);}
         const body=f.bin?{content:f.base64,encoding:'base64'}:{content:f.text,encoding:'utf-8'};
         const blob=await gh(`/repos/${USER}/${repo}/git/blobs`,{method:'POST',body:JSON.stringify(body)});
         tree.push({path:p,mode:'100644',type:'blob',sha:blob.sha});
-        done++;prog(12+Math.round(done/paths.length*45));
-      }));
-    }
-    const newTree=await gh(`/repos/${USER}/${repo}/git/trees`,{method:'POST',body:JSON.stringify({tree})});
+        done++;prog(12+Math.round(done/paths.length*45));}));}
+    const nt=await gh(`/repos/${USER}/${repo}/git/trees`,{method:'POST',body:JSON.stringify({tree})});
     const commit=await gh(`/repos/${USER}/${repo}/git/commits`,{method:'POST',
-      body:JSON.stringify({message:'🍰 deploy via ShortCake',tree:newTree.sha,parents:[ref.object.sha]})});
+      body:JSON.stringify({message:'🍰 deploy via ShortCake',tree:nt.sha,parents:[ref.object.sha]})});
     await gh(`/repos/${USER}/${repo}/git/refs/heads/${branch}`,{method:'PATCH',
       body:JSON.stringify({sha:commit.sha,force:true})});
-    prog(60);
-    dlog('✅ プッシュ完了','lok');
-    dlog('📡 GitHub Pagesを自動設定中...');
-    try{
-      await gh(`/repos/${USER}/${repo}/pages`,{method:'POST',
-        body:JSON.stringify({build_type:'workflow'})});
-      dlog('✅ Pages有効化(Actions方式)','lok');
-    }catch(e){
-      if(e.message.includes('409')){
-        try{
-          await gh(`/repos/${USER}/${repo}/pages`,{method:'PUT',
-            body:JSON.stringify({build_type:'workflow'})});
-          dlog('✅ Pages設定をActions方式に更新','lok');
-        }catch{dlog('⚠️ Pages設定は既存のまま','lin');}
-      }else throw e;
-    }
-    prog(70);
-    dlog('🏭 ビルド&公開を見届け中...(数十秒〜数分)');
+    prog(60);dlog('✅ プッシュ完了','lok');
+    dlog('📡 Pages自動設定中...');
+    try{await gh(`/repos/${USER}/${repo}/pages`,{method:'POST',body:JSON.stringify({build_type:'workflow'})});
+      dlog('✅ Pages有効化','lok');}
+    catch(e){if(e.message.includes('409')){
+      try{await gh(`/repos/${USER}/${repo}/pages`,{method:'PUT',body:JSON.stringify({build_type:'workflow'})});
+        dlog('✅ Actions方式に更新','lok');}catch{dlog('⚠️ Pages設定は既存のまま','lin');}}
+      else throw e;}
+    prog(70);dlog('🏭 見届け中...');
     const url=`https://${USER}.github.io/${repo}/`;
     let published=false;
     for(let i=0;i<60;i++){
       await new Promise(r=>setTimeout(r,5000));
-      try{
-        const runs=await gh(`/repos/${USER}/${repo}/actions/runs?per_page=1`);
-        if(runs.workflow_runs.length){
-          const run=runs.workflow_runs[0];
+      try{const runs=await gh(`/repos/${USER}/${repo}/actions/runs?per_page=1`);
+        if(runs.workflow_runs.length){const run=runs.workflow_runs[0];
           prog(70+Math.min(25,i));
           if(run.status==='completed'){
             if(run.conclusion==='success'){published=true;break;}
-            else{
-              dlog(`❌ ビルド失敗(${run.conclusion})`,'lng');
-              dlog(`🔍 <a href="${run.html_url}" target="_blank">Actionsログ</a>の赤い部分をAIに(いつものやつ)`,'lin');
-              break;
-            }
-          }
-          if(i%6===5)dlog(`　...まだ${run.status}です`);
-        }
-      }catch{}
-    }
+            else{dlog(`❌ ビルド失敗(${run.conclusion})`,'lng');
+              dlog(`🔍 <a href="${run.html_url}" target="_blank">ログ</a>をAIに`,'lin');break;}}}}catch{}}
     if(published){
-      prog(100);
-      dlog('🎉 公開完了!','lok');
+      prog(100);dlog('🎉 公開完了!','lok');
       document.getElementById('liveLink').href=url;
       document.getElementById('liveLink').textContent=url;
-      document.getElementById('qrImg').src=
-        `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
       document.getElementById('doneCard').classList.add('show');
-      toast('🎉 世界公開されました!');
+      toast('🎉 世界公開!');
+      /* プロジェクト登録+リンク紐づけ+作業タブ */
+      setP(repo,{});
+      if(FLOW.link){addLink(repo,FLOW.link,FLOW.sent||{});FLOW={};}
+      pushHist(repo,'🚀 公開');
+      WT[repo]=null;/* 次回開くとき最新を取得 */
+      openWorkTab(repo,false);
+      dlog(`🔨 作業タブ「${repo}」を用意しました。修正はそこからどうぞ`,'lok');
     }
-    const hist=JSON.parse(localStorage.getItem(LS_HIST)||'[]');
-    hist.unshift({repo,user:USER,url,type:WS.type,at:new Date().toISOString()});
-    localStorage.setItem(LS_HIST,JSON.stringify(hist.slice(0,30)));
-  }catch(e){
-    dlog(`❌ エラー: ${e.message}`,'lng');
-    dlog('💡 このエラー文をそのままAIに(いつものやつ)','lin');
-    toast('😵 失敗。ログを確認してください');
-  }
+  }catch(e){dlog(`❌ ${e.message}`,'lng');dlog('💡 エラーをそのままAIに','lin');toast('😵 失敗');}
   btn.disabled=false;btn.textContent='🚀 デプロイ!';
 }
-function copyUrl(){
-  navigator.clipboard.writeText(document.getElementById('liveLink').href);
-  toast('📋 URLをコピーしました');
-}
-function toggleQR(){
-  const q=document.getElementById('qr');
-  q.style.display=q.style.display==='block'?'none':'block';
-}
 
-/* ========== 履歴 ========== */
-function renderHist(){
-  const el=document.getElementById('histList');
-  const hist=JSON.parse(localStorage.getItem(LS_HIST)||'[]');
-  if(!hist.length){el.innerHTML='<p style="color:#776b85">まだ履歴がありません🍰</p>';return;}
-  el.innerHTML=hist.map(h=>
-    `<div class="histItem">🍰 <b>${h.repo}</b><span class="date">${new Date(h.at).toLocaleString()}</span><br>`+
-    `<a href="${h.url||`https://${h.user}.github.io/${h.repo}/`}" target="_blank">🌐 サイト</a>`+
-    `<a href="https://github.com/${h.user}/${h.repo}" target="_blank">📂 リポジトリ</a>`+
-    `<a href="https://github.com/${h.user}/${h.repo}/actions" target="_blank">🏭 ビルド</a></div>`
-  ).join('');
-}
-
-/* ========== ツリー+手動編集 ========== */
+/* ---------- ツリー/編集 ---------- */
 let selPath=null;
 function openTree(){
+  if(!WS)return toast('😵 未読み込み');
   const list=document.getElementById('treeList');list.innerHTML='';
   const root={dirs:{},files:[]};
-  Object.keys(WS.files).sort().forEach(p=>{
-    const parts=p.split('/');let node=root;
-    parts.slice(0,-1).forEach(d=>{node=node.dirs[d]=node.dirs[d]||{dirs:{},files:[]};});
-    node.files.push({name:parts.at(-1),full:p});
-  });
+  Object.keys(WS.files).sort().forEach(p=>{const parts=p.split('/');let n=root;
+    parts.slice(0,-1).forEach(d=>{n=n.dirs[d]=n.dirs[d]||{dirs:{},files:[]};});
+    n.files.push({name:parts.at(-1),full:p});});
   renderNode(root,list,0);
   document.getElementById('treeView').textContent='← ファイルを選択';
   document.getElementById('editBtn').style.display='none';
@@ -1108,36 +1213,26 @@ function renderNode(node,container,depth){
     const box=document.createElement('div');container.appendChild(box);
     renderNode(node.dirs[d],box,depth+1);
     el.onclick=()=>{el.classList.toggle('closed');
-      box.style.display=el.classList.contains('closed')?'none':'';};
-  });
+      box.style.display=el.classList.contains('closed')?'none':'';};});
   node.files.forEach(f=>{
     const el=document.createElement('div');
     el.className='tnode'+(WS.dirty.has(f.full)?' dirty':'');
     el.style.paddingLeft=(24+depth*16)+'px';
-    el.innerHTML=`📄 ${f.name}`+(WS.files[f.full].bin?'<span class="badge bin">bin</span>':'');
+    el.innerHTML=`📄 ${f.name}`+(WS.files[f.full].bin?'<span class="badge">bin</span>':'');
     el.onclick=async()=>{
       document.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
-      el.classList.add('sel');
-      exitEdit();
-      selPath=f.full;
+      el.classList.add('sel');exitEdit();selPath=f.full;
       const file=WS.files[f.full];
-      if(file.bin){
-        document.getElementById('treeView').textContent='(バイナリ: プレビュー省略)';
-        document.getElementById('editBtn').style.display='none';return;
-      }
-      if(file.lazy){
-        document.getElementById('treeView').textContent='☁️ 取得中...';
+      if(file.bin){document.getElementById('treeView').textContent='(バイナリ)';
+        document.getElementById('editBtn').style.display='none';return;}
+      if(file.lazy){document.getElementById('treeView').textContent='☁️ 取得中...';
         try{await ensureFile(f.full);}catch(e){
-          document.getElementById('treeView').textContent='❌ 取得失敗: '+e.message;return;}
-      }
+          document.getElementById('treeView').textContent='❌ '+e.message;return;}}
       document.getElementById('treeView').textContent=file.text;
-      document.getElementById('editBtn').style.display='inline-block';
-    };
-    container.appendChild(el);
-  });
+      document.getElementById('editBtn').style.display='inline-block';};
+    container.appendChild(el);});
 }
 function startEdit(){
-  if(!selPath)return;
   const f=WS.files[selPath];
   if(!f||f.bin||f.lazy)return;
   document.getElementById('treeView').style.display='none';
@@ -1146,45 +1241,16 @@ function startEdit(){
   document.getElementById('editFoot').style.display='flex';
 }
 function saveEdit(){
-  if(!selPath)return;
   WS.files[selPath]={text:document.getElementById('editArea').value};
-  markDirty(selPath);
-  refreshWSBar();
-  exitEdit();
+  markDirty(selPath);renderAdvCommit();exitEdit();
   document.getElementById('treeView').textContent=WS.files[selPath].text;
   document.querySelectorAll('.tnode.sel').forEach(el=>el.classList.add('dirty'));
-  toast(WS.linked?`💾 ${selPath} 保存(コミット待ち)`:`💾 ${selPath} 保存`);
+  toast(`💾 保存(${WS.linked?'コミットで反映':'ローカル'})`);
 }
 function exitEdit(){
   document.getElementById('treeView').style.display='block';
   document.getElementById('editArea').style.display='none';
   document.getElementById('editFoot').style.display='none';
-}
-
-/* ========== 検品/UI ========== */
-function openInspect(){
-  const body=document.getElementById('inspectBody');body.innerHTML='';
-  const icon={info:'ℹ️',ok:'✅',warn:'⚠️',fix:'🔧'};
-  WS.report.forEach(r=>{
-    const d=document.createElement('div');
-    d.className='rep '+r.cls;
-    d.innerHTML=`<b>${icon[r.cls]} ${r.title}</b>${r.msg}`;
-    body.appendChild(d);
-  });
-  document.getElementById('inspectModal').classList.add('show');
-}
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
-  if(t.disabled)return;
-  document.querySelectorAll('.tab,.pane').forEach(e=>e.classList.remove('on'));
-  t.classList.add('on');document.getElementById(t.dataset.p).classList.add('on');
-  if(t.dataset.p==='deployPane')renderDeploy();
-  if(t.dataset.p==='histPane')renderHist();
-  if(t.dataset.p==='repoPane'&&!WS.linked&&!REPOS.length)loadRepoList();
-});
-function toast(m){
-  const t=document.getElementById('toast');
-  t.textContent=m;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3800);
 }
 </script>
 </body>
