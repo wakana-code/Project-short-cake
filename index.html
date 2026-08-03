@@ -1,3 +1,6 @@
+🍰 全部盛り込み、**v1.3 完全版**いきます!(コード後に変更点まとめてます)
+
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -15,8 +18,8 @@ header .sub{font-size:11px;color:#776b85}
 #userBox img{width:30px;height:30px;border-radius:50%;border:2px solid #ff9eb5;display:none}
 #connState{padding:4px 12px;border-radius:12px;font-size:11px;background:#3a2430;color:#ff8f8f}
 #connState.ok{background:#243a2c;color:#8fd8a0}
-#tabs{display:flex;gap:4px;padding:10px 14px 0;background:#1b1824}
-.tab{padding:9px 20px;border:none;border-radius:10px 10px 0 0;background:#242030;color:#998aa8;cursor:pointer;font-size:14px}
+#tabs{display:flex;gap:4px;padding:10px 14px 0;background:#1b1824;flex-wrap:wrap}
+.tab{padding:9px 18px;border:none;border-radius:10px 10px 0 0;background:#242030;color:#998aa8;cursor:pointer;font-size:14px}
 .tab.on{background:#2e2940;color:#fff;font-weight:bold}
 .tab:disabled{opacity:.35;cursor:not-allowed}
 .pane{flex:1;display:none;overflow-y:auto;padding:22px}
@@ -57,7 +60,7 @@ textarea:focus{border-color:#ff9eb5}
 #wsCount{color:#9b8dae;font-size:12px}
 #wsType{padding:3px 12px;border-radius:10px;font-size:11px;background:#2c3a4a;color:#8fc7ff;font-weight:bold}
 #wsLink{display:none;padding:3px 12px;border-radius:10px;font-size:11px;background:#3a2a20;color:#ffc98f;font-weight:bold}
-#wsBar .btn{margin:0;padding:8px 18px;font-size:13px}
+#wsBar .btn{margin:0;padding:8px 16px;font-size:13px}
 #treeModal,#inspectModal{position:fixed;inset:0;background:rgba(10,7,14,.75);display:none;align-items:center;justify-content:center;z-index:60}
 #treeModal.show,#inspectModal.show{display:flex}
 .modalBox{background:#211d2b;border:1px solid #453d55;border-radius:16px;width:min(920px,95vw);height:min(640px,90vh);display:flex;flex-direction:column;overflow:hidden}
@@ -121,6 +124,7 @@ textarea:focus{border-color:#ff9eb5}
 .repoItem b{color:#ffd3a3}
 .repoItem span{color:#776b85;font-size:11px;margin-left:auto}
 #dirtyList{font-size:12.5px;font-family:Consolas,monospace;line-height:2;color:#ffc98f;background:#1b1824;border-radius:10px;padding:10px 14px;margin-bottom:6px}
+#repoSearch{margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -144,34 +148,34 @@ textarea:focus{border-color:#ff9eb5}
 </div>
 
 <div class="pane" id="pastePane">
-  <div class="hint">💡 AIの回答を丸ごと貼ってください。<b>📂リポジトリ読み込み中ならPATCH/FILEが直接適用</b>され、コミット待ちになります。MANIFESTがあれば新規プロジェクトとして扱います。</div>
+  <div class="hint">💡 AIの回答を丸ごと貼ってください。📂リポジトリ読み込み中ならPATCH/FILEが直接適用されコミット待ちになります。</div>
   <textarea id="ta" placeholder="ここにAIの回答をペースト..."></textarea>
   <button class="btn pink" onclick="importPaste()">🍰 取り込む(自動判別)</button>
 </div>
 
 <div class="pane" id="folderPane">
-  <div class="hint">💡 フォルダ/ZIPをドロップorボタン選択。<b>📂リポジトリ読み込み中なら差分だけ検出</b>して更新ファイルをコミット待ちにします。</div>
+  <div class="hint">💡 フォルダ/ZIPをドロップorボタン選択。📂リポジトリ読み込み中なら差分だけ検出してコミット待ちにします。</div>
   <div id="dropZone"><span class="big">📁</span><span>ここにフォルダ or ZIP をドロップ</span></div>
   <div id="pickRow">
     <button class="btn" onclick="document.getElementById('dirPicker').click()">📂 Finderからフォルダを選ぶ</button>
     <button class="btn" onclick="document.getElementById('zipPicker').click()">🤐 ZIPファイルを選ぶ</button>
   </div>
   <input type="file" id="dirPicker" webkitdirectory hidden>
-  <input type="file" id="zipPicker" accept=".zip" hidden>
+  <input type="file" id="zipPicker" accept=".zip,application/zip,application/x-zip-compressed" hidden>
 </div>
 
-<!-- ===== リポジトリペイン ===== -->
 <div class="pane" id="repoPane">
   <div class="card" id="repoListCard">
     <h2>📂 リポジトリを選んで読み込む</h2>
-    <p>読み込むと「貼り付け(PATCH)」「フォルダ(差分)」「手動編集」が全部このリポジトリに向きます。</p>
+    <input type="text" id="repoSearch" placeholder="🔍 リポジトリ名で検索(多少間違ってもOK)" oninput="renderRepoList()">
+    <div id="repoList"></div>
     <button class="btn" onclick="loadRepoList()">🔄 一覧を更新</button>
-    <div id="repoList" style="margin-top:12px"></div>
   </div>
   <div class="card" id="repoLoadedCard" style="display:none">
     <h2>🔗 <span id="lnkName"></span></h2>
     <p id="lnkInfo"></p>
     <button class="btn" onclick="openTree()">🔍 中身を見る / ✏️ 手動編集</button>
+    <button class="btn" onclick="exportForAI()">📤 AIに渡すテキストを生成(コピー)</button>
     <button class="btn" onclick="unlinkRepo()">↩️ 一覧に戻る(リンク解除)</button>
   </div>
   <div class="card" id="commitCard" style="display:none">
@@ -246,6 +250,7 @@ textarea:focus{border-color:#ff9eb5}
   <span id="wsLink"></span><span id="wsCount"></span>
   <button class="btn" onclick="openTree()">🔍 中身</button>
   <button class="btn" onclick="openInspect()">🕵️ 検品</button>
+  <button class="btn" onclick="exportForAI()">📤 AIへ</button>
   <button class="btn" id="wsCommitBtn" style="display:none" onclick="gotoCommit()">💾 コミットへ</button>
   <button class="btn" onclick="clearWS()">🗑️</button>
 </div>
@@ -278,11 +283,14 @@ textarea:focus{border-color:#ff9eb5}
 
 <script>
 /* ================================================
-   🍰 ShortCake v1.1 — リポジトリ直結編集対応・完全版
+   🍰 ShortCake v1.3
+   新: リポジトリあいまい検索 / AIに渡すエクスポート /
+       バイナリ判定を除外方式に変更(tsx等の取りこぼし根絶) /
+       ZIP読み込みのエラー可視化
    ================================================ */
 const LS_TOKEN='sc_token',LS_HIST='sc_history';
 let WS={name:null,files:{},type:null,report:[],extras:{},linked:null,dirty:new Set(),deleted:new Set()};
-let USER=null;
+let USER=null,REPOS=[];
 
 async function gh(path,opt={}){
   const token=localStorage.getItem(LS_TOKEN);
@@ -321,12 +329,14 @@ function disconnect(){localStorage.removeItem(LS_TOKEN);location.reload();}
   try{onConnected(await gh('/user'));}
   catch{localStorage.removeItem(LS_TOKEN);toast('⚠️ トークン無効。再設定を');}}})();
 
-/* ========== 共通ユーティリティ ========== */
+/* ========== ユーティリティ ========== */
 const b64decode=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,'')),c=>c.charCodeAt(0)));
 const SKIP_RE=/(^|\/)(node_modules|\.git|\.DS_Store|dist|build|\.next|__pycache__|\.cache)(\/|$)/;
-const TEXT_EXT=/\.(html?|css|js|mjs|cjs|ts|tsx|jsx|json|md|txt|svg|xml|yml|yaml|toml|py|rb|sh|env|gitignore|csv|vue|svelte)$/i;
+/* ★方針転換: 「テキスト拡張子リスト」ではなく「バイナリ拡張子リスト」で判定。
+   リストにない拡張子(tsx含む未知の形式)はすべてテキストとして読む → 取りこぼし根絶 */
+const BIN_EXT=/\.(png|jpe?g|gif|webp|avif|ico|bmp|tiff?|woff2?|ttf|otf|eot|mp3|wav|ogg|m4a|mp4|webm|mov|avi|pdf|zip|gz|tar|rar|7z|jar|exe|dll|bin|dat|psd|sketch|fig)$/i;
+const isBin=p=>BIN_EXT.test(p);
 
-/* lazyファイル(リポジトリから未取得)の中身を取得 */
 async function ensureFile(path,fobj){
   const f=fobj||WS.files[path];
   if(!f||!f.lazy)return f;
@@ -340,21 +350,38 @@ async function ensureFile(path,fobj){
 function markDirty(p){if(WS.linked){WS.dirty.add(p);WS.deleted.delete(p);refreshLinkedUI();}}
 function markDeleted(p){if(WS.linked){WS.deleted.add(p);WS.dirty.delete(p);refreshLinkedUI();}}
 
-/* ========== リポジトリ読み込み ========== */
+/* ========== リポジトリ一覧+あいまい検索 ========== */
 async function loadRepoList(){
   const el=document.getElementById('repoList');
   el.innerHTML='読み込み中...';
   try{
-    const repos=await gh('/user/repos?sort=updated&per_page=100');
-    el.innerHTML='';
-    repos.forEach(r=>{
-      const d=document.createElement('div');
-      d.className='repoItem';
-      d.innerHTML=`📦 <b>${r.name}</b>${r.private?'🔒':''}<span>${new Date(r.pushed_at).toLocaleDateString()}</span>`;
-      d.onclick=()=>loadRepo(r.name);
-      el.appendChild(d);
-    });
+    REPOS=await gh('/user/repos?sort=updated&per_page=100');
+    renderRepoList();
   }catch(e){el.innerHTML=`❌ ${e.message}`;}
+}
+/* あいまい一致: 正規化部分一致 or 文字順一致(subsequence) */
+function fuzzyMatch(name,q){
+  const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
+  name=norm(name);q=norm(q);
+  if(!q)return true;
+  if(name.includes(q))return true;
+  let i=0;
+  for(const c of name){if(c===q[i])i++;if(i===q.length)return true;}
+  return false;
+}
+function renderRepoList(){
+  const el=document.getElementById('repoList');
+  const q=document.getElementById('repoSearch').value;
+  el.innerHTML='';
+  const hits=REPOS.filter(r=>fuzzyMatch(r.name,q));
+  if(!hits.length){el.innerHTML='<p style="color:#776b85;font-size:13px">該当なし。検索語を短くしてみてください</p>';return;}
+  hits.forEach(r=>{
+    const d=document.createElement('div');
+    d.className='repoItem';
+    d.innerHTML=`📦 <b>${r.name}</b>${r.private?'🔒':''}<span>${new Date(r.pushed_at).toLocaleDateString()}</span>`;
+    d.onclick=()=>loadRepo(r.name);
+    el.appendChild(d);
+  });
 }
 async function loadRepo(repo){
   toast(`📂 「${repo}」を読み込み中...`);
@@ -367,17 +394,15 @@ async function loadRepo(repo){
     const files={};
     tree.tree.forEach(t=>{
       if(t.type!=='blob'||SKIP_RE.test(t.path))return;
-      files[t.path]={sha:t.sha,lazy:true,bin:!TEXT_EXT.test(t.path)};
+      files[t.path]={sha:t.sha,lazy:true,bin:isBin(t.path)};
     });
     WS={name:repo,files,type:null,report:[],extras:{},
       linked:{repo,branch,headSha:ref.object.sha},dirty:new Set(),deleted:new Set()};
-    /* 検品に必要な主要ファイルだけ先に取得 */
     for(const p of ['package.json','vite.config.js','vite.config.ts','vite.config.mjs'])
       if(WS.files[p])await ensureFile(p);
     inspectProject();
     refreshWSBar();
-    if(tree.truncated)toast('⚠️ 巨大リポジトリのため一部ファイルが省略されています');
-    else toast(`🔗 「${repo}」をリンクしました(${Object.keys(files).length}ファイル)`);
+    toast(tree.truncated?'⚠️ 巨大なため一部省略されました':`🔗 「${repo}」をリンク(${Object.keys(files).length}ファイル)`);
   }catch(e){toast('😵 読み込み失敗: '+e.message.slice(0,80));}
 }
 function unlinkRepo(){clearWS();}
@@ -394,7 +419,6 @@ function refreshLinkedUI(){
     lk.textContent=`🔗 ${WS.linked.repo}@${WS.linked.branch}${n?` ● 未コミット${n}件`:''}`;
     cb.style.display=n?'inline-block':'none';
   }else{lk.style.display='none';cb.style.display='none';}
-  /* リポジトリペイン */
   document.getElementById('repoListCard').style.display=WS.linked?'none':'block';
   document.getElementById('repoLoadedCard').style.display=WS.linked?'block':'none';
   document.getElementById('commitCard').style.display=(WS.linked&&n)?'block':'none';
@@ -407,7 +431,88 @@ function refreshLinkedUI(){
   }
 }
 
-/* ========== コミット ========== */
+/* ========== 📤 AIに渡すエクスポート ========== */
+async function exportForAI(){
+  if(!WS.name)return toast('😵 プロジェクトが未読み込みです');
+  toast('📤 テキスト生成中...(ファイル取得あり)');
+  const paths=Object.keys(WS.files).sort();
+  /* ツリー図 */
+  let treeText='';
+  const root={dirs:{},files:[]};
+  paths.forEach(p=>{
+    const parts=p.split('/');let node=root;
+    parts.slice(0,-1).forEach(d=>{node=node.dirs[d]=node.dirs[d]||{dirs:{},files:[]};});
+    node.files.push(parts.at(-1));
+  });
+  const drawTree=(node,indent)=>{
+    Object.keys(node.dirs).sort().forEach(d=>{
+      treeText+=`${indent}📁 ${d}/\n`;drawTree(node.dirs[d],indent+'  ');});
+    node.files.sort().forEach(f=>treeText+=`${indent}📄 ${f}\n`);
+  };
+  drawTree(root,'');
+  /* 本文 */
+  let out=`以下は現在のプロジェクト「${WS.name}」の全ファイルです。\n`;
+  out+=`これを把握した上で、修正は必ずPATCH形式(oldブロックはこの内容から一字一句コピー)、新規ファイルはFILE形式、削除はDELETE形式で出力してください。\n\n`;
+  out+=`【ファイル構造】\n${treeText}\n`;
+  let skipped=[];
+  for(const p of paths){
+    const f=WS.files[p];
+    if(f.bin){skipped.push(p);continue;}
+    try{await ensureFile(p);}catch{skipped.push(p+'(取得失敗)');continue;}
+    out+=`#### FILE: ${p}\n\`\`\`\n${f.text}\n\`\`\`\n\n`;
+  }
+  if(skipped.length)out+=`【省略したバイナリ等】\n${skipped.join('\n')}\n`;
+  const kb=Math.round(out.length/1024);
+  try{
+    await navigator.clipboard.writeText(out);
+    toast(`📤 コピー完了!(約${kb}KB / ${paths.length}ファイル)→ AIチャットに貼ってください`);
+    if(kb>300)setTimeout(()=>toast('⚠️ サイズ大。AIのコンテキスト上限に注意(不要フォルダの除外を検討)'),4000);
+  }catch{
+    /* クリップボード失敗時はダウンロード */
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
+    a.download=WS.name+'_for_ai.txt';a.click();
+    toast('📄 コピー不可のためテキストファイルでダウンロードしました');
+  }
+}
+
+/* ========== コミット+見届け ========== */
+async function watchPagesAfterCommit(repo,sha,clog){
+  clog('🏭 サイトの自動更新を見届け中...(数十秒〜数分)');
+  const url=`https://${USER}.github.io/${repo}/`;
+  let run=null;
+  for(let i=0;i<8;i++){
+    await new Promise(w=>setTimeout(w,5000));
+    try{
+      const runs=await gh(`/repos/${USER}/${repo}/actions/runs?per_page=5`);
+      run=runs.workflow_runs.find(x=>x.head_sha===sha);
+      if(run)break;
+    }catch{}
+  }
+  if(!run){
+    clog('⚠️ 自動ビルドが起動しません。deploy.ymlが無い可能性があります','lng');
+    clog('💡 🚀タブから<b>同名で一度デプロイ</b>すると以後コミットだけで自動更新されます','lin');
+    return;
+  }
+  clog(`🔍 ビルド起動を確認(<a href="${run.html_url}" target="_blank">進行状況</a>)`);
+  for(let i=0;i<60;i++){
+    if(run.status==='completed')break;
+    await new Promise(w=>setTimeout(w,5000));
+    try{run=await gh(`/repos/${USER}/${repo}/actions/runs/${run.id}`);}catch{}
+    if(i%6===5)clog(`　...まだ${run.status}です`);
+  }
+  if(run.conclusion==='success'){
+    clog('🎉 サイト更新完了!','lok');
+    clog(`🌐 <a href="${url}" target="_blank">${url}</a>`,'lok');
+    clog('💡 変わってなければ ⌘+Shift+R(キャッシュ更新)','lin');
+    toast('🎉 サイトが更新されました!');
+  }else if(run.status!=='completed'){
+    clog('⏳ まだビルド中。上のリンクから確認してください','lin');
+  }else{
+    clog(`❌ ビルド失敗(${run.conclusion})`,'lng');
+    clog(`🔍 <a href="${run.html_url}" target="_blank">ログ</a>の赤い部分をAIに(いつものやつ)`,'lin');
+  }
+}
 async function commitChanges(){
   if(!WS.linked)return;
   const paths=[...WS.dirty],dels=[...WS.deleted];
@@ -455,46 +560,6 @@ async function commitChanges(){
   btn.disabled=false;btn.textContent='💾 コミット&プッシュ';
 }
 
-/* ========== コミット後の見届け係 ========== */
-async function watchPagesAfterCommit(repo,sha,clog){
-  clog('🏭 サイトの自動更新を見届け中...(数十秒〜数分)');
-  const url=`https://${USER}.github.io/${repo}/`;
-  let run=null;
-  /* このコミットに紐づくビルドを探す(最大40秒) */
-  for(let i=0;i<8;i++){
-    await new Promise(w=>setTimeout(w,5000));
-    try{
-      const runs=await gh(`/repos/${USER}/${repo}/actions/runs?per_page=5`);
-      run=runs.workflow_runs.find(x=>x.head_sha===sha);
-      if(run)break;
-    }catch{}
-  }
-  if(!run){
-    clog('⚠️ 自動ビルドが起動しませんでした。このリポジトリにはデプロイ指示書(deploy.yml)が無い可能性があります','lng');
-    clog('💡 🚀デプロイタブから<b>同じリポジトリ名で一度デプロイ</b>すると指示書が入り、以後は💾コミットだけで自動更新されます','lin');
-    return;
-  }
-  clog(`🔍 ビルド起動を確認(<a href="${run.html_url}" target="_blank">進行状況</a>)`);
-  /* 完了まで監視(最大5分) */
-  for(let i=0;i<60;i++){
-    if(run.status==='completed')break;
-    await new Promise(w=>setTimeout(w,5000));
-    try{run=await gh(`/repos/${USER}/${repo}/actions/runs/${run.id}`);}catch{}
-    if(i%6===5)clog(`　...まだ${run.status}です`);
-  }
-  if(run.conclusion==='success'){
-    clog('🎉 サイト更新完了!','lok');
-    clog(`🌐 <a href="${url}" target="_blank">${url}</a>`,'lok');
-    clog('💡 見た目が変わらない時はキャッシュです。⌘+Shift+R でスーパーリロード!','lin');
-    toast('🎉 サイトが更新されました!');
-  }else if(run.status!=='completed'){
-    clog('⏳ 5分経ってもビルド中です。上の「進行状況」リンクから直接確認してください','lin');
-  }else{
-    clog(`❌ ビルド失敗(${run.conclusion})`,'lng');
-    clog(`🔍 <a href="${run.html_url}" target="_blank">Actionsログ</a>の赤い部分をAIに貼れば診断できます(いつものやつ)`,'lin');
-  }
-}
-
 /* ========== パーサー ========== */
 function parseManifest(text){
   const mm=text.match(/####\s*MANIFEST\s*```\w*\n([\s\S]*?)```/);
@@ -540,21 +605,18 @@ function applyPatch(ft,p){
   if(nf.indexOf(no)>=0)return{text:nf.replace(no,normalize(p.neu))};
   return{text:null};
 }
-
 async function importPaste(){
   const text=document.getElementById('ta').value;
   if(!text.trim())return toast('😵 何も貼られていません');
   const man=parseManifest(text);let files=parseFiles(text);
   const patches=parsePatches(text),deletes=parseDeletes(text);
-
-  if(man){ /* 新規プロジェクト(リンク解除して展開) */
+  if(man){
     const missing=man.FILES.filter(f=>!(f in files));
     if(missing.length&&!confirm(`⚠️ 本体がないファイル: ${missing.join(', ')}\n続ける?`))return;
     setWS(man.PROJECT||'unnamed',files);return;
   }
-
   if(patches.length||deletes.length||Object.keys(files).length){
-    if(!WS.name)return toast('😵 適用先がありません。先にプロジェクトかリポジトリを読み込んでください');
+    if(!WS.name)return toast('😵 適用先がありません。先に読み込んでください');
     let fail=0,rep=[];
     Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;markDirty(p);rep.push(`📄${p}`);});
     deletes.forEach(p=>{if(p in WS.files){delete WS.files[p];markDeleted(p);rep.push(`🗑️${p}`);}});
@@ -568,14 +630,13 @@ async function importPaste(){
     }
     refreshWSBar();
     if(fail)toast(`⚠️ 適用${rep.length}件 / PATCH失敗${fail}件(old不一致疑い)`);
-    else if(WS.linked)toast(`✅ 適用${rep.length}件!📂タブか💾ボタンからコミットしてください`);
+    else if(WS.linked)toast(`✅ 適用${rep.length}件!💾ボタンからコミットを`);
     else toast(`✅ 適用${rep.length}件`);
     return;
   }
-
   files=parseLoose(text);
   if(Object.keys(files).length){
-    if(WS.linked){ /* リンク中はゆるい書式も更新扱い */
+    if(WS.linked){
       Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;markDirty(p);});
       refreshWSBar();
       toast(`✅ ${Object.keys(files).length}ファイル更新(コミット待ち)`);
@@ -585,35 +646,41 @@ async function importPaste(){
   toast('😵 コードブロックが見つかりません');
 }
 
-/* ========== フォルダ読み込み ========== */
+/* ========== フォルダ/ZIP読み込み ========== */
 const zone=document.getElementById('dropZone');
 ['dragover','dragenter'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('over');}));
 ['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('over');}));
 zone.addEventListener('drop',async e=>{
-  const zipFile=[...e.dataTransfer.files].find(f=>f.name.endsWith('.zip'));
-  if(zipFile){await loadZip(zipFile);return;}
-  const entries=[...e.dataTransfer.items].map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(Boolean);
-  if(!entries.length)return toast('😵 フォルダかZIPをドロップしてください');
-  toast('📥 読み込み中...');
-  const files={};
-  const rootName=entries.length===1&&entries[0].isDirectory?entries[0].name:'dropped-project';
-  for(const en of entries)await walkEntry(en,'',files,entries.length===1&&en.isDirectory);
-  finishFolderLoad(rootName,files);
+  try{
+    const zipFile=[...e.dataTransfer.files].find(f=>/\.zip$/i.test(f.name));
+    if(zipFile){await loadZip(zipFile);return;}
+    const entries=[...e.dataTransfer.items].map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(Boolean);
+    if(!entries.length)return toast('😵 フォルダかZIPをドロップしてください');
+    toast('📥 読み込み中...');
+    const files={};
+    const rootName=entries.length===1&&entries[0].isDirectory?entries[0].name:'dropped-project';
+    for(const en of entries)await walkEntry(en,'',files,entries.length===1&&en.isDirectory);
+    await finishFolderLoad(rootName,files);
+  }catch(err){toast('😵 読み込みエラー: '+err.message);}
 });
 document.getElementById('dirPicker').addEventListener('change',async e=>{
-  const list=[...e.target.files];if(!list.length)return;
-  toast('📥 読み込み中...');
-  const files={};
-  for(const f of list){
-    const rel=f.webkitRelativePath.split('/').slice(1).join('/');
-    if(!rel||SKIP_RE.test(rel)||f.size>3*1024*1024)continue;
-    files[rel]=await readFileSmart(f,rel);
-  }
-  finishFolderLoad(list[0].webkitRelativePath.split('/')[0],files);
+  try{
+    const list=[...e.target.files];if(!list.length)return;
+    toast('📥 読み込み中...');
+    const files={};
+    for(const f of list){
+      const rel=f.webkitRelativePath.split('/').slice(1).join('/');
+      if(!rel||SKIP_RE.test(rel)||f.size>3*1024*1024)continue;
+      files[rel]=await readFileSmart(f,rel);
+    }
+    await finishFolderLoad(list[0].webkitRelativePath.split('/')[0],files);
+  }catch(err){toast('😵 読み込みエラー: '+err.message);}
   e.target.value='';
 });
 document.getElementById('zipPicker').addEventListener('change',async e=>{
-  if(e.target.files[0])await loadZip(e.target.files[0]);e.target.value='';
+  try{if(e.target.files[0])await loadZip(e.target.files[0]);}
+  catch(err){toast('😵 ZIPエラー: '+err.message);}
+  e.target.value='';
 });
 function walkEntry(entry,prefix,files,stripRoot){
   return new Promise(resolve=>{
@@ -638,26 +705,27 @@ function walkEntry(entry,prefix,files,stripRoot){
 function readFileSmart(f,path){
   return new Promise(res=>{
     const r=new FileReader();
-    if(TEXT_EXT.test(path)){r.onload=()=>res({text:r.result});r.readAsText(f);}
+    if(!isBin(path)){r.onload=()=>res({text:r.result});r.readAsText(f);}
     else{r.onload=()=>res({base64:r.result.split(',')[1],bin:true});r.readAsDataURL(f);}
   });
 }
 async function loadZip(file){
+  if(typeof JSZip==='undefined')return toast('😵 ZIP機能の読み込みに失敗(ネット接続を確認して再読み込み)');
   toast('🤐 ZIP解凍中...');
   const zip=await JSZip.loadAsync(file);
   const files={};
-  const names=Object.keys(zip.files).filter(n=>!zip.files[n].dir&&!SKIP_RE.test(n));
+  const names=Object.keys(zip.files).filter(n=>!zip.files[n].dir&&!SKIP_RE.test(n)&&!n.startsWith('__MACOSX'));
+  if(!names.length)return toast('😵 ZIP内に読み込めるファイルがありません');
   let strip='';
   const roots=new Set(names.map(n=>n.split('/')[0]));
   if(roots.size===1&&names.every(n=>n.includes('/')))strip=[...roots][0]+'/';
   for(const n of names){
     const path=n.slice(strip.length);if(!path)continue;
-    if(TEXT_EXT.test(path))files[path]={text:await zip.files[n].async('string')};
+    if(!isBin(path))files[path]={text:await zip.files[n].async('string')};
     else files[path]={base64:await zip.files[n].async('base64'),bin:true};
   }
-  finishFolderLoad(file.name.replace(/\.zip$/,''),files);
+  await finishFolderLoad(file.name.replace(/\.zip$/i,''),files);
 }
-/* ★リンク中なら差分マージ、でなければ新規WS */
 async function finishFolderLoad(name,files){
   if(!Object.keys(files).length)return toast('😵 読み込めるファイルがありません');
   if(WS.linked){
@@ -719,7 +787,7 @@ function inspectProject(){
     if(absCount){rep('fix',`絶対パス${absCount}件`,'デプロイ時に相対パスへ自動変換');WS.extras.fixAbsPaths=true;}
   }
   if(type==='vite'){
-    rep('ok','Vite判定','Actionsで自動ビルド+Pages自動設定します');
+    rep('ok','Vite判定','Actionsで自動ビルド+Pages自動設定します(tsx/ts/jsxもビルドで処理されます)');
     const cfgPath=Object.keys(F).find(p=>/^vite\.config\.(js|ts|mjs)$/.test(p));
     if(cfgPath&&!F[cfgPath].lazy&&!/base\s*:/.test(F[cfgPath].text)){
       rep('fix','base設定なし',`base:'./' を自動注入します`);WS.extras.injectViteBase=cfgPath;}
@@ -729,7 +797,7 @@ function inspectProject(){
   if(type==='next'){rep('warn','Next.js検出','静的エクスポート前提で試みます');WS.extras.workflow='next';}
   if(type==='node-build'){rep('warn','汎用Nodeビルド','dist/公開の汎用設定を同梱');WS.extras.workflow='generic';}
   if(type==='node-unknown')rep('warn','buildスクリプトなし','Pagesではサーバー処理は動きません');
-  if(type==='broken-react')rep('warn','React断片','AIに完全構成で出し直させてください');
+  if(type==='broken-react')rep('warn','React断片(package.json無し)','AIに「Vite完全構成で出し直して」と依頼してください');
   const secretPatterns=[
     [/sk-[a-zA-Z0-9]{20,}/,'OpenAI系キー'],[/github_pat_[a-zA-Z0-9_]{20,}/,'GitHubトークン'],
     [/AIza[a-zA-Z0-9_-]{30,}/,'Googleキー'],
@@ -764,7 +832,7 @@ function clearWS(){
   refreshLinkedUI();renderDeploy();toast('🗑️ クリア');
 }
 
-/* ========== デプロイ(新規公開用) ========== */
+/* ========== デプロイ ========== */
 function renderDeploy(){
   const no=document.getElementById('dNoWs'),ready=document.getElementById('dReady');
   if(!WS.name){no.style.display='block';ready.style.display='none';return;}
@@ -775,7 +843,7 @@ function renderDeploy(){
     `プロジェクト: <b>${WS.name}</b><br>種別: <b>${document.getElementById('wsType').textContent}</b> / ファイル: <b>${Object.keys(WS.files).length}</b><br>`+
     `自動修正: <b>${fixes}件</b>`+
     (WS.extras.workflow?`<br>🏭 Actionsビルド+Pages自動設定`:'<br>📄 そのまま公開(Pages自動設定)')+
-    (WS.linked?`<br>🔗 リンク中: 同名なら上書き、別名なら複製デプロイ`:'');
+    (WS.linked?`<br>🔗 リンク中: 同名なら上書き、別名なら複製`:'');
   document.getElementById('repoName').value=WS.name;
 }
 const dlog=(msg,cls='lin')=>{
@@ -922,10 +990,8 @@ async function deploy(){
       await Promise.all(batch.map(async p=>{
         const f=files[p];
         if(f.lazy){
-          if(sameRepo){ /* 同一リポジトリなら既存blobを再利用 */
-            tree.push({path:p,mode:'100644',type:'blob',sha:f.sha});done++;return;
-          }
-          await ensureFile(p,f); /* 別リポジトリへは実体を取得して転送 */
+          if(sameRepo){tree.push({path:p,mode:'100644',type:'blob',sha:f.sha});done++;return;}
+          await ensureFile(p,f);
         }
         const body=f.bin?{content:f.base64,encoding:'base64'}:{content:f.text,encoding:'utf-8'};
         const blob=await gh(`/repos/${USER}/${repo}/git/blobs`,{method:'POST',body:JSON.stringify(body)});
@@ -969,7 +1035,7 @@ async function deploy(){
             if(run.conclusion==='success'){published=true;break;}
             else{
               dlog(`❌ ビルド失敗(${run.conclusion})`,'lng');
-              dlog(`🔍 <a href="${run.html_url}" target="_blank">Actionsログ</a>の赤い部分をAIに貼れば診断できます`,'lin');
+              dlog(`🔍 <a href="${run.html_url}" target="_blank">Actionsログ</a>の赤い部分をAIに(いつものやつ)`,'lin');
               break;
             }
           }
@@ -1019,7 +1085,7 @@ function renderHist(){
   ).join('');
 }
 
-/* ========== ツリー表示+手動編集 ========== */
+/* ========== ツリー+手動編集 ========== */
 let selPath=null;
 function openTree(){
   const list=document.getElementById('treeList');list.innerHTML='';
@@ -1059,8 +1125,7 @@ function renderNode(node,container,depth){
       const file=WS.files[f.full];
       if(file.bin){
         document.getElementById('treeView').textContent='(バイナリ: プレビュー省略)';
-        document.getElementById('editBtn').style.display='none';
-        return;
+        document.getElementById('editBtn').style.display='none';return;
       }
       if(file.lazy){
         document.getElementById('treeView').textContent='☁️ 取得中...';
@@ -1098,7 +1163,7 @@ function exitEdit(){
   document.getElementById('editFoot').style.display='none';
 }
 
-/* ========== 検品表示/UI ========== */
+/* ========== 検品/UI ========== */
 function openInspect(){
   const body=document.getElementById('inspectBody');body.innerHTML='';
   const icon={info:'ℹ️',ok:'✅',warn:'⚠️',fix:'🔧'};
@@ -1116,7 +1181,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   t.classList.add('on');document.getElementById(t.dataset.p).classList.add('on');
   if(t.dataset.p==='deployPane')renderDeploy();
   if(t.dataset.p==='histPane')renderHist();
-  if(t.dataset.p==='repoPane'&&!WS.linked)loadRepoList();
+  if(t.dataset.p==='repoPane'&&!WS.linked&&!REPOS.length)loadRepoList();
 });
 function toast(m){
   const t=document.getElementById('toast');
@@ -1126,3 +1191,14 @@ function toast(m){
 </script>
 </body>
 </html>
+```
+
+## v1.3の変更点まとめ🎁
+
+- 🔍 **リポジトリあいまい検索**:検索欄を追加。正規化部分一致+**文字順一致**なので「shrtcake」でもshortcakeがヒットします
+- 📤 **「AIに渡す」ボタン**(wsBarとリポジトリ画面の両方):プロジェクト全体を**ツリー図+FILE書式の一本のテキスト**にしてクリップボードへ。AIチャットに貼れば、ファイル添付できないAIでも全把握→PATCH返答が可能に。サイズ表示付き、コピー不可環境では.txtダウンロードにフォールバック
+- 🔧 **tsx等の取りこぼし根絶**:判定方針を「テキストのリストに載ってたら読む」→**「バイナリのリストに載ってなければ全部読む」**に反転。未知の拡張子も全部テキストとして拾います(これが原因でした、私の6敗目🙇)
+- 🤐 **ZIP強化**:`__MACOSX`ゴミフォルダ除外(Mac製ZIPあるある)、ライブラリ読込失敗や空ZIPを**無言で失敗せずエラー表示**するように
+- 前回のコミット後見届け機能も統合済み
+
+これで「AIチャット⇄ShortCake⇄GitHub Pages」の往復が完全に繋がりました。**添付できないAIにはテキストで渡し、返答は貼るだけ**。🍰(ところでケーキ、利息でイチゴ3個になりました)
