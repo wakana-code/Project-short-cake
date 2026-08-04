@@ -650,9 +650,56 @@ function applyPatch(ft,p){
   if(nf.indexOf(no)>=0)return{text:nf.replace(no,normalize(p.neu))};
   return{text:null};
 }
+/* ---------- 裸形式(囲いが剥がれたコピペ)の救済パーサー ---------- */
+const LANG_LINE=/^(html|css|javascript|js|typescript|ts|json|manifest|python|py|text|txt|xml|yaml|yml|markdown|md)$/i;
+function parseNaked(text){
+  const lines=text.replace(/\r\n?/g,'\n').split('\n');
+  let man=null,files={},cur=null,buf=[],inMan=false,manBuf=[];
+  const flush=()=>{if(cur){
+    while(buf.length&&!buf[buf.length-1].trim())buf.pop(); /* 末尾空行除去 */
+    files[cur]={text:buf.join('\n')+'\n'};}
+    cur=null;buf=[];};
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    const t=line.trim().replace(/^#+\s*/,''); /* ####付きでも裸でも受ける */
+    if(/^MANIFEST$/i.test(t)){flush();inMan=true;manBuf=[];continue;}
+    let fm=t.match(/^FILE:\s*([\w\-./]+)$/i);
+    if(fm){
+      if(inMan){inMan=false;}
+      flush();cur=fm[1];
+      /* 直後の「HTML」「js」みたいな言語名だけの行を骨拾いしてスキップ */
+      if(i+1<lines.length&&LANG_LINE.test(lines[i+1].trim()))i++;
+      continue;
+    }
+    if(inMan){
+      if(LANG_LINE.test(t))continue; /* manifestという残骸行 */
+      if(t)manBuf.push(line);
+      /* MANIFEST部の終わり判定はFILE:行で行うので継続 */
+      continue;
+    }
+    if(cur)buf.push(line);
+  }
+  flush();
+  if(manBuf.length){
+    man={FILES:[]};
+    manBuf.forEach(l=>{l=l.trim();
+      if(l.startsWith('- '))man.FILES.push(l.slice(2).trim());
+      else if(l.includes(':')){let[k,...v]=l.split(':');k=k.trim().toUpperCase();
+        if(k!=='FILES'&&k!=='FILE')man[k]=v.join(':').trim();}});
+  }
+  return{man,files};
+}
 async function applyText(text){
-  const man=parseManifest(text);
-  const files=parseFiles(text),patches=parsePatches(text),deletes=parseDeletes(text);
+  let man=parseManifest(text);
+  let files=parseFiles(text),patches=parsePatches(text),deletes=parseDeletes(text);
+  /* ★正規形式が1個も見つからない時だけ、裸形式の救済を試す */
+  if(!man&&!Object.keys(files).length&&!patches.length&&!deletes.length){
+    const naked=parseNaked(text);
+    if(Object.keys(naked.files).length){
+      man=naked.man;files=naked.files;
+      toast(`🩹 囲いが剥がれた形式を検出→救済パースしました(${Object.keys(files).length}ファイル)`);
+    }
+  }
   /* ★全面書き直し(MANIFEST+FILE)をリンク中プロジェクトへの更新として適用 */
   if(man&&WS&&WS.linked&&Object.keys(files).length){
     Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;markDirty(p);});
@@ -685,9 +732,15 @@ async function applyText(text){
 async function importPaste(srcId){
   const text=document.getElementById(srcId).value;
   if(!text.trim())return toast('😵 何も貼られていません');
-  const man=parseManifest(text);
+  let man=parseManifest(text);
+  let nakedFiles=null;
+  if(!man&&!Object.keys(parseFiles(text)).length&&!parsePatches(text).length&&!parseDeletes(text).length){
+    const naked=parseNaked(text);
+    if(naked.man&&Object.keys(naked.files).length){man=naked.man;nakedFiles=naked.files;
+      toast('🩹 囲いが剥がれた形式を救済パースしました');}
+  }
   if(man){
-    const files=parseFiles(text);
+    const files=nakedFiles||parseFiles(text);
     const missing=man.FILES.filter(f=>!(f in files));
     if(missing.length&&!confirm(`⚠️ 本体がないファイル: ${missing.join(', ')}\n続ける?`))return;
     /* ★リンク中なら「全面更新」か「新規」かを選ばせる */
