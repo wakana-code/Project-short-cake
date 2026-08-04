@@ -350,6 +350,7 @@ FILES:
 - oldは実在コードの完全コピー。記憶で書かず提示されたコードから写す
 - oldはファイル内で一意になる長さに(前後の行を含める)
 - 1修正=1PATCH。新規ファイルはFILE形式、全面書き直しもFILE形式でよい
+- 変更が広範囲に及ぶ場合は、Aと同じMANIFEST+FILE形式で全ファイルを出し直してもよい(全面更新として適用される)
 
 【C. 追加・削除】
 - コード追加もPATCH(oldに挿入位置周辺、newに周辺+新行)
@@ -649,7 +650,21 @@ function applyPatch(ft,p){
   return{text:null};
 }
 async function applyText(text){
+  const man=parseManifest(text);
   const files=parseFiles(text),patches=parsePatches(text),deletes=parseDeletes(text);
+  /* ★全面書き直し(MANIFEST+FILE)をリンク中プロジェクトへの更新として適用 */
+  if(man&&WS&&WS.linked&&Object.keys(files).length){
+    Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;markDirty(p);});
+    /* 新構成に含まれない既存ファイルの削除を提案(バイナリと.github/は除外) */
+    const keep=new Set([...man.FILES,...Object.keys(files)]);
+    const gone=Object.keys(WS.files).filter(p=>
+      !keep.has(p)&&!p.startsWith('.github/')&&!WS.files[p].bin&&!WS.deleted.has(p));
+    if(gone.length&&confirm(`🔄 全面書き直しを検出しました。\n新しい構成に含まれない${gone.length}ファイルを削除しますか?\n\n${gone.join('\n')}\n\n(OK=削除 / キャンセル=残す)`)){
+      gone.forEach(p=>{delete WS.files[p];markDeleted(p);});
+    }
+    toast(`🔄 全面更新として適用(${Object.keys(files).length}ファイル${gone.length?`・削除候補${gone.length}`:''})`);
+    return true;
+  }
   if(!Object.keys(files).length&&!patches.length&&!deletes.length){
     toast('😵 FILE/PATCH/DELETEブロックが見つかりません');return false;}
   let fail=0;
@@ -674,6 +689,14 @@ async function importPaste(srcId){
     const files=parseFiles(text);
     const missing=man.FILES.filter(f=>!(f in files));
     if(missing.length&&!confirm(`⚠️ 本体がないファイル: ${missing.join(', ')}\n続ける?`))return;
+    /* ★リンク中なら「全面更新」か「新規」かを選ばせる */
+    if(WS&&WS.linked&&confirm(`🔗 リンク中の「${WS.linked.repo}」への全面更新として適用しますか?\n(キャンセル=新規プロジェクトとして読み込み)`)){
+      await applyText(text);
+      document.getElementById(srcId).value='';
+      const n=WS.dirty.size+WS.deleted.size;
+      toast(`✅ 全面更新を適用${n?` → 💾コミット(${n}件)で反映!`:''}`);
+      return;
+    }
     setAdvWS(man.PROJECT||'unnamed',files);return;
   }
   if(!WS||!WS.name)return toast('😵 適用先がありません。先に読み込みを');
