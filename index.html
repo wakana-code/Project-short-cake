@@ -294,8 +294,7 @@ textarea:focus{border-color:#ff9eb5}
   <div class="card">
     <h2>🤖 AIサービス管理</h2>
     <div id="svcManage"></div>
-    <label class="chk"><input type="checkbox" id="autoOpenChk" onchange="localStorage.setItem('sc_autoOpen',this.checked?'1':'0')"> コピー時に自動でAIを開く</label>
-    <p class="danger">💡 タブは名前付きで開くため、2回目以降は同じタブが再利用されます(増殖しません)。ChatGPT/Claudeは短い依頼文なら入力済み状態で開きます。</p>
+    <p class="danger">💡 AIボタンは押した時だけタブを開きます(名前付きなので増殖しません)。</p>
   </div>
   <div class="card" id="disconnectCard" style="display:none"><h2>🔌 接続解除</h2><button class="btn" onclick="disconnect()">解除する</button></div>
 </div>
@@ -436,10 +435,18 @@ const clearPend=()=>localStorage.removeItem(LS_PEND);
 
 /* ---------- 🤖 AIサービス ---------- */
 const DEFAULT_SVCS=[
-  {id:'chatgpt',name:'🤖 ChatGPT',url:'https://chatgpt.com/',q:'https://chatgpt.com/?q={text}'},
-  {id:'gemini',name:'✨ Gemini',url:'https://gemini.google.com/app',q:null},
-  {id:'claude',name:'🎩 Claude',url:'https://claude.ai/new',q:'https://claude.ai/new?q={text}'},
+  {id:'chatgpt',name:'🤖 ChatGPT',url:'https://chatgpt.com/'},
+  {id:'gemini',name:'✨ Gemini',url:'https://gemini.google.com/app'},
+  {id:'claude',name:'🎩 Claude',url:'https://claude.ai/new'},
 ];
+/* 会話リンクの浄化: ?q=等のクエリとハッシュを除去 */
+function cleanLink(url){
+  try{const u=new URL(url.trim());u.search='';u.hash='';return u.href;}
+  catch{return url.trim();}
+}
+function looksLikeTopPage(url){
+  return /^(https:\/\/(chatgpt\.com|claude\.ai|gemini\.google\.com))\/?(new|app)?\/?$/.test(cleanLink(url));
+}
 function loadSvcs(){
   const saved=JSON.parse(localStorage.getItem('sc_services')||'null');
   return saved&&saved.length?saved:DEFAULT_SVCS.slice();
@@ -453,12 +460,12 @@ const autoOpen=()=>localStorage.getItem('sc_autoOpen')!=='0';
 function renderSvcButtons(containerId){
   const el=document.getElementById(containerId);if(!el)return;
   el.innerHTML='';
-  const cur=curSvc();
   loadSvcs().forEach(s=>{
     const b=document.createElement('button');
-    b.className='svcBtn'+(s.id===cur.id?' sel':'');
-    b.textContent=s.name;
-    b.onclick=()=>{localStorage.setItem('sc_lastSvc',s.id);renderSvcButtons(containerId);};
+    b.className='svcBtn';
+    b.textContent=s.name+' ↗';
+    b.title=s.url;
+    b.onclick=()=>{window.open(s.url,'sc_ai_'+s.id);};  /* 押した時だけ開く。それだけ */
     el.appendChild(b);
   });
   const add=document.createElement('button');
@@ -467,7 +474,7 @@ function renderSvcButtons(containerId){
     const name=prompt('AIの名前(例: GLM):');if(!name)return;
     const url=prompt('チャット画面のURL:');if(!url)return;
     const s=loadSvcs();
-    s.push({id:'custom-'+Date.now(),name:'💬 '+name,url:url.trim(),q:null});
+    s.push({id:'custom-'+Date.now(),name:'💬 '+name,url:url.trim()});
     saveSvcs(s);renderSvcButtons(containerId);renderSvcManage();
   };
   el.appendChild(add);
@@ -485,15 +492,7 @@ function delSvc(id){
   saveSvcs(loadSvcs().filter(s=>s.id!==id));
   renderSvcManage();
 }
-/* コピー済みテキストを持ってAIを開く。短文&q対応なら入力済みで開く */
-function openAIWith(text,tabName){
-  if(!autoOpen())return;
-  const s=curSvc();
-  let url=s.url;
-  if(s.q&&text&&text.length<1500)url=s.q.replace('{text}',encodeURIComponent(text));
-  else setTimeout(()=>toast('💡 開いた画面で Cmd+V → Enter で送信!'),1800);
-  try{window.open(url,tabName||'sc_ai_'+s.id);}catch{}
-}
+/* (自動オープン機能は廃止。サービスボタンから手動で開く方式に) */
 
 /* ---------- 共通 ---------- */
 const b64decode=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,'')),c=>c.charCodeAt(0)));
@@ -635,8 +634,9 @@ function promptLink(repo,isSwitch=false){
     ?'🔄 新しい会話のURLを貼ってください。\n(保存後、次の依頼文に契約書と最新コードが自動同梱され、簡単に引き継げます)'
     :'📎 AIとの会話URL(アドレス欄)を貼ってください:\n(この会話は契約書・コードを把握済みとして扱います。未把握なら保存後に🆘フル再送を使ってください)');
   if(!url)return;
+  url=cleanLink(url);
   /* リンクあり=把握済みとみなす。乗り換えだけは新会話なので未送信扱い(次回フル同梱) */
-  addLink(repo,url.trim(),isSwitch?{c:false,s:false}:{c:true,s:true});
+  addLink(repo,url,isSwitch?{c:false,s:false}:{c:true,s:true});
   toast(isSwitch?'🔄 乗り換え完了!次の依頼文に引き継ぎ資料を自動同梱します':'📎 リンク保存!以後の依頼文は最小構成になります');
   renderWork();
 }
@@ -669,12 +669,7 @@ async function copyWorkPrompt(){
   parts.push(`【修正依頼】\n${inst}\n\n変更は必ずPATCH形式(oldは現行コードの完全コピー)で出力してください。新規ファイルはFILE形式で。`);
   await navigator.clipboard.writeText(parts.join('\n\n---\n\n'));
   if(lk){const a=loadProj();const l=a[CUR_WORK].links.find(x=>x.active);l.sentContract=true;l.sentStructure=true;saveProj(a);}
-  toast(`🤖 コピー完了!${added.length?`(${added.join('+')}を同梱)`:'(最小構成)'}`);
-  /* ★登録済みの会話タブを再利用して開く */
-  if(lk&&autoOpen()){
-    setTimeout(()=>toast('💡 開いた会話で Cmd+V → Enter!'),1800);
-    try{window.open(lk.url,'sc_ai_'+CUR_WORK);}catch{}
-  }
+  toast(`🤖 コピー完了!${added.length?`(${added.join('+')}を同梱)`:'(最小構成)'} → 💬会話を開くから貼ってください`);
 }
 async function copyFullResend(){
   toast('📤 フル資料を収集中...');
@@ -976,14 +971,16 @@ async function copyNewPrompt(){
   FLOW.sent={c:true,s:true};
   const pend=getPend();
   if(pend){pend.sent={c:true,s:true};localStorage.setItem(LS_PEND,JSON.stringify(pend));}
-  toast('🤖 コピー完了!');
-  openAIWith(full,'sc_ai_new');
+  toast('🤖 コピー完了!上の「AIボタン」から開いて貼ってください');
 }
 function saveFlowLink(inputId){
-  const url=document.getElementById(inputId).value.trim();
+  let url=document.getElementById(inputId).value.trim();
   if(!url)return toast('😵 URLを貼ってください');
+  url=cleanLink(url);
+  if(looksLikeTopPage(url)&&!confirm('⚠️ これはAIのトップページのURLのようです。\n会話開始後にアドレス欄に出る「会話専用URL」(例: /c/xxxx)がおすすめです。\nこのまま保存しますか?'))return;
+  document.getElementById(inputId).value=url;
   FLOW.link=url;
-  setPend(url,FLOW.sent||{});  /* ★永続化(リロード耐性) */
+  setPend(url,FLOW.sent||{});
   toast('📎 リンクを記憶しました(公開時にプロジェクトへ自動紐づけ)');
 }
 async function flowNewImport(){
@@ -1031,12 +1028,13 @@ async function copyHandover(){
   const full=parts.join('\n\n---\n\n');
   await navigator.clipboard.writeText(full);
   FLOW.sent={c,s};
-  toast('🤖 引き継ぎ文をコピー!');
-  openAIWith(full,'sc_ai_'+FLOW.repo);
+  toast('🤖 引き継ぎ文をコピー!上の「AIボタン」から開いて貼ってください');
 }
 function finishHandover(){
-  const url=document.getElementById('hoLink').value.trim();
+  let url=document.getElementById('hoLink').value.trim();
   if(!url)return toast('😵 会話リンクを貼ってください');
+  url=cleanLink(url);
+  if(looksLikeTopPage(url)&&!confirm('⚠️ トップページのURLのようです。会話開始後の「/c/xxxx」等がおすすめ。このまま保存しますか?'))return;
   /* コピー未実行でもチェックボックスの状態から送信済みを判定 */
   const sent=(FLOW.sent&&(FLOW.sent.c||FLOW.sent.s))?FLOW.sent
     :{c:document.getElementById('hoContract').checked,s:document.getElementById('hoCode').checked};
