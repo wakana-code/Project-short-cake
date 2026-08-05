@@ -64,6 +64,13 @@ textarea:focus{border-color:#ff9eb5}
 .linkRow input{flex:1}
 .linkRow .btn{margin:0}
 .chk{font-size:13px;color:#c9bfd6;display:block;margin:6px 0;cursor:pointer}
+.svcRow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.svcBtn{padding:9px 18px;border:2px solid #3a3348;border-radius:12px;background:#241f31;color:#c9bfd6;cursor:pointer;font-size:13px}
+.svcBtn:hover{border-color:#453d55}
+.svcBtn.sel{border-color:#ff9eb5;color:#ff9eb5;font-weight:bold;background:#2a2230}
+.svcItem{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid #322c40;border-radius:10px;margin-bottom:6px;font-size:13px}
+.svcItem b{color:#ffd3a3}
+.svcItem span{color:#776b85;font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wkHead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 .wkHead b{font-size:17px;color:#ffd3a3}
 .wkHead a{color:#8fc7ff;font-size:13px;text-decoration:none;background:#241f31;padding:6px 12px;border-radius:8px;border:1px solid #322c40}
@@ -166,7 +173,9 @@ textarea:focus{border-color:#ff9eb5}
     <h2>✨ 新しく作る <button class="btn sm" style="float:right" onclick="gBack()">← 戻る</button></h2>
     <div class="stepHead">Step1: 何を作りたい?</div>
     <textarea id="newDesc" rows="3" placeholder="例: 25分作業+5分休憩を繰り返すポモドーロタイマー。残り時間を大きく表示して、終わったら音を鳴らす"></textarea>
-    <button class="btn pink" onclick="copyNewPrompt()">🤖 AIへの依頼文をコピー(書式説明を自動同梱)</button>
+    <div class="stepHead">どのAIに頼む?</div>
+    <div class="svcRow" id="svcNew"></div>
+    <button class="btn pink" onclick="copyNewPrompt()">🤖 依頼文をコピーしてAIを開く</button>
     <div class="stepHead">Step2: AIチャットに貼る → 会話リンクを保存</div>
     <div class="hint">📎 <b>会話リンクとは?</b> 今AIとやりとりしているチャット画面のURL(ブラウザのアドレス欄)です。保存しておくと——<br>
     ①後で「どの会話で作ったっけ?」と迷子にならない ②ShortCakeが「この会話には書式説明済み」と記憶し、<b>次回から依頼文が短くなります</b></div>
@@ -188,7 +197,9 @@ textarea:focus{border-color:#ff9eb5}
     <div class="stepHead">Step1: 引き継ぎ資料をコピーしてAIチャットに貼る</div>
     <label class="chk"><input type="checkbox" id="hoContract" checked> 書式説明(契約書)を含める ※このAIと初めて話すならON</label>
     <label class="chk"><input type="checkbox" id="hoCode" checked> ファイル構造+全コードを含める ※AIが中身を知らないならON</label>
-    <button class="btn pink" onclick="copyHandover()">🤖 引き継ぎ文をコピー</button>
+    <div class="stepHead">どのAIに頼む?</div>
+    <div class="svcRow" id="svcHo"></div>
+    <button class="btn pink" onclick="copyHandover()">🤖 引き継ぎ文をコピーしてAIを開く</button>
     <div class="stepHead">Step2: 会話リンクを保存</div>
     <div class="hint">📎 AIチャット画面のURL(アドレス欄)を貼ってください。ShortCakeが「このAIは把握済み」と記憶し、以後の修正依頼が最小限になります。</div>
     <div class="linkRow"><input type="text" id="hoLink" placeholder="https://..."><button class="btn sm" onclick="finishHandover()">保存して作業開始 →</button></div>
@@ -279,6 +290,12 @@ textarea:focus{border-color:#ff9eb5}
     <button class="btn pink" id="connectBtn" onclick="connect()">🤝 接続テスト</button>
     <div id="connResult"></div>
     <p class="danger">🔒 トークンはこのブラウザにのみ保存。通信先はgithub.comだけ。</p>
+  </div>
+  <div class="card">
+    <h2>🤖 AIサービス管理</h2>
+    <div id="svcManage"></div>
+    <label class="chk"><input type="checkbox" id="autoOpenChk" onchange="localStorage.setItem('sc_autoOpen',this.checked?'1':'0')"> コピー時に自動でAIを開く</label>
+    <p class="danger">💡 タブは名前付きで開くため、2回目以降は同じタブが再利用されます(増殖しません)。ChatGPT/Claudeは短い依頼文なら入力済み状態で開きます。</p>
   </div>
   <div class="card" id="disconnectCard" style="display:none"><h2>🔌 接続解除</h2><button class="btn" onclick="disconnect()">解除する</button></div>
 </div>
@@ -391,6 +408,7 @@ function onConnected(u){
   document.getElementById('disconnectCard').style.display='block';
   ['tabGuide','tabList','tabAdv'].forEach(id=>document.getElementById(id).disabled=false);
   restoreWorkTabs();
+  renderSvcManage();
 }
 function disconnect(){localStorage.removeItem(LS_TOKEN);location.reload();}
 (async()=>{if(localStorage.getItem(LS_TOKEN)){
@@ -415,6 +433,67 @@ function pushHist(repo,msg){const a=loadProj();const p=a[repo]||(a[repo]={links:
 const setPend=(url,sent)=>localStorage.setItem(LS_PEND,JSON.stringify({url,sent:sent||{}}));
 const getPend=()=>JSON.parse(localStorage.getItem(LS_PEND)||'null');
 const clearPend=()=>localStorage.removeItem(LS_PEND);
+
+/* ---------- 🤖 AIサービス ---------- */
+const DEFAULT_SVCS=[
+  {id:'chatgpt',name:'🤖 ChatGPT',url:'https://chatgpt.com/',q:'https://chatgpt.com/?q={text}'},
+  {id:'gemini',name:'✨ Gemini',url:'https://gemini.google.com/app',q:null},
+  {id:'claude',name:'🎩 Claude',url:'https://claude.ai/new',q:'https://claude.ai/new?q={text}'},
+];
+function loadSvcs(){
+  const saved=JSON.parse(localStorage.getItem('sc_services')||'null');
+  return saved&&saved.length?saved:DEFAULT_SVCS.slice();
+}
+function saveSvcs(s){localStorage.setItem('sc_services',JSON.stringify(s));}
+function curSvc(){
+  const s=loadSvcs();
+  return s.find(x=>x.id===localStorage.getItem('sc_lastSvc'))||s[0];
+}
+const autoOpen=()=>localStorage.getItem('sc_autoOpen')!=='0';
+function renderSvcButtons(containerId){
+  const el=document.getElementById(containerId);if(!el)return;
+  el.innerHTML='';
+  const cur=curSvc();
+  loadSvcs().forEach(s=>{
+    const b=document.createElement('button');
+    b.className='svcBtn'+(s.id===cur.id?' sel':'');
+    b.textContent=s.name;
+    b.onclick=()=>{localStorage.setItem('sc_lastSvc',s.id);renderSvcButtons(containerId);};
+    el.appendChild(b);
+  });
+  const add=document.createElement('button');
+  add.className='svcBtn';add.textContent='＋追加';
+  add.onclick=()=>{
+    const name=prompt('AIの名前(例: GLM):');if(!name)return;
+    const url=prompt('チャット画面のURL:');if(!url)return;
+    const s=loadSvcs();
+    s.push({id:'custom-'+Date.now(),name:'💬 '+name,url:url.trim(),q:null});
+    saveSvcs(s);renderSvcButtons(containerId);renderSvcManage();
+  };
+  el.appendChild(add);
+}
+function renderSvcManage(){
+  const el=document.getElementById('svcManage');if(!el)return;
+  el.innerHTML=loadSvcs().map(s=>
+    `<div class="svcItem"><b>${s.name}</b><span>${s.url}</span>`+
+    (s.id.startsWith('custom-')?`<button class="btn sm" onclick="delSvc('${s.id}')">🗑️</button>`:'')+
+    `</div>`).join('');
+  const chk=document.getElementById('autoOpenChk');
+  if(chk)chk.checked=autoOpen();
+}
+function delSvc(id){
+  saveSvcs(loadSvcs().filter(s=>s.id!==id));
+  renderSvcManage();
+}
+/* コピー済みテキストを持ってAIを開く。短文&q対応なら入力済みで開く */
+function openAIWith(text,tabName){
+  if(!autoOpen())return;
+  const s=curSvc();
+  let url=s.url;
+  if(s.q&&text&&text.length<1500)url=s.q.replace('{text}',encodeURIComponent(text));
+  else setTimeout(()=>toast('💡 開いた画面で Cmd+V → Enter で送信!'),1800);
+  try{window.open(url,tabName||'sc_ai_'+s.id);}catch{}
+}
 
 /* ---------- 共通 ---------- */
 const b64decode=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,'')),c=>c.charCodeAt(0)));
@@ -590,7 +669,12 @@ async function copyWorkPrompt(){
   parts.push(`【修正依頼】\n${inst}\n\n変更は必ずPATCH形式(oldは現行コードの完全コピー)で出力してください。新規ファイルはFILE形式で。`);
   await navigator.clipboard.writeText(parts.join('\n\n---\n\n'));
   if(lk){const a=loadProj();const l=a[CUR_WORK].links.find(x=>x.active);l.sentContract=true;l.sentStructure=true;saveProj(a);}
-  toast(`🤖 コピー完了!${added.length?`(${added.join('+')}を同梱)`:'(依頼文のみ・最小構成)'} → AIに貼ってください`);
+  toast(`🤖 コピー完了!${added.length?`(${added.join('+')}を同梱)`:'(最小構成)'}`);
+  /* ★登録済みの会話タブを再利用して開く */
+  if(lk&&autoOpen()){
+    setTimeout(()=>toast('💡 開いた会話で Cmd+V → Enter!'),1800);
+    try{window.open(lk.url,'sc_ai_'+CUR_WORK);}catch{}
+  }
 }
 async function copyFullResend(){
   toast('📤 フル資料を収集中...');
@@ -880,19 +964,20 @@ function gBack(){['gNew','gFix','gHandover','gFiles'].forEach(id=>document.getEl
   document.getElementById('gHome').style.display='block';}
 function startFlow(mode){
   gBack();document.getElementById('gHome').style.display='none';FLOW={mode,sent:{},link:null};
-  if(mode==='new')document.getElementById('gNew').style.display='block';
+  if(mode==='new'){document.getElementById('gNew').style.display='block';renderSvcButtons('svcNew');}
   if(mode==='fix'){document.getElementById('gFix').style.display='block';loadRepoList().then(renderFixList);}
   if(mode==='files')document.getElementById('gFiles').style.display='block';
 }
 async function copyNewPrompt(){
   const d=document.getElementById('newDesc').value.trim();
   if(!d)return toast('😵 作りたいものを書いてください');
-  await navigator.clipboard.writeText(CONTRACT+'\n\n---\n\n上記の書式に従って、以下を作ってください:\n\n'+d);
+  const full=CONTRACT+'\n\n---\n\n上記の書式に従って、以下を作ってください:\n\n'+d;
+  await navigator.clipboard.writeText(full);
   FLOW.sent={c:true,s:true};
-  /* ★保留リンクが既にあれば送信済み情報を更新 */
   const pend=getPend();
   if(pend){pend.sent={c:true,s:true};localStorage.setItem(LS_PEND,JSON.stringify(pend));}
-  toast('🤖 コピー完了!AIチャットに貼ってください(書式説明も同梱済み)');
+  toast('🤖 コピー完了!');
+  openAIWith(full,'sc_ai_new');
 }
 function saveFlowLink(inputId){
   const url=document.getElementById(inputId).value.trim();
@@ -932,6 +1017,7 @@ async function startHandover(repo){
   document.getElementById('gHandover').style.display='block';
   document.getElementById('hoName').textContent=repo;
   FLOW={mode:'fix',repo,sent:{},link:null};
+  renderSvcButtons('svcHo');
   if(!WT[repo]){toast('📂 読み込み中...');try{await loadRepo(repo,false);}catch(e){toast('😵 '+e.message);return;}}
   WS=WT[repo];
 }
@@ -942,9 +1028,11 @@ async function copyHandover(){
   if(c)parts.push(CONTRACT);
   if(s){toast('📤 コード収集中...');parts.push(await buildExportText());}
   parts.push('上記を把握したら「把握しました」と返事してください。今後このプロジェクトの修正を依頼します。');
-  await navigator.clipboard.writeText(parts.join('\n\n---\n\n'));
+  const full=parts.join('\n\n---\n\n');
+  await navigator.clipboard.writeText(full);
   FLOW.sent={c,s};
-  toast('🤖 引き継ぎ文をコピー!AIチャットに貼ってください');
+  toast('🤖 引き継ぎ文をコピー!');
+  openAIWith(full,'sc_ai_'+FLOW.repo);
 }
 function finishHandover(){
   const url=document.getElementById('hoLink').value.trim();
