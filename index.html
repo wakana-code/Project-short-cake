@@ -325,6 +325,17 @@ textarea:focus{border-color:#ff9eb5}
 <input type="file" id="dirPicker" webkitdirectory hidden>
 <input type="file" id="zipPicker" accept=".zip,application/zip,application/x-zip-compressed" hidden>
 <div id="toast"></div>
+<div id="exportModal" style="position:fixed;inset:0;background:rgba(10,7,14,.75);display:none;align-items:center;justify-content:center;z-index:70">
+  <div style="background:#211d2b;border:1px solid #453d55;border-radius:16px;padding:20px;width:min(480px,92vw);max-height:80vh;overflow-y:auto">
+    <b style="color:#ff9eb5">📤 AIに渡す — サイズを選ぶ</b>
+    <div id="expSizeBtns" style="display:flex;flex-direction:column;gap:8px;margin:14px 0"></div>
+    <div id="expParts" style="display:none">
+      <div style="font-size:12px;color:#9b8dae;margin-bottom:8px">パートを順番にコピーしてAIに貼ってください(全部貼り終わるまでAIは作業しません)</div>
+      <div id="expPartBtns" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+    <button class="btn sm" style="margin-top:12px" onclick="document.getElementById('exportModal').style.display='none'">閉じる</button>
+  </div>
+</div>
 
 <script>
 /* =====================================================
@@ -1219,19 +1230,81 @@ function openInspect(){
 async function exportForAI(withIntro=false){
   if(!WS||!WS.name)return toast('😵 未読み込み');
   toast('📤 生成中...(ファイル取得あり)');
-  let out=await buildExportText();
+  let full=await buildExportText();
   if(withIntro){
-    out+='\n上記が現在の全ファイルです。把握したら「把握しました」と返事してください。以後の修正はPATCH形式(oldは上記コードからの完全コピー)でお願いします。';
-    /* 構造を渡した=この会話は把握済み、として記憶を更新 */
+    full+='\n上記が現在の全ファイルです。把握したら「把握しました」と返事してください。以後の修正はPATCH形式(oldは上記コードからの完全コピー)でお願いします。';
     const lk=activeLink(CUR_WORK);
     if(lk){const a=loadProj();const l=a[CUR_WORK].links.find(x=>x.active);
       if(l){l.sentStructure=true;saveProj(a);}}
   }
-  try{await navigator.clipboard.writeText(out);
-    toast(`📤 コピー完了(約${Math.round(out.length/1024)}KB / ${Object.keys(WS.files).length}ファイル)→ AIに貼ってください`);}
-  catch{const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
-    a.download=WS.name+'_for_ai.txt';a.click();toast('📄 .txtでダウンロードしました');}
+  /* サイズ選択モーダル */
+  const modal=document.getElementById('exportModal');
+  const sizeBox=document.getElementById('expSizeBtns');
+  document.getElementById('expParts').style.display='none';
+  sizeBox.innerHTML='';
+  const kb=Math.round(full.length/1024);
+  const opts=[
+    {label:`📄 一括コピー(全${full.length.toLocaleString()}字 / 約${kb}KB)`,size:0},
+    {label:'✂️ 標準分割 約3万字/通 — ChatGPT/Claude/Gemini向け',size:30000},
+    {label:'✂️ 細かめ 約1.5万字/通 — 入力制限が渋いサービス向け',size:15000},
+    {label:'✂️ 極小 約8千字/通 — 上限が厳しい/不明なサービス向け',size:8000},
+  ];
+  opts.forEach(o=>{
+    const b=document.createElement('button');
+    b.className='btn';b.style.margin='0';b.style.textAlign='left';
+    b.textContent=o.label;
+    if(o.size&&full.length<=o.size){b.disabled=true;b.style.opacity='.4';b.textContent+=' (分割不要のサイズです)';}
+    b.onclick=async()=>{
+      if(!o.size){ /* 一括 */
+        try{await navigator.clipboard.writeText(full);
+          toast(`📤 一括コピー完了(約${kb}KB)`);modal.style.display='none';}
+        catch{const a=document.createElement('a');
+          a.href=URL.createObjectURL(new Blob([full],{type:'text/plain'}));
+          a.download=WS.name+'_for_ai.txt';a.click();toast('📄 .txtでダウンロード');}
+        return;
+      }
+      showParts(splitForAI(full,o.size));
+    };
+    sizeBox.appendChild(b);
+  });
+  modal.style.display='flex';
+}
+/* ファイル境界優先で分割。巨大ファイルは中割り+続きマーク */
+function splitForAI(full,size){
+  const blocks=full.split(/(?=#### FILE: )/); /* 先頭ブロック(ツリー等)+各FILE */
+  const chunks=[];let cur='';
+  for(let b of blocks){
+    while(b.length>size){ /* 単体で超えるファイルは中割り */
+      const cut=b.lastIndexOf('\n',size);
+      const head=b.slice(0,cut>0?cut:size);
+      chunks.push(cur+head+'\n(※このファイルは次のパートに続く)');cur='';
+      b='(※前パートの続き)\n'+b.slice(cut>0?cut:size);
+    }
+    if((cur+b).length>size){chunks.push(cur);cur=b;}
+    else cur+=b;
+  }
+  if(cur.trim())chunks.push(cur);
+  const n=chunks.length;
+  return chunks.map((c,i)=>
+    `【パート ${i+1}/${n}】プロジェクト全体を分割して送ります。全パートが届くまで作業せず「パート${i+1}受領」とだけ返事してください。${i===n-1?'これが最終パートです。全体を把握したら「把握しました」と返事してください。':''}\n\n`+c);
+}
+function showParts(parts){
+  const box=document.getElementById('expPartBtns');
+  document.getElementById('expSizeBtns').innerHTML='';
+  document.getElementById('expParts').style.display='block';
+  box.innerHTML='';
+  parts.forEach((p,i)=>{
+    const b=document.createElement('button');
+    b.className='btn';b.style.margin='0';b.style.textAlign='left';
+    b.textContent=`📋 パート ${i+1}/${parts.length} をコピー(${p.length.toLocaleString()}字)`;
+    b.onclick=async()=>{
+      await navigator.clipboard.writeText(p);
+      b.textContent=`✅ パート ${i+1}/${parts.length} コピー済み → AIに貼る`;
+      b.style.background='#243a2c';
+      toast(`📋 パート${i+1}をコピー!AIに貼って、返事が来たら次へ`);
+    };
+    box.appendChild(b);
+  });
 }
 
 /* ---------- デプロイ ---------- */
