@@ -25,7 +25,6 @@ header .sub{font-size:11px;color:#776b85}
 .pane.on{display:block}
 .card{background:#211d2b;border:1px solid #322c40;border-radius:14px;padding:20px;max-width:720px;margin:0 auto 16px}
 .card h2{font-size:16px;color:#ff9eb5;margin-bottom:12px}
-.card h3{font-size:14px;color:#ffd3a3;margin:14px 0 8px}
 .card p,.card li{font-size:13px;line-height:1.9;color:#c9bfd6}
 .card ol{padding-left:22px;margin:8px 0}
 .card code{background:#2e2940;padding:2px 8px;border-radius:6px;font-size:12px;color:#ffd3a3}
@@ -66,8 +65,7 @@ textarea:focus{border-color:#ff9eb5}
 .chk{font-size:13px;color:#c9bfd6;display:block;margin:6px 0;cursor:pointer}
 .svcRow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .svcBtn{padding:9px 18px;border:2px solid #3a3348;border-radius:12px;background:#241f31;color:#c9bfd6;cursor:pointer;font-size:13px}
-.svcBtn:hover{border-color:#453d55}
-.svcBtn.sel{border-color:#ff9eb5;color:#ff9eb5;font-weight:bold;background:#2a2230}
+.svcBtn:hover{border-color:#ff9eb5;color:#ff9eb5}
 .svcItem{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid #322c40;border-radius:10px;margin-bottom:6px;font-size:13px}
 .svcItem b{color:#ffd3a3}
 .svcItem span{color:#776b85;font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -142,11 +140,13 @@ textarea:focus{border-color:#ff9eb5}
 .projItem b{color:#ffd3a3;font-size:14px}
 .projItem a{color:#8fc7ff;margin-right:12px;text-decoration:none}
 .projItem .btn{margin:0 8px 0 0}
+#exportModal{position:fixed;inset:0;background:rgba(10,7,14,.75);display:none;align-items:center;justify-content:center;z-index:70}
+#exportModal .box{background:#211d2b;border:1px solid #453d55;border-radius:16px;padding:20px;width:min(480px,92vw);max-height:80vh;overflow-y:auto}
 </style>
 </head>
 <body>
 <header>
-  <span class="logo">🍰 ShortCake</span><span class="sub">v2.1 — AIと作って、直して、公開する</span>
+  <span class="logo">🍰 ShortCake</span><span class="sub">v2.2 — AIと作って、直して、公開する</span>
   <div id="userBox">
     <span id="connState">未接続</span><img id="avatar" alt=""><span id="uname"></span>
   </div>
@@ -160,7 +160,6 @@ textarea:focus{border-color:#ff9eb5}
   <button class="tab on" data-p="setupPane">⚙️ 接続</button>
 </div>
 
-<!-- ================= 🧭 はじめる ================= -->
 <div class="pane" id="guidePane">
   <div class="card" id="gHome">
     <h2>🧭 なにをする?</h2>
@@ -172,13 +171,14 @@ textarea:focus{border-color:#ff9eb5}
   <div class="card" id="gNew" style="display:none">
     <h2>✨ 新しく作る <button class="btn sm" style="float:right" onclick="gBack()">← 戻る</button></h2>
     <div class="stepHead">Step1: 何を作りたい?</div>
-    <textarea id="newDesc" rows="3" placeholder="例: 25分作業+5分休憩を繰り返すポモドーロタイマー。残り時間を大きく表示して、終わったら音を鳴らす"></textarea>
-    <div class="stepHead">どのAIに頼む?</div>
+    <textarea id="newDesc" rows="3" placeholder="例: 25分作業+5分休憩を繰り返すポモドーロタイマー"></textarea>
+    <button class="btn pink" onclick="copyNewPrompt()">🤖 AIへの依頼文をコピー(書式説明を自動同梱)</button>
+    <div class="stepHead">AIを開く(押した時だけ開きます)</div>
     <div class="svcRow" id="svcNew"></div>
-    <button class="btn pink" onclick="copyNewPrompt()">🤖 依頼文をコピーしてAIを開く</button>
-    <div class="stepHead">Step2: AIチャットに貼る → 会話リンクを保存</div>
-    <div class="hint">📎 <b>会話リンクとは?</b> 今AIとやりとりしているチャット画面のURL(ブラウザのアドレス欄)です。保存しておくと——<br>
-    ①後で「どの会話で作ったっけ?」と迷子にならない ②ShortCakeが「この会話には書式説明済み」と記憶し、<b>次回から依頼文が短くなります</b></div>
+    <div class="stepHead">Step2: AIに貼る → 会話リンクを保存</div>
+    <div class="hint">📎 <b>会話リンクとは?</b> AIとやりとりしているチャット画面のURL(アドレス欄)。保存すると——<br>
+    ①「どの会話で作ったっけ?」の迷子防止 ②「この会話は書式説明済み」と記憶し、<b>次回から依頼文が短くなります</b><br>
+    💡 会話開始後にURLが「/c/xxxx」等に変わってからコピーするのがおすすめ</div>
     <div class="linkRow"><input type="text" id="newLink" placeholder="https://chatgpt.com/c/... など"><button class="btn sm" onclick="saveFlowLink('newLink')">保存</button></div>
     <div class="stepHead">Step3: AIの回答を丸ごと貼る</div>
     <textarea id="newPaste" rows="6" placeholder="AIの回答(説明文ごと全部)をここへ"></textarea>
@@ -193,15 +193,14 @@ textarea:focus{border-color:#ff9eb5}
 
   <div class="card" id="gHandover" style="display:none">
     <h2>🤝 AIとお引き合わせ: <span id="hoName"></span> <button class="btn sm" style="float:right" onclick="startFlow('fix')">← 戻る</button></h2>
-    <p>このプロジェクトはまだAIの会話と繋がっていません。<b>初回だけ</b>、AIに引き継ぎ資料を渡します(次回からこの工程は消えます)。</p>
-    <div class="stepHead">Step1: 引き継ぎ資料をコピーしてAIチャットに貼る</div>
-    <label class="chk"><input type="checkbox" id="hoContract" checked> 書式説明(契約書)を含める ※このAIと初めて話すならON</label>
-    <label class="chk"><input type="checkbox" id="hoCode" checked> ファイル構造+全コードを含める ※AIが中身を知らないならON</label>
-    <div class="stepHead">どのAIに頼む?</div>
+    <p>初回だけ、AIに引き継ぎ資料を渡します(次回からこの工程は消えます)。</p>
+    <div class="stepHead">Step1: 引き継ぎ資料をコピーしてAIに貼る</div>
+    <label class="chk"><input type="checkbox" id="hoContract" checked> 書式説明(契約書)を含める</label>
+    <label class="chk"><input type="checkbox" id="hoCode" checked> ファイル構造+全コードを含める</label>
+    <button class="btn pink" onclick="copyHandover()">🤖 引き継ぎ文をコピー</button>
+    <div class="stepHead">AIを開く(押した時だけ)</div>
     <div class="svcRow" id="svcHo"></div>
-    <button class="btn pink" onclick="copyHandover()">🤖 引き継ぎ文をコピーしてAIを開く</button>
     <div class="stepHead">Step2: 会話リンクを保存</div>
-    <div class="hint">📎 AIチャット画面のURL(アドレス欄)を貼ってください。ShortCakeが「このAIは把握済み」と記憶し、以後の修正依頼が最小限になります。</div>
     <div class="linkRow"><input type="text" id="hoLink" placeholder="https://..."><button class="btn sm" onclick="finishHandover()">保存して作業開始 →</button></div>
   </div>
 
@@ -212,20 +211,16 @@ textarea:focus{border-color:#ff9eb5}
       <button class="btn" onclick="document.getElementById('dirPicker').click()">📂 フォルダを選ぶ</button>
       <button class="btn" onclick="document.getElementById('zipPicker').click()">🤐 ZIPを選ぶ</button>
     </div>
-    <p style="margin-top:10px">読み込むと検品結果が出ます。そのまま「🚀公開へ」で公開できます。</p>
     <div id="gFilesNext" style="display:none">
       <button class="btn pink" onclick="advGoto('advDeploy');activate('advPane')">🚀 公開へ進む</button>
     </div>
   </div>
 </div>
 
-<!-- ================= 🔨 作業台 ================= -->
 <div class="pane" id="workPane"><div class="card" style="max-width:780px" id="workInner"></div></div>
 
-<!-- ================= 📚 一覧 ================= -->
 <div class="pane" id="listPane"><div class="card"><h2>📚 プロジェクト一覧</h2><div id="projList"></div></div></div>
 
-<!-- ================= 🛠 上級者 ================= -->
 <div class="pane" id="advPane">
   <div class="advNav">
     <button class="btn sm cur" data-s="advPaste" onclick="advGoto('advPaste')">📋 貼り付け</button>
@@ -234,7 +229,7 @@ textarea:focus{border-color:#ff9eb5}
     <button class="btn sm" data-s="advDeploy" onclick="advGoto('advDeploy')">🚀 デプロイ</button>
   </div>
   <div class="sub on" id="advPaste">
-    <div class="hint">💡 AIの回答を丸ごと貼る。リポジトリリンク中ならPATCH/FILEが直接適用されます(反映は💾コミット)。</div>
+    <div class="hint">💡 AIの回答を丸ごと貼る。リンク中ならPATCH/FILE/MANIFESTが直接適用(反映は💾)。囲いが剥がれたコピペも救済します。</div>
     <textarea id="ta" placeholder="AIの回答をペースト..."></textarea>
     <button class="btn pink" onclick="importPaste('ta')">🍰 取り込む(自動判別)</button>
   </div>
@@ -274,7 +269,6 @@ textarea:focus{border-color:#ff9eb5}
   </div>
 </div>
 
-<!-- ================= ⚙️ 接続 ================= -->
 <div class="pane on" id="setupPane">
   <div class="card">
     <h2>🔑 GitHubと接続する(初回のみ)</h2>
@@ -299,7 +293,6 @@ textarea:focus{border-color:#ff9eb5}
   <div class="card" id="disconnectCard" style="display:none"><h2>🔌 接続解除</h2><button class="btn" onclick="disconnect()">解除する</button></div>
 </div>
 
-<!-- ★常駐ワークスペースバー(コミットボタン復活の要) -->
 <div id="wsBar">
   <span>📦</span><span id="wsName">-</span><span id="wsType"></span><span id="wsCount" style="color:#9b8dae;font-size:12px"></span>
   <button class="btn" onclick="openTree()">🔍 中身</button>
@@ -322,26 +315,21 @@ textarea:focus{border-color:#ff9eb5}
     <button class="btn sm" onclick="document.getElementById('inspectModal').classList.remove('show')">閉じる</button></div>
   <div id="inspectBody"></div>
 </div></div>
+<div id="exportModal"><div class="box">
+  <b style="color:#ff9eb5">📤 AIに渡す — サイズを選ぶ</b>
+  <div id="expSizeBtns" style="display:flex;flex-direction:column;gap:8px;margin:14px 0"></div>
+  <div id="expParts" style="display:none">
+    <div style="font-size:12px;color:#9b8dae;margin-bottom:8px">パートを順番にコピーしてAIに貼ってください</div>
+    <div id="expPartBtns" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+  <button class="btn sm" style="margin-top:12px" onclick="document.getElementById('exportModal').style.display='none'">閉じる</button>
+</div></div>
 <input type="file" id="dirPicker" webkitdirectory hidden>
 <input type="file" id="zipPicker" accept=".zip,application/zip,application/x-zip-compressed" hidden>
 <div id="toast"></div>
-<div id="exportModal" style="position:fixed;inset:0;background:rgba(10,7,14,.75);display:none;align-items:center;justify-content:center;z-index:70">
-  <div style="background:#211d2b;border:1px solid #453d55;border-radius:16px;padding:20px;width:min(480px,92vw);max-height:80vh;overflow-y:auto">
-    <b style="color:#ff9eb5">📤 AIに渡す — サイズを選ぶ</b>
-    <div id="expSizeBtns" style="display:flex;flex-direction:column;gap:8px;margin:14px 0"></div>
-    <div id="expParts" style="display:none">
-      <div style="font-size:12px;color:#9b8dae;margin-bottom:8px">パートを順番にコピーしてAIに貼ってください(全部貼り終わるまでAIは作業しません)</div>
-      <div id="expPartBtns" style="display:flex;flex-direction:column;gap:6px"></div>
-    </div>
-    <button class="btn sm" style="margin-top:12px" onclick="document.getElementById('exportModal').style.display='none'">閉じる</button>
-  </div>
-</div>
-
 <script>
 /* =====================================================
-   🍰 ShortCake v2.1
-   修正: ①会話リンクを永続化しプッシュ直後に紐づけ
-        ②コミットボタンを常駐バーに復活(全画面から可視)
+   🍰 ShortCake v2.2 — 全部入り最終版
    ===================================================== */
 const LS_TOKEN='sc_token',LS_PROJ='sc_projects',LS_PEND='sc_pendingLink';
 let USER=null,REPOS=[],WT={},WS=null,CUR_WORK=null,FLOW={};
@@ -377,8 +365,7 @@ FILES:
 - oldは実在コードの完全コピー。記憶で書かず提示されたコードから写す
 - oldはファイル内で一意になる長さに(前後の行を含める)
 - 1修正=1PATCH。新規ファイルはFILE形式、全面書き直しもFILE形式でよい
-- 変更が広範囲に及ぶ場合は、Aと同じMANIFEST+FILE形式で全ファイルを出し直してもよい(全面更新として適用される)
-- 変更が広範囲に及ぶ場合は、Aと同じMANIFEST+FILE形式で全ファイルを出し直してもよい(全面更新として適用される)
+- 変更が広範囲なら、AのMANIFEST+FILE形式で全ファイル出し直してもよい(全面更新として適用される)
 
 【C. 追加・削除】
 - コード追加もPATCH(oldに挿入位置周辺、newに周辺+新行)
@@ -386,8 +373,9 @@ FILES:
 - ファイル削除は: #### DELETE: パス
 
 【パス】相対パスのみ。先頭 / や ../ 禁止。静的サイトの入口は必ずindex.html
-
-【補足】この会話であなた自身が出力したコードは「提示されたコード」とみなしoldに引用してよい。正確に思い出せない場合は推測せず「現在のファイル内容を貼ってください」とユーザーに求めること。`;
+【囲い】\`\`\` の代わりに ~~~ を使ってもよい(回答全体を1つの\`\`\`に包む場合は内側を~~~に)
+【分割受信】「【パート i/N】」形式で分割送信された場合、全パート到着まで作業せず「パートi受領」とだけ返事し、最終パート後に全体を把握すること
+【補足】この会話であなた自身が出力したコードは「提示されたコード」とみなしoldに引用してよい。思い出せない場合は推測せず「現在のファイル内容を貼ってください」と求めること。`;
 
 /* ---------- GitHub API ---------- */
 async function gh(path,opt={}){
@@ -417,8 +405,7 @@ function onConnected(u){
   const av=document.getElementById('avatar');av.src=u.avatar_url;av.style.display='block';
   document.getElementById('disconnectCard').style.display='block';
   ['tabGuide','tabList','tabAdv'].forEach(id=>document.getElementById(id).disabled=false);
-  restoreWorkTabs();
-  renderSvcManage();
+  restoreWorkTabs();renderSvcManage();
 }
 function disconnect(){localStorage.removeItem(LS_TOKEN);location.reload();}
 (async()=>{if(localStorage.getItem(LS_TOKEN)){
@@ -431,18 +418,43 @@ const saveProj=o=>localStorage.setItem(LS_PROJ,JSON.stringify(o));
 function getP(repo){const a=loadProj();return a[repo]||null;}
 function setP(repo,data){const a=loadProj();a[repo]={...(a[repo]||{links:[],hist:[],open:false}),...data};saveProj(a);return a[repo];}
 function activeLink(repo){const p=getP(repo);return p?(p.links||[]).find(l=>l.active):null;}
-function addLink(repo,url,sent){
-  const a=loadProj();const p=a[repo]||(a[repo]={links:[],hist:[],open:false});
-  (p.links||[]).forEach(l=>l.active=false);
-  p.links.push({url,at:Date.now(),active:true,sentContract:!!sent.c,sentStructure:!!sent.s});
-  saveProj(a);
-}
 function pushHist(repo,msg){const a=loadProj();const p=a[repo]||(a[repo]={links:[],hist:[],open:false});
   p.hist.unshift({msg,at:Date.now()});p.hist=p.hist.slice(0,30);saveProj(a);}
-/* ★保留リンク(リロード耐性) */
 const setPend=(url,sent)=>localStorage.setItem(LS_PEND,JSON.stringify({url,sent:sent||{}}));
 const getPend=()=>JSON.parse(localStorage.getItem(LS_PEND)||'null');
 const clearPend=()=>localStorage.removeItem(LS_PEND);
+
+/* ---------- リンク保存(自己完結・検証つき) ---------- */
+function scCleanLink(url){
+  try{const u=new URL(url.trim());u.search='';u.hash='';return u.href;}
+  catch{return url.trim();}
+}
+function scIsTopPage(url){
+  return /^(https:\/\/(chatgpt\.com|claude\.ai|gemini\.google\.com))\/?(new|app)?\/?$/.test(scCleanLink(url));
+}
+function scAddLink(repo,url,sent){
+  const all=loadProj();
+  const p=all[repo]||(all[repo]={links:[],hist:[],open:false});
+  if(!Array.isArray(p.links))p.links=[];
+  p.links.forEach(l=>l.active=false);
+  p.links.push({url,at:Date.now(),active:true,sentContract:!!sent.c,sentStructure:!!sent.s});
+  saveProj(all);
+  const check=loadProj();
+  return check[repo]&&check[repo].links.some(l=>l.active&&l.url===url);
+}
+function promptLink(repo,isSwitch=false){
+  try{
+    let url=prompt(isSwitch
+      ?'🔄 新しい会話のURLを貼ってください。\n(次の依頼文に契約書と最新コードが自動同梱されます)'
+      :'📎 AIとの会話URL(アドレス欄)を貼ってください:\n(この会話は契約書・コードを把握済みとして扱います)');
+    if(!url||!url.trim())return;
+    url=scCleanLink(url);
+    const ok=scAddLink(repo,url,isSwitch?{c:false,s:false}:{c:true,s:true});
+    if(!ok){toast('❌ 保存の検証に失敗しました');return;}
+    toast(isSwitch?'🔄 乗り換え完了!':'📎 リンク保存!以後の依頼文は最小構成になります');
+    if(CUR_WORK===repo)renderWork();
+  }catch(e){toast('❌ リンク保存エラー: '+e.message);console.error(e);}
+}
 
 /* ---------- 🤖 AIサービス ---------- */
 const DEFAULT_SVCS=[
@@ -450,33 +462,18 @@ const DEFAULT_SVCS=[
   {id:'gemini',name:'✨ Gemini',url:'https://gemini.google.com/app'},
   {id:'claude',name:'🎩 Claude',url:'https://claude.ai/new'},
 ];
-/* 会話リンクの浄化: ?q=等のクエリとハッシュを除去 */
-function cleanLink(url){
-  try{const u=new URL(url.trim());u.search='';u.hash='';return u.href;}
-  catch{return url.trim();}
-}
-function looksLikeTopPage(url){
-  return /^(https:\/\/(chatgpt\.com|claude\.ai|gemini\.google\.com))\/?(new|app)?\/?$/.test(cleanLink(url));
-}
 function loadSvcs(){
-  const saved=JSON.parse(localStorage.getItem('sc_services')||'null');
-  return saved&&saved.length?saved:DEFAULT_SVCS.slice();
+  const s=JSON.parse(localStorage.getItem('sc_services')||'null');
+  return s&&s.length?s:DEFAULT_SVCS.slice();
 }
 function saveSvcs(s){localStorage.setItem('sc_services',JSON.stringify(s));}
-function curSvc(){
-  const s=loadSvcs();
-  return s.find(x=>x.id===localStorage.getItem('sc_lastSvc'))||s[0];
-}
-const autoOpen=()=>localStorage.getItem('sc_autoOpen')!=='0';
 function renderSvcButtons(containerId){
   const el=document.getElementById(containerId);if(!el)return;
   el.innerHTML='';
   loadSvcs().forEach(s=>{
     const b=document.createElement('button');
-    b.className='svcBtn';
-    b.textContent=s.name+' ↗';
-    b.title=s.url;
-    b.onclick=()=>{window.open(s.url,'sc_ai_'+s.id);};  /* 押した時だけ開く。それだけ */
+    b.className='svcBtn';b.textContent=s.name+' ↗';b.title=s.url;
+    b.onclick=()=>{window.open(s.url,'sc_ai_'+s.id);};
     el.appendChild(b);
   });
   const add=document.createElement('button');
@@ -496,14 +493,8 @@ function renderSvcManage(){
     `<div class="svcItem"><b>${s.name}</b><span>${s.url}</span>`+
     (s.id.startsWith('custom-')?`<button class="btn sm" onclick="delSvc('${s.id}')">🗑️</button>`:'')+
     `</div>`).join('');
-  const chk=document.getElementById('autoOpenChk');
-  if(chk)chk.checked=autoOpen();
 }
-function delSvc(id){
-  saveSvcs(loadSvcs().filter(s=>s.id!==id));
-  renderSvcManage();
-}
-/* (自動オープン機能は廃止。サービスボタンから手動で開く方式に) */
+function delSvc(id){saveSvcs(loadSvcs().filter(s=>s.id!==id));renderSvcManage();}
 
 /* ---------- 共通 ---------- */
 const b64decode=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,'')),c=>c.charCodeAt(0)));
@@ -523,7 +514,6 @@ function markDeleted(p){if(WS&&WS.linked){WS.deleted.add(p);WS.dirty.delete(p);}
 function normalize(s){return s.replace(/\r\n?/g,'\n').split('\n').map(l=>l.replace(/\s+$/,'')).join('\n');}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),3800);}
-/* ★未コミットUIの一括更新(常駐バー+作業タブ) */
 function refreshDirtyUI(){
   const n=WS&&WS.linked?WS.dirty.size+WS.deleted.size:0;
   const wc=document.getElementById('wsCommit');
@@ -584,15 +574,12 @@ async function showWork(repo){
     document.getElementById('workInner').innerHTML='<p>☁️ 読み込み中...</p>';
     try{await loadRepo(repo,false);}catch(e){
       if(e.message.includes('404')){
-        /* 👻 リポジトリ削除済み: お墓画面を表示 */
         const a=loadProj();if(a[repo]){a[repo].dead=true;saveProj(a);}
         document.getElementById('workInner').innerHTML=`
           <h2 style="color:#ff9d9d">👻 ${repo} は GitHub 上に存在しません</h2>
-          <p style="color:#c9bfd6;font-size:13px;line-height:2;margin:10px 0">
-          RepoSweeper等で削除されたようです。このタブと記録を片付けますか?<br>
-          (会話リンクの記録も一緒に消えます)</p>
+          <p style="font-size:13px;color:#c9bfd6;margin:10px 0">削除されたようです。片付けますか?</p>
           <button class="btn pink" onclick="removeProj('${repo}')">🗑️ タブと記録を片付ける</button>
-          <button class="btn" onclick="closeWorkTab('${repo}')">タブだけ閉じる(記録は残す)</button>`;
+          <button class="btn" onclick="closeWorkTab('${repo}')">タブだけ閉じる</button>`;
         return;
       }
       document.getElementById('workInner').innerHTML=`<p>❌ ${e.message}</p>`;return;}
@@ -628,8 +615,8 @@ function renderWork(){
     <button class="btn sm" onclick="openInspect()">🕵️ 検品</button>
     <button class="btn sm" id="wkCommitBtn" onclick="workManualCommit()">💾 未コミット反映</button>
   </div>
-  <div class="stepHead">🕘 このプロジェクトの履歴</div>
-  <div id="wkHist">${(p.hist||[]).map(h=>`<div class="histLine">✏️ ${h.msg} <span style="color:#665a75">(${new Date(h.at).toLocaleString()})</span></div>`).join('')||'<div class="histLine">まだ履歴なし</div>'}</div>`;
+  <div class="stepHead">🕘 履歴</div>
+  <div>${(p.hist||[]).map(h=>`<div class="histLine">✏️ ${h.msg} <span style="color:#665a75">(${new Date(h.at).toLocaleString()})</span></div>`).join('')||'<div class="histLine">まだ履歴なし</div>'}</div>`;
   renderWorkStatus();
 }
 function renderWorkStatus(){
@@ -640,17 +627,6 @@ function renderWorkStatus(){
   btn.style.opacity=n?'1':'0.5';
   const tb=document.getElementById('wt_'+CUR_WORK);
   if(tb)tb.firstChild.textContent=`🔨 ${CUR_WORK}${n?' ●':''} `;
-}
-function promptLink(repo,isSwitch=false){
-  const url=prompt(isSwitch
-    ?'🔄 新しい会話のURLを貼ってください。\n(保存後、次の依頼文に契約書と最新コードが自動同梱され、簡単に引き継げます)'
-    :'📎 AIとの会話URL(アドレス欄)を貼ってください:\n(この会話は契約書・コードを把握済みとして扱います。未把握なら保存後に🆘フル再送を使ってください)');
-  if(!url)return;
-  url=scCleanLink(url);
-  /* リンクあり=把握済みとみなす。乗り換えだけは新会話なので未送信扱い(次回フル同梱) */
-  addLink(repo,url,isSwitch?{c:false,s:false}:{c:true,s:true});
-  toast(isSwitch?'🔄 乗り換え完了!次の依頼文に引き継ぎ資料を自動同梱します':'📎 リンク保存!以後の依頼文は最小構成になります');
-  renderWork();
 }
 
 /* ---------- 依頼文ビルダー ---------- */
@@ -681,7 +657,7 @@ async function copyWorkPrompt(){
   parts.push(`【修正依頼】\n${inst}\n\n変更は必ずPATCH形式(oldは現行コードの完全コピー)で出力してください。新規ファイルはFILE形式で。`);
   await navigator.clipboard.writeText(parts.join('\n\n---\n\n'));
   if(lk){const a=loadProj();const l=a[CUR_WORK].links.find(x=>x.active);l.sentContract=true;l.sentStructure=true;saveProj(a);}
-  toast(`🤖 コピー完了!${added.length?`(${added.join('+')}を同梱)`:'(最小構成)'} → 💬会話を開くから貼ってください`);
+  toast(`🤖 コピー完了!${added.length?`(${added.join('+')}を同梱)`:'(最小構成)'} → 💬会話を開いて貼ってください`);
 }
 async function copyFullResend(){
   toast('📤 フル資料を収集中...');
@@ -689,83 +665,131 @@ async function copyFullResend(){
   await navigator.clipboard.writeText(txt);
   const lk=activeLink(CUR_WORK);
   if(lk){const a=loadProj();const l=a[CUR_WORK].links.find(x=>x.active);l.sentContract=true;l.sentStructure=true;saveProj(a);}
-  toast('🆘 フル再送分をコピーしました。AIに貼ってください');
+  toast('🆘 フル再送分をコピーしました');
 }
 
-/* ---------- 作業台: 適用→コミット→見届け ---------- */
-async function applyAndCommit(){
-  const txt=document.getElementById('wkPaste').value;
-  if(!txt.trim())return toast('😵 回答を貼ってください');
-  const ok=await applyText(txt);
-  if(!ok)return;
-  const n=WS.dirty.size+WS.deleted.size;
-  if(!n)return toast('⚠️ 適用できた変更がありません(PATCH不一致の可能性)');
-  const inst=document.getElementById('wkInst').value.trim();
-  const msg=inst||'🍰 update via ShortCake';
-  document.getElementById('wkPaste').value='';
-  await commitCore(msg,document.getElementById('wkLog'));
+/* ---------- 📤 AIに渡す(一括/分割) ---------- */
+async function exportForAI(withIntro=false){
+  if(!WS||!WS.name)return toast('😵 未読み込み');
+  toast('📤 生成中...');
+  let full=await buildExportText();
+  if(withIntro){
+    full+='\n上記が現在の全ファイルです。把握したら「把握しました」と返事してください。以後の修正はPATCH形式でお願いします。';
+    const lk=activeLink(CUR_WORK);
+    if(lk){const a=loadProj();const l=a[CUR_WORK].links.find(x=>x.active);
+      if(l){l.sentStructure=true;saveProj(a);}}
+  }
+  const modal=document.getElementById('exportModal');
+  const sizeBox=document.getElementById('expSizeBtns');
+  document.getElementById('expParts').style.display='none';
+  sizeBox.innerHTML='';
+  const kb=Math.round(full.length/1024);
+  [{label:`📄 一括コピー(全${full.length.toLocaleString()}字 / 約${kb}KB)`,size:0},
+   {label:'✂️ 標準分割 約3万字/通 — ChatGPT/Claude/Gemini向け',size:30000},
+   {label:'✂️ 細かめ 約1.5万字/通 — 入力制限が渋いサービス向け',size:15000},
+   {label:'✂️ 極小 約8千字/通 — 上限が厳しいサービス向け',size:8000},
+  ].forEach(o=>{
+    const b=document.createElement('button');
+    b.className='btn';b.style.margin='0';b.style.textAlign='left';
+    b.textContent=o.label;
+    if(o.size&&full.length<=o.size){b.disabled=true;b.style.opacity='.4';b.textContent+=' (分割不要)';}
+    b.onclick=async()=>{
+      if(!o.size){
+        try{await navigator.clipboard.writeText(full);
+          toast(`📤 一括コピー完了(約${kb}KB)`);modal.style.display='none';}
+        catch{const a=document.createElement('a');
+          a.href=URL.createObjectURL(new Blob([full],{type:'text/plain'}));
+          a.download=WS.name+'_for_ai.txt';a.click();}
+        return;
+      }
+      showParts(splitForAI(full,o.size));
+    };
+    sizeBox.appendChild(b);
+  });
+  modal.style.display='flex';
 }
-async function workManualCommit(){
-  const n=WS.dirty.size+WS.deleted.size;
-  if(!n)return toast('変更がありません');
-  const msg=prompt('コミットメッセージ(空欄OK):')||'🍰 update via ShortCake';
-  await commitCore(msg,document.getElementById('wkLog'));
+function splitForAI(full,size){
+  const blocks=full.split(/(?=#### FILE: )/);
+  const chunks=[];let cur='';
+  for(let b of blocks){
+    while(b.length>size){
+      const cut=b.lastIndexOf('\n',size);
+      chunks.push(cur+b.slice(0,cut>0?cut:size)+'\n(※このファイルは次のパートに続く)');cur='';
+      b='(※前パートの続き)\n'+b.slice(cut>0?cut:size);
+    }
+    if((cur+b).length>size){chunks.push(cur);cur=b;}
+    else cur+=b;
+  }
+  if(cur.trim())chunks.push(cur);
+  const n=chunks.length;
+  return chunks.map((c,i)=>
+    `【パート ${i+1}/${n}】プロジェクト全体を分割して送ります。全パートが届くまで作業せず「パート${i+1}受領」とだけ返事してください。${i===n-1?'これが最終パートです。全体を把握したら「把握しました」と返事してください。':''}\n\n`+c);
 }
-/* ★常駐バーのコミット(上級者含む全画面から) */
-async function advCommitPrompt(){
-  if(!WS||!WS.linked)return toast('😵 リポジトリ未リンク');
-  const n=WS.dirty.size+WS.deleted.size;
-  if(!n)return toast('変更なし');
-  const list=[...WS.dirty].map(p=>'✏️'+p).concat([...WS.deleted].map(p=>'🗑️'+p)).join('\n');
-  const msg=prompt(`以下を「${WS.linked.repo}」にコミットします:\n${list}\n\nコミットメッセージ(空欄OK):`);
-  if(msg===null)return;
-  /* ログの出し先: 作業タブ表示中はwkLog、それ以外はdeployLogを転用 */
-  let logEl=document.getElementById('wkLog');
-  if(!logEl||!CUR_WORK){logEl=document.getElementById('deployLog');
-    advGoto('advDeploy');if(!document.getElementById('advPane').classList.contains('on'))activate('advPane');}
-  await commitCore(msg.trim()||'🍰 update via ShortCake',logEl);
+function showParts(parts){
+  const box=document.getElementById('expPartBtns');
+  document.getElementById('expSizeBtns').innerHTML='';
+  document.getElementById('expParts').style.display='block';
+  box.innerHTML='';
+  parts.forEach((p,i)=>{
+    const b=document.createElement('button');
+    b.className='btn';b.style.margin='0';b.style.textAlign='left';
+    b.textContent=`📋 パート ${i+1}/${parts.length} をコピー(${p.length.toLocaleString()}字)`;
+    b.onclick=async()=>{
+      await navigator.clipboard.writeText(p);
+      b.textContent=`✅ パート ${i+1}/${parts.length} コピー済み`;
+      b.style.background='#243a2c';
+      toast(`📋 パート${i+1}をコピー!AIに貼って、返事が来たら次へ`);
+    };
+    box.appendChild(b);
+  });
 }
 
-/* ---------- パーサー&適用 ---------- */
-function parseManifest(t){const m=t.match(/####\s*MANIFEST\s*```\w*\n([\s\S]*?)```/);if(!m)return null;
-  const man={FILES:[]};m[1].split('\n').forEach(l=>{l=l.trim();
+/* ---------- パーサー(正規/チルダ/裸) ---------- */
+function parseManifest(t){
+  const m=t.match(/####\s*MANIFEST\s*```\w*\n([\s\S]*?)```/)||t.match(/####\s*MANIFEST\s*~~~\w*\n([\s\S]*?)~~~/);
+  if(!m)return null;
+  const man={FILES:[]};
+  m[1].split('\n').forEach(l=>{l=l.trim();
     if(l.startsWith('- '))man.FILES.push(l.slice(2).trim());
     else if(l.includes(':')){let[k,...v]=l.split(':');k=k.trim().toUpperCase();
-      if(k!=='FILES'&&k!=='FILE')man[k]=v.join(':').trim();}});return man;}
-function parseFiles(t){const f={};for(const m of t.matchAll(/####\s*FILE:\s*([\w\-./]+)\s*\n```[\w+-]*\n([\s\S]*?)```/g))f[m[1].trim()]={text:m[2]};return f;}
-function parsePatches(t){const p=[];for(const m of t.matchAll(/####\s*PATCH:\s*([\w\-./]+)\s*\n```old\s*\n([\s\S]*?)```\s*\n+```new\s*\n([\s\S]*?)```/g))p.push({path:m[1].trim(),old:m[2],neu:m[3]});return p;}
-function parseDeletes(t){const d=[];for(const m of t.matchAll(/####\s*DELETE:\s*([\w\-./]+)/g))d.push(m[1].trim());return d;}
-function applyPatch(ft,p){
-  if(ft.indexOf(p.old)>=0)return{text:ft.replace(p.old,p.neu)};
-  const nf=normalize(ft),no=normalize(p.old);
-  if(nf.indexOf(no)>=0)return{text:nf.replace(no,normalize(p.neu))};
-  return{text:null};
+      if(k!=='FILES'&&k!=='FILE')man[k]=v.join(':').trim();}});
+  return man;
 }
-/* ---------- 裸形式(囲いが剥がれたコピペ)の救済パーサー ---------- */
+function parseFiles(t){
+  const f={};
+  for(const m of t.matchAll(/####\s*FILE:\s*([\w\-./]+)\s*\n```[\w+-]*\n([\s\S]*?)```/g))f[m[1].trim()]={text:m[2]};
+  for(const m of t.matchAll(/####\s*FILE:\s*([\w\-./]+)\s*\n~~~[\w+-]*\n([\s\S]*?)~~~/g))f[m[1].trim()]={text:m[2]};
+  return f;
+}
+function parsePatches(t){
+  const p=[];
+  for(const m of t.matchAll(/####\s*PATCH:\s*([\w\-./]+)\s*\n```old\s*\n([\s\S]*?)```\s*\n+```new\s*\n([\s\S]*?)```/g))p.push({path:m[1].trim(),old:m[2],neu:m[3]});
+  for(const m of t.matchAll(/####\s*PATCH:\s*([\w\-./]+)\s*\n~~~old\s*\n([\s\S]*?)~~~\s*\n+~~~new\s*\n([\s\S]*?)~~~/g))p.push({path:m[1].trim(),old:m[2],neu:m[3]});
+  return p;
+}
+function parseDeletes(t){const d=[];for(const m of t.matchAll(/####\s*DELETE:\s*([\w\-./]+)/g))d.push(m[1].trim());return d;}
 const LANG_LINE=/^(html|css|javascript|js|typescript|ts|json|manifest|python|py|text|txt|xml|yaml|yml|markdown|md)$/i;
 function parseNaked(text){
   const lines=text.replace(/\r\n?/g,'\n').split('\n');
   let man=null,files={},cur=null,buf=[],inMan=false,manBuf=[];
   const flush=()=>{if(cur){
-    while(buf.length&&!buf[buf.length-1].trim())buf.pop(); /* 末尾空行除去 */
+    while(buf.length&&!buf[buf.length-1].trim())buf.pop();
     files[cur]={text:buf.join('\n')+'\n'};}
     cur=null;buf=[];};
   for(let i=0;i<lines.length;i++){
     const line=lines[i];
-    const t=line.trim().replace(/^#+\s*/,''); /* ####付きでも裸でも受ける */
+    const t=line.trim().replace(/^#+\s*/,'');
     if(/^MANIFEST$/i.test(t)){flush();inMan=true;manBuf=[];continue;}
     let fm=t.match(/^FILE:\s*([\w\-./]+)$/i);
     if(fm){
-      if(inMan){inMan=false;}
+      if(inMan)inMan=false;
       flush();cur=fm[1];
-      /* 直後の「HTML」「js」みたいな言語名だけの行を骨拾いしてスキップ */
       if(i+1<lines.length&&LANG_LINE.test(lines[i+1].trim()))i++;
       continue;
     }
     if(inMan){
-      if(LANG_LINE.test(t))continue; /* manifestという残骸行 */
+      if(LANG_LINE.test(t))continue;
       if(t)manBuf.push(line);
-      /* MANIFEST部の終わり判定はFILE:行で行うので継続 */
       continue;
     }
     if(cur)buf.push(line);
@@ -780,28 +804,31 @@ function parseNaked(text){
   }
   return{man,files};
 }
+function applyPatch(ft,p){
+  if(ft.indexOf(p.old)>=0)return{text:ft.replace(p.old,p.neu)};
+  const nf=normalize(ft),no=normalize(p.old);
+  if(nf.indexOf(no)>=0)return{text:nf.replace(no,normalize(p.neu))};
+  return{text:null};
+}
 async function applyText(text){
   let man=parseManifest(text);
   let files=parseFiles(text),patches=parsePatches(text),deletes=parseDeletes(text);
-  /* ★正規形式が1個も見つからない時だけ、裸形式の救済を試す */
   if(!man&&!Object.keys(files).length&&!patches.length&&!deletes.length){
     const naked=parseNaked(text);
     if(Object.keys(naked.files).length){
       man=naked.man;files=naked.files;
-      toast(`🩹 囲いが剥がれた形式を検出→救済パースしました(${Object.keys(files).length}ファイル)`);
+      toast(`🩹 囲いが剥がれた形式を救済パースしました(${Object.keys(files).length}ファイル)`);
     }
   }
-  /* ★全面書き直し(MANIFEST+FILE)をリンク中プロジェクトへの更新として適用 */
   if(man&&WS&&WS.linked&&Object.keys(files).length){
     Object.entries(files).forEach(([p,c])=>{WS.files[p]=c;markDirty(p);});
-    /* 新構成に含まれない既存ファイルの削除を提案(バイナリと.github/は除外) */
-    const keep=new Set([...man.FILES,...Object.keys(files)]);
+    const keep=new Set([...(man.FILES||[]),...Object.keys(files)]);
     const gone=Object.keys(WS.files).filter(p=>
       !keep.has(p)&&!p.startsWith('.github/')&&!WS.files[p].bin&&!WS.deleted.has(p));
-    if(gone.length&&confirm(`🔄 全面書き直しを検出しました。\n新しい構成に含まれない${gone.length}ファイルを削除しますか?\n\n${gone.join('\n')}\n\n(OK=削除 / キャンセル=残す)`)){
+    if(gone.length&&confirm(`🔄 全面書き直しを検出。\n新構成にない${gone.length}ファイルを削除しますか?\n\n${gone.join('\n')}`)){
       gone.forEach(p=>{delete WS.files[p];markDeleted(p);});
     }
-    toast(`🔄 全面更新として適用(${Object.keys(files).length}ファイル${gone.length?`・削除候補${gone.length}`:''})`);
+    toast(`🔄 全面更新として適用(${Object.keys(files).length}ファイル)`);
     return true;
   }
   if(!Object.keys(files).length&&!patches.length&&!deletes.length){
@@ -817,7 +844,7 @@ async function applyText(text){
     if(r.text===null)fail++;
     else{WS.files[pt.path]={text:r.text};markDirty(pt.path);}
   }
-  if(fail)toast(`⚠️ PATCH失敗${fail}件。「oldを現行コードから一字一句コピーして出し直して」とAIに伝えてください`);
+  if(fail)toast(`⚠️ PATCH失敗${fail}件。「oldを現行コードから一字一句コピーして出し直して」とAIに`);
   return true;
 }
 async function importPaste(srcId){
@@ -828,14 +855,13 @@ async function importPaste(srcId){
   if(!man&&!Object.keys(parseFiles(text)).length&&!parsePatches(text).length&&!parseDeletes(text).length){
     const naked=parseNaked(text);
     if(naked.man&&Object.keys(naked.files).length){man=naked.man;nakedFiles=naked.files;
-      toast('🩹 囲いが剥がれた形式を救済パースしました');}
+      toast('🩹 囲いが剥がれた形式を救済パース');}
   }
   if(man){
     const files=nakedFiles||parseFiles(text);
-    const missing=man.FILES.filter(f=>!(f in files));
-    if(missing.length&&!confirm(`⚠️ 本体がないファイル: ${missing.join(', ')}\n続ける?`))return;
-    /* ★リンク中なら「全面更新」か「新規」かを選ばせる */
-    if(WS&&WS.linked&&confirm(`🔗 リンク中の「${WS.linked.repo}」への全面更新として適用しますか?\n(キャンセル=新規プロジェクトとして読み込み)`)){
+    const missing=(man.FILES||[]).filter(f=>!(f in files));
+    if(missing.length&&!confirm(`⚠️ 本体なし: ${missing.join(', ')}\n続ける?`))return;
+    if(WS&&WS.linked&&confirm(`🔗 リンク中「${WS.linked.repo}」への全面更新として適用?\n(キャンセル=新規プロジェクト)`)){
       await applyText(text);
       document.getElementById(srcId).value='';
       const n=WS.dirty.size+WS.deleted.size;
@@ -848,7 +874,7 @@ async function importPaste(srcId){
   await applyText(text);
   document.getElementById(srcId).value='';
   const n=WS.dirty.size+WS.deleted.size;
-  toast(`✅ 適用しました${WS.linked&&n?` → 下の💾コミット(${n}件)で反映!`:''}`);
+  toast(`✅ 適用しました${WS.linked&&n?` → 💾コミット(${n}件)で反映!`:''}`);
 }
 function setAdvWS(name,files){
   const ws=newWS((name||'project').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'project');
@@ -856,8 +882,7 @@ function setAdvWS(name,files){
   inspectProject();
   document.getElementById('wsBar').classList.add('show');
   document.getElementById('wsName').textContent=ws.name;
-  refreshDirtyUI();
-  renderDeploy();
+  refreshDirtyUI();renderDeploy();
   toast('📦 読み込み完了!🚀デプロイへどうぞ');
 }
 
@@ -909,7 +934,36 @@ async function loadRepo(repo,advMode){
   toast(`🔗 「${repo}」読み込み完了`);
 }
 
-/* ---------- コミット共通 ---------- */
+/* ---------- コミット ---------- */
+async function applyAndCommit(){
+  const txt=document.getElementById('wkPaste').value;
+  if(!txt.trim())return toast('😵 回答を貼ってください');
+  const ok=await applyText(txt);
+  if(!ok)return;
+  const n=WS.dirty.size+WS.deleted.size;
+  if(!n)return toast('⚠️ 適用できた変更がありません');
+  const inst=document.getElementById('wkInst').value.trim();
+  document.getElementById('wkPaste').value='';
+  await commitCore(inst||'🍰 update via ShortCake',document.getElementById('wkLog'));
+}
+async function workManualCommit(){
+  const n=WS.dirty.size+WS.deleted.size;
+  if(!n)return toast('変更がありません');
+  const msg=prompt('コミットメッセージ(空欄OK):')||'🍰 update via ShortCake';
+  await commitCore(msg,document.getElementById('wkLog'));
+}
+async function advCommitPrompt(){
+  if(!WS||!WS.linked)return toast('😵 リポジトリ未リンク');
+  const n=WS.dirty.size+WS.deleted.size;
+  if(!n)return toast('変更なし');
+  const list=[...WS.dirty].map(p=>'✏️'+p).concat([...WS.deleted].map(p=>'🗑️'+p)).join('\n');
+  const msg=prompt(`「${WS.linked.repo}」にコミット:\n${list}\n\nメッセージ(空欄OK):`);
+  if(msg===null)return;
+  let logEl=document.getElementById('wkLog');
+  if(!logEl||!CUR_WORK){logEl=document.getElementById('deployLog');
+    advGoto('advDeploy');if(!document.getElementById('advPane').classList.contains('on'))activate('advPane');}
+  await commitCore(msg.trim()||'🍰 update via ShortCake',logEl);
+}
 async function commitCore(msg,logEl){
   const clog=(m,c='lin')=>{logEl.classList.add('show');logEl.innerHTML+=`<div class="${c}">${m}</div>`;logEl.scrollTop=logEl.scrollHeight;};
   const paths=[...WS.dirty],dels=[...WS.deleted];
@@ -950,17 +1004,22 @@ async function watchPages(repo,sha,clog){
     try{const runs=await gh(`/repos/${USER}/${repo}/actions/runs?per_page=5`);
       run=runs.workflow_runs.find(x=>x.head_sha===sha);if(run)break;}catch{}
   }
-  if(!run){clog('⚠️ 自動ビルドが起動しません(deploy.yml未設置の可能性)','lng');
-    clog('💡 🛠上級者→🚀から同名で一度デプロイすると以後自動化されます','lin');return;}
+  if(!run){clog('⚠️ 自動ビルドが起動しません(deploy.yml未設置?)','lng');
+    clog('💡 🛠→🚀から同名で一度デプロイすると以後自動化','lin');return;}
   clog(`🔍 ビルド起動(<a href="${run.html_url}" target="_blank">進行状況</a>)`);
   for(let i=0;i<60;i++){
     if(run.status==='completed')break;
     await new Promise(w=>setTimeout(w,5000));
     try{run=await gh(`/repos/${USER}/${repo}/actions/runs/${run.id}`);}catch{}
+    if(i%3===2)clog(`　⏳ ${run.status==='queued'?'待機中':'実行中'}...(${((i+1)*5/60).toFixed(1)}分)`);
   }
   if(run.conclusion==='success'){
     clog('🎉 サイト更新完了!','lok');clog(`🌐 <a href="${url}" target="_blank">${url}</a>`,'lok');
     clog('💡 変わってなければ ⌘+Shift+R','lin');toast('🎉 サイトが更新されました!');
+    if(location.href.includes(`/${repo}/`)){
+      if(confirm('🍰 ShortCake自身が更新されました!リロードしますか?'))location.reload();
+      else clog('⚠️ リロードまで今の画面は古いコードのままです','lng');
+    }
   }else if(run.status!=='completed')clog('⏳ まだビルド中。リンクから確認を','lin');
   else{clog(`❌ ビルド失敗(${run.conclusion})`,'lng');
     clog(`🔍 <a href="${run.html_url}" target="_blank">ログ</a>の赤い部分をAIに`,'lin');}
@@ -978,54 +1037,50 @@ function startFlow(mode){
 async function copyNewPrompt(){
   const d=document.getElementById('newDesc').value.trim();
   if(!d)return toast('😵 作りたいものを書いてください');
-  const full=CONTRACT+'\n\n---\n\n上記の書式に従って、以下を作ってください:\n\n'+d;
-  await navigator.clipboard.writeText(full);
+  await navigator.clipboard.writeText(CONTRACT+'\n\n---\n\n上記の書式に従って、以下を作ってください:\n\n'+d);
   FLOW.sent={c:true,s:true};
   const pend=getPend();
   if(pend){pend.sent={c:true,s:true};localStorage.setItem(LS_PEND,JSON.stringify(pend));}
-  toast('🤖 コピー完了!上の「AIボタン」から開いて貼ってください');
-}
-/* ★リンク保存系を自己完結に再定義(過去パッチの適用状態に依存しない) */
-function scCleanLink(url){
-  try{const u=new URL(url.trim());u.search='';u.hash='';return u.href;}
-  catch{return url.trim();}
-}
-function scIsTopPage(url){
-  return /^(https:\/\/(chatgpt\.com|claude\.ai|gemini\.google\.com))\/?(new|app)?\/?$/.test(scCleanLink(url));
+  toast('🤖 コピー完了!AIボタンから開いて貼ってください');
 }
 function saveFlowLink(inputId){
-  let url=document.getElementById(inputId).value.trim();
-  if(!url)return toast('😵 URLを貼ってください');
-  url=scCleanLink(url);
-  if(scIsTopPage(url)&&!confirm('⚠️ これはAIのトップページのURLのようです。\n会話開始後にアドレス欄に出る「会話専用URL」(例: /c/xxxx)がおすすめです。\nこのまま保存しますか?'))return;
-  document.getElementById(inputId).value=url;
-  FLOW.link=url;
-  setPend(url,FLOW.sent||{});
-  toast('📎 リンクを記憶しました(公開時にプロジェクトへ自動紐づけ)');
+  try{
+    let url=document.getElementById(inputId).value.trim();
+    if(!url)return toast('😵 URLを貼ってください');
+    url=scCleanLink(url);
+    if(scIsTopPage(url)&&!confirm('⚠️ トップページのURLのようです。会話開始後の「/c/xxxx」等がおすすめ。このまま保存?'))return;
+    document.getElementById(inputId).value=url;
+    FLOW.link=url;
+    setPend(url,FLOW.sent||{});
+    toast('📎 リンクを記憶しました(公開時に自動紐づけ)');
+  }catch(e){toast('❌ '+e.message);}
 }
 async function flowNewImport(){
   const text=document.getElementById('newPaste').value;
   if(!text.trim())return toast('😵 回答を貼ってください');
-  const man=parseManifest(text);
+  let man=parseManifest(text),files=parseFiles(text);
+  if(!man||!Object.keys(files).length){
+    const naked=parseNaked(text);
+    if(naked.man&&Object.keys(naked.files).length){man=naked.man;files=naked.files;
+      toast('🩹 囲いが剥がれた形式を救済パース');}
+  }
   if(!man)return toast('😵 MANIFESTが見つかりません。依頼文を先にAIに送りましたか?');
-  const files=parseFiles(text);
-  const missing=man.FILES.filter(f=>!(f in files));
+  const missing=(man.FILES||[]).filter(f=>!(f in files));
   if(missing.length&&!confirm(`⚠️ 本体なし: ${missing.join(', ')}\n続ける?`))return;
   setAdvWS(man.PROJECT||'unnamed',files);
   activate('advPane');advGoto('advDeploy');
-  toast('📦 取り込みOK!🚀ボタンで公開してください(完了後、作業タブが開きます)');
+  toast('📦 取り込みOK!🚀で公開してください');
 }
 function renderFixList(){
   const el=document.getElementById('fixList');if(!el)return;
   if(!REPOS.length){el.innerHTML='読み込み中...';return;}
-  /* GitHubの現存リポジトリ一覧を正とし、記憶側の死んだやつは出さない */
   const q=document.getElementById('fixSearch').value;
   const hits=REPOS.filter(r=>fuzzyMatch(r.name,q));
   const linked=hits.filter(r=>activeLink(r.name)),un=hits.filter(r=>!activeLink(r.name));
   let html='';
   if(linked.length){html+='<div class="grpHead">💬 会話とリンク済み(クリックで即・作業開始)</div>';
     linked.forEach(r=>{html+=`<div class="repoItem" onclick="openWorkTab('${r.name}')">📦 <b>${r.name}</b><span>${new Date(r.pushed_at).toLocaleDateString()}</span></div>`;});}
-  if(un.length){html+='<div class="grpHead un">🔗 未リンク(初回だけAIへの引き継ぎが必要)</div>';
+  if(un.length){html+='<div class="grpHead un">🔗 未リンク(初回だけ引き継ぎが必要)</div>';
     un.forEach(r=>{html+=`<div class="repoItem" onclick="startHandover('${r.name}')">📦 <b>${r.name}</b><span>${new Date(r.pushed_at).toLocaleDateString()}</span></div>`;});}
   el.innerHTML=html||'該当なし';
 }
@@ -1045,42 +1100,42 @@ async function copyHandover(){
   if(c)parts.push(CONTRACT);
   if(s){toast('📤 コード収集中...');parts.push(await buildExportText());}
   parts.push('上記を把握したら「把握しました」と返事してください。今後このプロジェクトの修正を依頼します。');
-  const full=parts.join('\n\n---\n\n');
-  await navigator.clipboard.writeText(full);
+  await navigator.clipboard.writeText(parts.join('\n\n---\n\n'));
   FLOW.sent={c,s};
-  toast('🤖 引き継ぎ文をコピー!上の「AIボタン」から開いて貼ってください');
+  toast('🤖 引き継ぎ文をコピー!AIボタンから開いて貼ってください');
 }
 function finishHandover(){
-  let url=document.getElementById('hoLink').value.trim();
-  if(!url)return toast('😵 会話リンクを貼ってください');
-  url=scCleanLink(url);
-  if(scIsTopPage(url)&&!confirm('⚠️ トップページのURLのようです。会話開始後の「/c/xxxx」等がおすすめ。このまま保存しますか?'))return;
-  /* コピー未実行でもチェックボックスの状態から送信済みを判定 */
-  const sent=(FLOW.sent&&(FLOW.sent.c||FLOW.sent.s))?FLOW.sent
-    :{c:document.getElementById('hoContract').checked,s:document.getElementById('hoCode').checked};
-  addLink(FLOW.repo,url,sent);
-  toast('🔗 リンク完了!次回からは一覧から直接ここに来られます');
-  openWorkTab(FLOW.repo);
+  try{
+    let url=document.getElementById('hoLink').value.trim();
+    if(!url)return toast('😵 会話リンクを貼ってください');
+    url=scCleanLink(url);
+    if(scIsTopPage(url)&&!confirm('⚠️ トップページのURLのようです。このまま保存?'))return;
+    const sent=(FLOW.sent&&(FLOW.sent.c||FLOW.sent.s))?FLOW.sent
+      :{c:document.getElementById('hoContract').checked,s:document.getElementById('hoCode').checked};
+    const ok=scAddLink(FLOW.repo,url,sent);
+    if(!ok)return toast('❌ 保存の検証に失敗');
+    toast('🔗 リンク完了!');
+    openWorkTab(FLOW.repo);
+  }catch(e){toast('❌ '+e.message);}
 }
 
 /* ---------- 📚 一覧 ---------- */
 function removeProj(repo){
-  if(!confirm(`「${repo}」をShortCakeの記憶から削除しますか?\n(GitHub側には影響しません。会話リンク等の記録が消えます)`))return;
+  if(!confirm(`「${repo}」をShortCakeの記憶から削除?\n(GitHub側には影響なし)`))return;
   const a=loadProj();delete a[repo];saveProj(a);
   closeWorkTab(repo);delete WT[repo];
-  renderProjList();toast(`🗑️ 「${repo}」の記録を削除しました`);
+  renderProjList();toast(`🗑️ 記録を削除しました`);
 }
 function renderProjList(){
   const el=document.getElementById('projList');
   const all=loadProj();
   const names=Object.keys(all);
-  if(!names.length){el.innerHTML='<p style="color:#776b85">まだプロジェクトがありません。🧭はじめる からどうぞ🍰</p>';return;}
-  el.innerHTML=`<button class="btn sm" onclick="checkAlive()">👻 全員の生存確認(削除済みを検出)</button><div id="projItems"></div>`;
+  if(!names.length){el.innerHTML='<p style="color:#776b85">まだプロジェクトがありません🍰</p>';return;}
+  el.innerHTML=`<button class="btn sm" onclick="checkAlive()">👻 全員の生存確認</button><div id="projItems"></div>`;
   document.getElementById('projItems').innerHTML=names.map(r=>{
     const lk=activeLink(r);
-    const dead=all[r].dead;
-    if(dead)return`<div class="projItem" style="opacity:.6;border-color:#8a2f3a"><b>👻 ${r}</b> <span style="color:#ff9d9d;font-size:11px">GitHub上に存在しません(削除済み?)</span><br>
-    <button class="btn sm" onclick="removeProj('${r}')">🗑️ 記録を片付ける</button></div>`;
+    if(all[r].dead)return`<div class="projItem" style="opacity:.6;border-color:#8a2f3a"><b>👻 ${r}</b> <span style="color:#ff9d9d;font-size:11px">存在しません</span><br>
+    <button class="btn sm" onclick="removeProj('${r}')">🗑️ 片付ける</button></div>`;
     return`<div class="projItem"><b>📦 ${r}</b><br>
     <button class="btn sm pink" onclick="openWorkTab('${r}')">🔨 開く</button>
     ${lk?`<a href="${lk.url}" target="_blank">💬 会話</a>`:''}
@@ -1098,9 +1153,8 @@ async function checkAlive(){
     try{await gh(`/repos/${USER}/${r}`);all[r].dead=false;}
     catch(e){if(e.message.includes('404')){all[r].dead=true;dead++;}}
   }
-  saveProj(all);
-  renderProjList();
-  toast(dead?`👻 ${dead}件の削除済みリポジトリを検出しました`:'✅ 全員生存でした!');
+  saveProj(all);renderProjList();
+  toast(dead?`👻 ${dead}件の削除済みを検出`:'✅ 全員生存!');
 }
 
 /* ---------- フォルダ/ZIP ---------- */
@@ -1154,7 +1208,7 @@ function readFileSmart(f,path){
     else{r.onload=()=>res({base64:r.result.split(',')[1],bin:true});r.readAsDataURL(f);}});
 }
 async function loadZip(file){
-  if(typeof JSZip==='undefined')return toast('😵 ZIP機能読込失敗(要ネット接続)');
+  if(typeof JSZip==='undefined')return toast('😵 ZIP機能読込失敗(要ネット)');
   toast('🤐 解凍中...');
   const zip=await JSZip.loadAsync(file);
   const files={};
@@ -1180,7 +1234,7 @@ async function finishFolderLoad(name,files){
       if(differ){WS.files[p]=f;markDirty(p);changed++;}
     }
     refreshDirtyUI();
-    toast(`🔍 差分: 変更${changed}/追加${added} → ${changed+added?'💾コミットで反映!':'変更なし'}`);
+    toast(`🔍 差分: 変更${changed}/追加${added} → ${changed+added?'💾で反映!':'変更なし'}`);
     return;
   }
   setAdvWS(name,files);
@@ -1214,7 +1268,7 @@ function inspectProject(){
     if(ac){rep('fix',`絶対パス${ac}件`,'デプロイ時に自動変換');WS.extras.fixAbsPaths=true;}}
   if(type==='vite'){rep('ok','Vite','Actionsで自動ビルド');
     const cp=Object.keys(F).find(p=>/^vite\.config\.(js|ts|mjs)$/.test(p));
-    if(cp&&!F[cp].lazy&&!/base\s*:/.test(F[cp].text)){rep('fix','base設定なし','自動注入します');WS.extras.injectViteBase=cp;}
+    if(cp&&!F[cp].lazy&&!/base\s*:/.test(F[cp].text)){rep('fix','base設定なし','自動注入');WS.extras.injectViteBase=cp;}
     WS.extras.workflow='vite';}
   if(type==='cra'){rep('ok','CRA','自動ビルド');WS.extras.injectCRAHomepage=true;WS.extras.workflow='cra';}
   if(type==='next'){rep('warn','Next.js','静的エクスポート前提');WS.extras.workflow='next';}
@@ -1234,85 +1288,6 @@ function openInspect(){
   (WS?WS.report:[]).forEach(r=>{const d=document.createElement('div');
     d.className='rep '+r.cls;d.innerHTML=`<b>${icon[r.cls]} ${r.title}</b>${r.msg}`;body.appendChild(d);});
   document.getElementById('inspectModal').classList.add('show');
-}
-async function exportForAI(withIntro=false){
-  if(!WS||!WS.name)return toast('😵 未読み込み');
-  toast('📤 生成中...(ファイル取得あり)');
-  let full=await buildExportText();
-  if(withIntro){
-    full+='\n上記が現在の全ファイルです。把握したら「把握しました」と返事してください。以後の修正はPATCH形式(oldは上記コードからの完全コピー)でお願いします。';
-    const lk=activeLink(CUR_WORK);
-    if(lk){const a=loadProj();const l=a[CUR_WORK].links.find(x=>x.active);
-      if(l){l.sentStructure=true;saveProj(a);}}
-  }
-  /* サイズ選択モーダル */
-  const modal=document.getElementById('exportModal');
-  const sizeBox=document.getElementById('expSizeBtns');
-  document.getElementById('expParts').style.display='none';
-  sizeBox.innerHTML='';
-  const kb=Math.round(full.length/1024);
-  const opts=[
-    {label:`📄 一括コピー(全${full.length.toLocaleString()}字 / 約${kb}KB)`,size:0},
-    {label:'✂️ 標準分割 約3万字/通 — ChatGPT/Claude/Gemini向け',size:30000},
-    {label:'✂️ 細かめ 約1.5万字/通 — 入力制限が渋いサービス向け',size:15000},
-    {label:'✂️ 極小 約8千字/通 — 上限が厳しい/不明なサービス向け',size:8000},
-  ];
-  opts.forEach(o=>{
-    const b=document.createElement('button');
-    b.className='btn';b.style.margin='0';b.style.textAlign='left';
-    b.textContent=o.label;
-    if(o.size&&full.length<=o.size){b.disabled=true;b.style.opacity='.4';b.textContent+=' (分割不要のサイズです)';}
-    b.onclick=async()=>{
-      if(!o.size){ /* 一括 */
-        try{await navigator.clipboard.writeText(full);
-          toast(`📤 一括コピー完了(約${kb}KB)`);modal.style.display='none';}
-        catch{const a=document.createElement('a');
-          a.href=URL.createObjectURL(new Blob([full],{type:'text/plain'}));
-          a.download=WS.name+'_for_ai.txt';a.click();toast('📄 .txtでダウンロード');}
-        return;
-      }
-      showParts(splitForAI(full,o.size));
-    };
-    sizeBox.appendChild(b);
-  });
-  modal.style.display='flex';
-}
-/* ファイル境界優先で分割。巨大ファイルは中割り+続きマーク */
-function splitForAI(full,size){
-  const blocks=full.split(/(?=#### FILE: )/); /* 先頭ブロック(ツリー等)+各FILE */
-  const chunks=[];let cur='';
-  for(let b of blocks){
-    while(b.length>size){ /* 単体で超えるファイルは中割り */
-      const cut=b.lastIndexOf('\n',size);
-      const head=b.slice(0,cut>0?cut:size);
-      chunks.push(cur+head+'\n(※このファイルは次のパートに続く)');cur='';
-      b='(※前パートの続き)\n'+b.slice(cut>0?cut:size);
-    }
-    if((cur+b).length>size){chunks.push(cur);cur=b;}
-    else cur+=b;
-  }
-  if(cur.trim())chunks.push(cur);
-  const n=chunks.length;
-  return chunks.map((c,i)=>
-    `【パート ${i+1}/${n}】プロジェクト全体を分割して送ります。全パートが届くまで作業せず「パート${i+1}受領」とだけ返事してください。${i===n-1?'これが最終パートです。全体を把握したら「把握しました」と返事してください。':''}\n\n`+c);
-}
-function showParts(parts){
-  const box=document.getElementById('expPartBtns');
-  document.getElementById('expSizeBtns').innerHTML='';
-  document.getElementById('expParts').style.display='block';
-  box.innerHTML='';
-  parts.forEach((p,i)=>{
-    const b=document.createElement('button');
-    b.className='btn';b.style.margin='0';b.style.textAlign='left';
-    b.textContent=`📋 パート ${i+1}/${parts.length} をコピー(${p.length.toLocaleString()}字)`;
-    b.onclick=async()=>{
-      await navigator.clipboard.writeText(p);
-      b.textContent=`✅ パート ${i+1}/${parts.length} コピー済み → AIに貼る`;
-      b.style.background='#243a2c';
-      toast(`📋 パート${i+1}をコピー!AIに貼って、返事が来たら次へ`);
-    };
-    box.appendChild(b);
-  });
 }
 
 /* ---------- デプロイ ---------- */
@@ -1404,7 +1379,7 @@ function prepareFiles(){
   if(WS.extras.injectViteBase){const p=WS.extras.injectViteBase,t=out[p].text;
     if(t&&/defineConfig\s*\(\s*\{/.test(t)){
       out[p].text=t.replace(/defineConfig\s*\(\s*\{/,'defineConfig({\n  base: "./",');
-      dlog(`🔧 base:"./"注入`,'lok');}}
+      dlog('🔧 base:"./"注入','lok');}}
   if(WS.extras.injectCRAHomepage&&out['package.json']&&!out['package.json'].lazy){
     try{const pkg=JSON.parse(out['package.json'].text);pkg.homepage='./';
       out['package.json'].text=JSON.stringify(pkg,null,2);dlog('🔧 homepage注入','lok');}catch{}}
@@ -1455,24 +1430,20 @@ async function deploy(){
     await gh(`/repos/${USER}/${repo}/git/refs/heads/${branch}`,{method:'PATCH',
       body:JSON.stringify({sha:commit.sha,force:true})});
     prog(60);dlog('✅ プッシュ完了','lok');
-
-    /* ★★リンク紐づけをここ(プッシュ直後)で実施。見届け失敗でも消えない★★ */
-    setP(repo,{});
+    setP(repo,{dead:false});
     {
       const pend=getPend();
       const lurl=FLOW.link||(pend&&pend.url);
-      /* 新規フローの依頼文には契約書が必ず同梱されるので、既定は送信済み扱い */
       let lsent={c:true,s:true};
       if(FLOW.sent&&(FLOW.sent.c||FLOW.sent.s))lsent=FLOW.sent;
       else if(pend&&pend.sent&&(pend.sent.c||pend.sent.s))lsent=pend.sent;
       if(lurl){
-        addLink(repo,lurl,lsent);
-        dlog(`📎 会話リンクを紐づけました(${lsent.c?'契約書✅':''}${lsent.s?' 構造✅':''})`,'lok');
+        scAddLink(repo,lurl,lsent);
+        dlog(`📎 会話リンクを紐づけました`,'lok');
         clearPend();FLOW={};
       }
     }
     pushHist(repo,'🚀 公開');
-
     dlog('📡 Pages自動設定中...');
     try{await gh(`/repos/${USER}/${repo}/pages`,{method:'POST',body:JSON.stringify({build_type:'workflow'})});
       dlog('✅ Pages有効化','lok');}
@@ -1498,12 +1469,10 @@ async function deploy(){
       document.getElementById('liveLink').textContent=url;
       document.getElementById('doneCard').classList.add('show');
       toast('🎉 世界公開!');
-    }else{
-      dlog(`🌐 サイトURL(ビルド完了後に有効): <a href="${url}" target="_blank">${url}</a>`,'lin');
-    }
-    WT[repo]=null;/* 次回開くとき最新を取得 */
+    }else dlog(`🌐 サイトURL(ビルド完了後有効): <a href="${url}" target="_blank">${url}</a>`,'lin');
+    WT[repo]=null;
     openWorkTab(repo,false);
-    dlog(`🔨 作業タブ「${repo}」を用意しました。修正はそこからどうぞ`,'lok');
+    dlog(`🔨 作業タブ「${repo}」を用意しました`,'lok');
   }catch(e){dlog(`❌ ${e.message}`,'lng');dlog('💡 エラーをそのままAIに','lin');toast('😵 失敗');}
   btn.disabled=false;btn.textContent='🚀 デプロイ!';
 }
