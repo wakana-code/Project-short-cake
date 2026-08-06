@@ -646,7 +646,7 @@ function promptLink(repo,isSwitch=false){
     ?'🔄 新しい会話のURLを貼ってください。\n(保存後、次の依頼文に契約書と最新コードが自動同梱され、簡単に引き継げます)'
     :'📎 AIとの会話URL(アドレス欄)を貼ってください:\n(この会話は契約書・コードを把握済みとして扱います。未把握なら保存後に🆘フル再送を使ってください)');
   if(!url)return;
-  url=cleanLink(url);
+  url=scCleanLink(url);
   /* リンクあり=把握済みとみなす。乗り換えだけは新会話なので未送信扱い(次回フル同梱) */
   addLink(repo,url,isSwitch?{c:false,s:false}:{c:true,s:true});
   toast(isSwitch?'🔄 乗り換え完了!次の依頼文に引き継ぎ資料を自動同梱します':'📎 リンク保存!以後の依頼文は最小構成になります');
@@ -985,11 +985,19 @@ async function copyNewPrompt(){
   if(pend){pend.sent={c:true,s:true};localStorage.setItem(LS_PEND,JSON.stringify(pend));}
   toast('🤖 コピー完了!上の「AIボタン」から開いて貼ってください');
 }
+/* ★リンク保存系を自己完結に再定義(過去パッチの適用状態に依存しない) */
+function scCleanLink(url){
+  try{const u=new URL(url.trim());u.search='';u.hash='';return u.href;}
+  catch{return url.trim();}
+}
+function scIsTopPage(url){
+  return /^(https:\/\/(chatgpt\.com|claude\.ai|gemini\.google\.com))\/?(new|app)?\/?$/.test(scCleanLink(url));
+}
 function saveFlowLink(inputId){
   let url=document.getElementById(inputId).value.trim();
   if(!url)return toast('😵 URLを貼ってください');
-  url=cleanLink(url);
-  if(looksLikeTopPage(url)&&!confirm('⚠️ これはAIのトップページのURLのようです。\n会話開始後にアドレス欄に出る「会話専用URL」(例: /c/xxxx)がおすすめです。\nこのまま保存しますか?'))return;
+  url=scCleanLink(url);
+  if(scIsTopPage(url)&&!confirm('⚠️ これはAIのトップページのURLのようです。\n会話開始後にアドレス欄に出る「会話専用URL」(例: /c/xxxx)がおすすめです。\nこのまま保存しますか?'))return;
   document.getElementById(inputId).value=url;
   FLOW.link=url;
   setPend(url,FLOW.sent||{});
@@ -1045,8 +1053,8 @@ async function copyHandover(){
 function finishHandover(){
   let url=document.getElementById('hoLink').value.trim();
   if(!url)return toast('😵 会話リンクを貼ってください');
-  url=cleanLink(url);
-  if(looksLikeTopPage(url)&&!confirm('⚠️ トップページのURLのようです。会話開始後の「/c/xxxx」等がおすすめ。このまま保存しますか?'))return;
+  url=scCleanLink(url);
+  if(scIsTopPage(url)&&!confirm('⚠️ トップページのURLのようです。会話開始後の「/c/xxxx」等がおすすめ。このまま保存しますか?'))return;
   /* コピー未実行でもチェックボックスの状態から送信済みを判定 */
   const sent=(FLOW.sent&&(FLOW.sent.c||FLOW.sent.s))?FLOW.sent
     :{c:document.getElementById('hoContract').checked,s:document.getElementById('hoCode').checked};
