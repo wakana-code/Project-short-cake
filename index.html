@@ -599,6 +599,7 @@ function renderWork(){
     <button class="btn sm" onclick="promptLink('${repo}',true)">🔄 乗り換え</button>
     <a href="${url}" target="_blank">🌐 サイト</a>
     <a href="https://github.com/${USER}/${repo}" target="_blank">📂 GitHub</a>
+    <button class="btn sm" onclick="exportForAI(true)">📤 AIに渡す(構造+コード)</button>
   </div>
   <div class="stepHead">✏️ AIに直してもらう</div>
   <input type="text" id="wkInst" placeholder="どう直す? 例: タイマー終了時に音を鳴らして">
@@ -1215,11 +1216,19 @@ function openInspect(){
     d.className='rep '+r.cls;d.innerHTML=`<b>${icon[r.cls]} ${r.title}</b>${r.msg}`;body.appendChild(d);});
   document.getElementById('inspectModal').classList.add('show');
 }
-async function exportForAI(){
+async function exportForAI(withIntro=false){
   if(!WS||!WS.name)return toast('😵 未読み込み');
-  toast('📤 生成中...');
-  const out=await buildExportText();
-  try{await navigator.clipboard.writeText(out);toast(`📤 コピー完了(約${Math.round(out.length/1024)}KB)`);}
+  toast('📤 生成中...(ファイル取得あり)');
+  let out=await buildExportText();
+  if(withIntro){
+    out+='\n上記が現在の全ファイルです。把握したら「把握しました」と返事してください。以後の修正はPATCH形式(oldは上記コードからの完全コピー)でお願いします。';
+    /* 構造を渡した=この会話は把握済み、として記憶を更新 */
+    const lk=activeLink(CUR_WORK);
+    if(lk){const a=loadProj();const l=a[CUR_WORK].links.find(x=>x.active);
+      if(l){l.sentStructure=true;saveProj(a);}}
+  }
+  try{await navigator.clipboard.writeText(out);
+    toast(`📤 コピー完了(約${Math.round(out.length/1024)}KB / ${Object.keys(WS.files).length}ファイル)→ AIに貼ってください`);}
   catch{const a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));
     a.download=WS.name+'_for_ai.txt';a.click();toast('📄 .txtでダウンロードしました');}
