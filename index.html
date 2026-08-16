@@ -1618,7 +1618,7 @@ function openTree(){
   /* 🏠 ツリー最上部=ルートへのドロップ先 */
   const rootDrop=document.createElement('div');
   rootDrop.style.cssText='padding:8px;margin:6px 4px;border:2px dashed #3a3348;border-radius:8px;font-size:11px;color:#776b85;text-align:center';
-  rootDrop.textContent='⬆️ ここにドロップでルート直下へ移動';
+  rootDrop.textContent='⬆️ ここ(または下の空白)にドロップでルート直下へ';
   rootDrop.addEventListener('dragover',e=>{e.preventDefault();rootDrop.style.borderColor='#ff9eb5';});
   rootDrop.addEventListener('dragleave',()=>rootDrop.style.borderColor='#3a3348');
   rootDrop.addEventListener('drop',e=>{
@@ -1630,6 +1630,16 @@ function openTree(){
       toast(`⬆️ ${name} をルートへ移動(💾で反映)`);}
   });
   list.prepend(rootDrop);
+  /* 🏠 ツリーの何もない空白部分へのドロップ=ルート直下 */
+  list.addEventListener('dragover',e=>{e.preventDefault();});
+  list.addEventListener('drop',e=>{
+    e.preventDefault();
+    const src=e.dataTransfer.getData('sc/path');if(!src)return;
+    const name=src.split('/').pop();
+    if(src===name)return;
+    if(moveFile(src,name)){refreshDirtyUI();openTree();
+      toast(`⬆️ ${name} をルートへ移動(💾で反映)`);}
+  });
   document.getElementById('treeView').textContent='← ファイルを選択';
   document.getElementById('editBtn').style.display='none';
   document.getElementById('renameBtn').style.display='none';
@@ -1668,6 +1678,32 @@ function renderNode(node,container,depth,dirPath=''){
     el.addEventListener('dragstart',e=>{
       e.dataTransfer.setData('sc/path',f.full);
       e.dataTransfer.effectAllowed='move';
+    });
+    /* 📥 ファイルに被せたら「そのファイルと同じフォルダ」へ移動 */
+    el.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();el.style.background='#332d4a';});
+    el.addEventListener('dragleave',()=>el.style.background='');
+    el.addEventListener('drop',e=>{
+      e.preventDefault();e.stopPropagation();el.style.background='';
+      const src=e.dataTransfer.getData('sc/path');
+      if(!src||src===f.full)return;
+      const destDir=f.full.includes('/')?f.full.slice(0,f.full.lastIndexOf('/')+1):'';
+      const name=src.split('/').pop();
+      if(src===destDir+name)return toast('既に同じフォルダにあります');
+      if(moveFile(src,destDir+name)){refreshDirtyUI();openTree();
+        toast(`📥 ${name} → ${destDir||'ルート'} に移動(💾で反映)`);}
+    });
+    /* 🖱️ 右クリックでリネーム */
+    el.addEventListener('contextmenu',e=>{
+      e.preventDefault();
+      const np=prompt('新しいパス(フォルダ移動も可):',f.full);
+      if(!np||np.trim()===f.full)return;
+      const clean=np.trim().replace(/^\/+/,'');
+      if(!/^[\w\-./]+$/.test(clean))return toast('😵 使える文字は英数字と - _ . / です');
+      if(moveFile(f.full,clean)){
+        if(selPath===f.full)selPath=clean;
+        refreshDirtyUI();openTree();
+        toast(`✏️ 「${clean}」に変更(💾で反映)`);
+      }
     });
     el.onclick=async()=>{
       document.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
