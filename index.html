@@ -517,8 +517,44 @@ async function ensureFile(path,fobj){
   if(f.bin)f.base64=blob.content.replace(/\n/g,'');else f.text=b64decode(blob.content);
   delete f.lazy;return f;
 }
-function markDirty(p){if(WS&&WS.linked){WS.dirty.add(p);WS.deleted.delete(p);}refreshDirtyUI();}
-function markDeleted(p){if(WS&&WS.linked){WS.deleted.add(p);WS.dirty.delete(p);}refreshDirtyUI();}
+function markDirty(p){if(WS&&WS.linked){WS.dirty.add(p);WS.deleted.delete(p);saveDraft();}refreshDirtyUI();}
+function markDeleted(p){if(WS&&WS.linked){WS.deleted.add(p);WS.dirty.delete(p);saveDraft();}refreshDirtyUI();}
+
+/* ---------- 📥 下書き自動保存(IndexedDB: 大容量OK) ---------- */
+function idb(){return new Promise((res,rej)=>{
+  const q=indexedDB.open('sc_drafts',1);
+  q.onupgradeneeded=()=>q.result.createObjectStore('drafts');
+  q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
+let draftTimer=null;
+function saveDraft(){
+  if(!WS||!WS.linked)return;
+  clearTimeout(draftTimer);
+  draftTimer=setTimeout(async()=>{
+    try{
+      const dirtyFiles={};
+      for(const p of WS.dirty){const f=WS.files[p];
+        if(f&&!f.lazy)dirtyFiles[p]=f.bin?{base64:f.base64,bin:true}:{text:f.text};}
+      const db=await idb();
+      const tx=db.transaction('drafts','readwrite');
+      tx.objectStore('drafts').put({files:dirtyFiles,deleted:[...WS.deleted],at:Date.now()},WS.linked.repo);
+    }catch(e){console.warn('draft save failed',e);}
+  },800);
+}
+async function loadDraft(repo){
+  try{const db=await idb();
+    return await new Promise(res=>{
+      const q=db.transaction('drafts').objectStore('drafts').get(repo);
+      q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null);});
+  }catch{return null;}
+}
+async function clearDraft(repo){
+  try{const db=await idb();
+    db.transaction('drafts','readwrite').objectStore('drafts').delete(repo);}catch{}
+}
+/* 未コミットがあるままページを閉じようとしたら警告 */
+addEventListener('beforeunload',e=>{
+  if(WS&&WS.linked&&(WS.dirty.size+WS.deleted.size)>0){e.preventDefault();e.returnValue='';}
+});
 function normalize(s){return s.replace(/\r\n?/g,'\n').split('\n').map(l=>l.replace(/\s+$/,'')).join('\n');}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),3800);}
@@ -947,6 +983,16 @@ async function loadRepo(repo,advMode){
     ws.files[t.path]={sha:t.sha,lazy:true,bin:isBin(t.path)};});
   ws.linked={repo,branch,headSha:ref.object.sha};
   WT[repo]=ws;WS=ws;
+  /* ★下書きがあれば復元を提案 */
+  const draft=await loadDraft(repo);
+  if(draft&&(Object.keys(draft.files).length||draft.deleted.length)){
+    const n=Object.keys(draft.files).length+draft.deleted.length;
+    if(confirm(`📥 「${repo}」に未コミットの下書き${n}件が残っています(${new Date(draft.at).toLocaleString()})。\n復元しますか?(キャンセル=下書きを破棄)`)){
+      Object.entries(draft.files).forEach(([p,f])=>{ws.files[p]=f;ws.dirty.add(p);});
+      draft.deleted.forEach(p=>{delete ws.files[p];ws.deleted.add(p);});
+      toast(`📥 下書き${n}件を復元しました → 💾で反映!`);
+    }else clearDraft(repo);
+  }
   for(const p of ['package.json','vite.config.js','vite.config.ts','vite.config.mjs'])
     if(ws.files[p])await ensureFile(p);
   inspectProject();
@@ -1015,6 +1061,7 @@ async function commitCore(msg,logEl){
     WS.linked.headSha=commit.sha;
     WS.dirty.clear();WS.deleted.clear();
     dels.forEach(p=>delete WS.files[p]);
+    clearDraft(repo);
     pushHist(repo,msg);refreshDirtyUI();
     clog(`✅ コミット完了:「${msg}」`,'lok');
     await watchPages(repo,commit.sha,clog);
