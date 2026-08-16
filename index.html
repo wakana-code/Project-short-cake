@@ -308,6 +308,7 @@ textarea:focus{border-color:#ff9eb5}
     <button class="btn sm" id="renameBtn" style="display:none" onclick="renameSelFile()">✏️ 名前変更</button>
     <button class="btn sm" id="delFileBtn" style="display:none" onclick="deleteSelFile()">🗑️</button>
     <button class="btn sm" id="editBtn" style="display:none" onclick="startEdit()">✏️ 編集</button>
+    <button class="btn pink sm" id="treeCommitBtn" style="display:none" onclick="treeCommit()">💾 保存して反映</button>
     <button class="btn sm" onclick="document.getElementById('treeModal').classList.remove('show');exitEdit()">閉じる</button></div>
   <div id="treeBody"><div id="treeList"></div>
     <div id="viewWrap"><div id="treeView">← ファイルを選択</div><textarea id="editArea"></textarea>
@@ -565,6 +566,7 @@ function refreshDirtyUI(){
   const cnt=document.getElementById('wsCount');
   if(cnt&&WS)cnt.textContent=`${Object.keys(WS.files).length}ファイル${n?` / 未コミット${n}`:''}`;
   if(CUR_WORK)renderWorkStatus();
+  refreshTreeCommitBtn();
 }
 
 /* ---------- タブ管理 ---------- */
@@ -1654,6 +1656,29 @@ async function deploy(){
   btn.disabled=false;btn.textContent='🚀 デプロイ!';
 }
 
+/* ---------- 🌲ツリーからの直コミット ---------- */
+function refreshTreeCommitBtn(){
+  const b=document.getElementById('treeCommitBtn');
+  if(!b)return;
+  const n=WS&&WS.linked?WS.dirty.size+WS.deleted.size:0;
+  b.style.display=n?'inline-block':'none';
+  b.textContent=`💾 保存して反映(${n}件)`;
+}
+async function treeCommit(){
+  if(!WS||!WS.linked)return toast('😵 リポジトリ未リンク');
+  const n=WS.dirty.size+WS.deleted.size;
+  if(!n)return toast('変更がありません');
+  document.getElementById('treeModal').classList.remove('show');exitEdit();
+  /* ログの出し先を確保(作業タブ表示中ならwkLog、違えば作業タブを開く) */
+  let logEl=document.getElementById('wkLog');
+  if(!logEl||!CUR_WORK){
+    if(WS.linked&&document.getElementById('wt_'+WS.linked.repo)){
+      await showWork(WS.linked.repo);logEl=document.getElementById('wkLog');
+    }else{openWorkTab(WS.linked.repo);await new Promise(r=>setTimeout(r,300));
+      logEl=document.getElementById('wkLog');}
+  }
+  await commitCore('🍰 ファイル更新 via ShortCake',logEl||document.getElementById('deployLog'));
+}
 /* ---------- 右クリックメニュー ---------- */
 let ctxEl=null;
 function showCtxMenu(x,y,path){
