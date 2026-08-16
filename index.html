@@ -1000,8 +1000,10 @@ async function commitCore(msg,logEl){
     for(const p of paths){
       const f=WS.files[p];await ensureFile(p);
       const body=f.bin?{content:f.base64,encoding:'base64'}:{content:f.text,encoding:'utf-8'};
+      const mb=f.bin?(f.base64.length*0.75/1048576):(f.text.length/1048576);
+      if(mb>3)clog(`　⏳ ${p} (${mb.toFixed(1)}MB) 送信中...これは時間がかかります`);
       const blob=await gh(`/repos/${USER}/${repo}/git/blobs`,{method:'POST',body:JSON.stringify(body)});
-      tree.push({path:p,mode:'100644',type:'blob',sha:blob.sha});clog(`　✏️ ${p}`);
+      tree.push({path:p,mode:'100644',type:'blob',sha:blob.sha});clog(`　✏️ ${p}${mb>3?` ✅(${mb.toFixed(1)}MB)`:''}`);
     }
     for(const p of dels){tree.push({path:p,mode:'100644',type:'blob',sha:null});clog(`　🗑️ ${p}`);}
     const nt=await gh(`/repos/${USER}/${repo}/git/trees`,{method:'POST',
@@ -1317,7 +1319,7 @@ function walkEntry(entry,prefix,files,stripRoot){
     if(entry.isFile){entry.file(async f=>{
       const path=prefix+entry.name;
       if(!SKIP_RE.test(path)&&sizeOK(f,path))files[path]=await readFileSmart(f,path);
-      else if(!SKIP_RE.test(path))toast(`⚠️ ${entry.name} はサイズ超過でスキップ(バイナリ20MB/テキスト3MBまで)`);
+      else if(!SKIP_RE.test(path))toast(`⚠️ ${entry.name} はサイズ超過でスキップ(バイナリ30MB/テキスト3MBまで)`);
       resolve();},()=>resolve());}
     else if(entry.isDirectory){
       if(SKIP_RE.test(prefix+entry.name)){resolve();return;}
@@ -1333,8 +1335,8 @@ function readFileSmart(f,path){
     if(!isBin(path)){r.onload=()=>res({text:r.result});r.readAsText(f);}
     else{r.onload=()=>res({base64:r.result.split(',')[1],bin:true});r.readAsDataURL(f);}});
 }
-/* バイナリは20MB、テキストは3MBまで */
-const sizeOK=(f,path)=>f.size<(isBin(path)?20:3)*1024*1024;
+/* バイナリは30MB、テキストは3MBまで */
+const sizeOK=(f,path)=>f.size<(isBin(path)?30:3)*1024*1024;
 async function loadZip(file){
   if(typeof JSZip==='undefined')return toast('😵 ZIP機能読込失敗(要ネット)');
   toast('🤐 解凍中...');
