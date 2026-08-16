@@ -305,6 +305,7 @@ textarea:focus{border-color:#ff9eb5}
   <div class="modalHead"><b>🔍 ファイル構造</b><span class="spacer"></span>
     <button class="btn sm" onclick="document.getElementById('anyPicker').click()">➕ ファイル追加(画像/動画OK)</button>
     <button class="btn sm" onclick="newTextFile()">📝 新規コード</button>
+    <button class="btn sm" id="renameBtn" style="display:none" onclick="renameSelFile()">✏️ 名前変更</button>
     <button class="btn sm" id="delFileBtn" style="display:none" onclick="deleteSelFile()">🗑️</button>
     <button class="btn sm" id="editBtn" style="display:none" onclick="startEdit()">✏️ 編集</button>
     <button class="btn sm" onclick="document.getElementById('treeModal').classList.remove('show');exitEdit()">閉じる</button></div>
@@ -1267,6 +1268,41 @@ function newTextFile(){
   document.getElementById('editFoot').style.display='flex';
   toast(`📝 「${p}」を作成。コードを書いて💾保存!`);
 }
+/* ✏️ リネーム(パス変更=移動も兼ねる) */
+function moveFile(oldPath,newPath){
+  if(oldPath===newPath)return false;
+  if(newPath in WS.files){toast(`😵 「${newPath}」は既に存在します`);return false;}
+  WS.files[newPath]=WS.files[oldPath];
+  delete WS.files[oldPath];
+  markDirty(newPath);
+  if(WS.linked)markDeleted(oldPath);
+  /* テキストファイル内の参照パスも更新するか確認 */
+  let refCount=0;
+  Object.entries(WS.files).forEach(([p,f])=>{
+    if(!f.bin&&!f.lazy&&f.text&&f.text.includes(oldPath))refCount++;
+  });
+  if(refCount&&confirm(`📎 ${refCount}個のファイルが「${oldPath}」を参照しています。\n参照パスも「${newPath}」に自動更新しますか?`)){
+    Object.entries(WS.files).forEach(([p,f])=>{
+      if(!f.bin&&!f.lazy&&f.text&&f.text.includes(oldPath)){
+        f.text=f.text.split(oldPath).join(newPath);
+        markDirty(p);
+      }
+    });
+    toast(`🔗 参照${refCount}件も更新しました`);
+  }
+  return true;
+}
+function renameSelFile(){
+  if(!selPath)return;
+  const np=prompt(`新しいパス(フォルダ移動も可):`,selPath);
+  if(!np||np.trim()===selPath)return;
+  const clean=np.trim().replace(/^\/+/,'');
+  if(!/^[\w\-./]+$/.test(clean))return toast('😵 使える文字は英数字と - _ . / です');
+  if(moveFile(selPath,clean)){
+    selPath=clean;refreshDirtyUI();openTree();
+    toast(`✏️ 「${clean}」に変更(💾コミットで反映)`);
+  }
+}
 /* 🗑️ 選択中ファイルの削除 */
 function deleteSelFile(){
   if(!selPath)return;
@@ -1579,19 +1615,47 @@ function openTree(){
     parts.slice(0,-1).forEach(d=>{n=n.dirs[d]=n.dirs[d]||{dirs:{},files:[]};});
     n.files.push({name:parts.at(-1),full:p});});
   renderNode(root,list,0);
+  /* 🏠 ツリー最上部=ルートへのドロップ先 */
+  const rootDrop=document.createElement('div');
+  rootDrop.style.cssText='padding:8px;margin:6px 4px;border:2px dashed #3a3348;border-radius:8px;font-size:11px;color:#776b85;text-align:center';
+  rootDrop.textContent='⬆️ ここにドロップでルート直下へ移動';
+  rootDrop.addEventListener('dragover',e=>{e.preventDefault();rootDrop.style.borderColor='#ff9eb5';});
+  rootDrop.addEventListener('dragleave',()=>rootDrop.style.borderColor='#3a3348');
+  rootDrop.addEventListener('drop',e=>{
+    e.preventDefault();rootDrop.style.borderColor='#3a3348';
+    const src=e.dataTransfer.getData('sc/path');if(!src)return;
+    const name=src.split('/').pop();
+    if(src===name)return toast('既にルートにあります');
+    if(moveFile(src,name)){refreshDirtyUI();openTree();
+      toast(`⬆️ ${name} をルートへ移動(💾で反映)`);}
+  });
+  list.prepend(rootDrop);
   document.getElementById('treeView').textContent='← ファイルを選択';
   document.getElementById('editBtn').style.display='none';
+  document.getElementById('renameBtn').style.display='none';
+  document.getElementById('delFileBtn').style.display='none';
   exitEdit();
   document.getElementById('treeModal').classList.add('show');
 }
-function renderNode(node,container,depth){
+function renderNode(node,container,depth,dirPath=''){
   Object.keys(node.dirs).sort().forEach(d=>{
     const el=document.createElement('div');
     el.className='tdir';el.style.paddingLeft=(8+depth*16)+'px';
     el.innerHTML=`<span class="arrow">▾</span>📁 ${d}`;
+    const thisDir=dirPath+d+'/';
+    /* 📥 フォルダをドロップ先にする */
+    el.addEventListener('dragover',e=>{e.preventDefault();el.style.background='#332d4a';});
+    el.addEventListener('dragleave',()=>el.style.background='');
+    el.addEventListener('drop',e=>{
+      e.preventDefault();e.stopPropagation();el.style.background='';
+      const src=e.dataTransfer.getData('sc/path');if(!src)return;
+      const name=src.split('/').pop();
+      if(moveFile(src,thisDir+name)){refreshDirtyUI();openTree();
+        toast(`📥 ${name} → ${thisDir} に移動(💾で反映)`);}
+    });
     container.appendChild(el);
     const box=document.createElement('div');container.appendChild(box);
-    renderNode(node.dirs[d],box,depth+1);
+    renderNode(node.dirs[d],box,depth+1,thisDir);
     el.onclick=()=>{el.classList.toggle('closed');
       box.style.display=el.classList.contains('closed')?'none':'';};});
   node.files.forEach(f=>{
@@ -1599,6 +1663,12 @@ function renderNode(node,container,depth){
     el.className='tnode'+(WS.dirty.has(f.full)?' dirty':'');
     el.style.paddingLeft=(24+depth*16)+'px';
     el.innerHTML=`📄 ${f.name}`+(WS.files[f.full].bin?'<span class="badge">bin</span>':'');
+    /* 🖐️ ファイルをドラッグ可能に */
+    el.draggable=true;
+    el.addEventListener('dragstart',e=>{
+      e.dataTransfer.setData('sc/path',f.full);
+      e.dataTransfer.effectAllowed='move';
+    });
     el.onclick=async()=>{
       document.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
       el.classList.add('sel');exitEdit();selPath=f.full;
@@ -1625,6 +1695,7 @@ function renderNode(node,container,depth){
           document.getElementById('treeView').textContent='❌ '+e.message;return;}}
       document.getElementById('treeView').textContent=file.text;
       document.getElementById('editBtn').style.display='inline-block';
+      document.getElementById('renameBtn').style.display='inline-block';
       document.getElementById('delFileBtn').style.display='inline-block';};
     container.appendChild(el);});
 }
