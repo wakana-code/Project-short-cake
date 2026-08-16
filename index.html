@@ -1187,6 +1187,24 @@ async function handleDrop(e){
     const zipFile=[...e.dataTransfer.files].find(f=>/\.zip$/i.test(f.name));
     if(zipFile)return loadZip(zipFile);
     const entries=[...e.dataTransfer.items].map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(Boolean);
+    /* ★単体ファイル(画像/動画含む)のドロップ追加に対応 */
+    if(entries.length&&entries.every(en=>en.isFile)&&WS&&WS.name){
+      const files={};
+      for(const en of entries)await walkEntry(en,'',files,false);
+      if(Object.keys(files).length){
+        let added=[];
+        for(const[p,f]of Object.entries(files)){
+          /* 画像/動画はassets/に自動格納(ルート汚染防止)。既存パスがあれば上書き */
+          const dest=(f.bin&&!(p in WS.files))?'assets/'+p:p;
+          WS.files[dest]=f;markDirty(dest);added.push(dest);
+        }
+        refreshDirtyUI();
+        toast(`📎 ${added.length}ファイル追加: ${added.slice(0,3).join(', ')}${added.length>3?' 他':''} → ${WS.linked?'💾で反映!':'🚀で公開!'}`);
+        if(added.some(p=>WS.files[p].bin))
+          setTimeout(()=>toast(`💡 HTMLからは <img src="${added.find(p=>WS.files[p].bin)}"> のように参照できます`),4000);
+        return;
+      }
+    }
     if(!entries.length)return toast('😵 フォルダかZIPを');
     toast('📥 読み込み中...');
     const files={};
@@ -1200,7 +1218,7 @@ document.getElementById('dirPicker').addEventListener('change',async e=>{
   try{const list=[...e.target.files];if(!list.length)return;
     toast('📥 読み込み中...');const files={};
     for(const f of list){const rel=f.webkitRelativePath.split('/').slice(1).join('/');
-      if(!rel||SKIP_RE.test(rel)||f.size>3*1024*1024)continue;
+      if(!rel||SKIP_RE.test(rel)||!sizeOK(f,rel))continue;
       files[rel]=await readFileSmart(f,rel);}
     await finishFolderLoad(list[0].webkitRelativePath.split('/')[0],files);
   }catch(err){toast('😵 '+err.message);}e.target.value='';});
@@ -1210,7 +1228,8 @@ function walkEntry(entry,prefix,files,stripRoot){
   return new Promise(resolve=>{
     if(entry.isFile){entry.file(async f=>{
       const path=prefix+entry.name;
-      if(!SKIP_RE.test(path)&&f.size<3*1024*1024)files[path]=await readFileSmart(f,path);
+      if(!SKIP_RE.test(path)&&sizeOK(f,path))files[path]=await readFileSmart(f,path);
+      else if(!SKIP_RE.test(path))toast(`⚠️ ${entry.name} はサイズ超過でスキップ(バイナリ20MB/テキスト3MBまで)`);
       resolve();},()=>resolve());}
     else if(entry.isDirectory){
       if(SKIP_RE.test(prefix+entry.name)){resolve();return;}
@@ -1226,6 +1245,8 @@ function readFileSmart(f,path){
     if(!isBin(path)){r.onload=()=>res({text:r.result});r.readAsText(f);}
     else{r.onload=()=>res({base64:r.result.split(',')[1],bin:true});r.readAsDataURL(f);}});
 }
+/* バイナリは20MB、テキストは3MBまで */
+const sizeOK=(f,path)=>f.size<(isBin(path)?20:3)*1024*1024;
 async function loadZip(file){
   if(typeof JSZip==='undefined')return toast('😵 ZIP機能読込失敗(要ネット)');
   toast('🤐 解凍中...');
@@ -1530,8 +1551,23 @@ function renderNode(node,container,depth){
       document.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
       el.classList.add('sel');exitEdit();selPath=f.full;
       const file=WS.files[f.full];
-      if(file.bin){document.getElementById('treeView').textContent='(バイナリ)';
-        document.getElementById('editBtn').style.display='none';return;}
+      if(file.bin){
+        document.getElementById('editBtn').style.display='none';
+        const tv=document.getElementById('treeView');
+        if(/\.(png|jpe?g|gif|webp|avif|ico|bmp|svg)$/i.test(f.full)){
+          if(file.lazy){tv.textContent='☁️ 画像取得中...';
+            try{await ensureFile(f.full);}catch(e){tv.textContent='❌ '+e.message;return;}}
+          const ext=f.full.split('.').pop().toLowerCase();
+          const mime={jpg:'jpeg',svg:'svg+xml'}[ext]||ext;
+          tv.innerHTML=`<img src="data:image/${mime};base64,${file.base64}" style="max-width:100%;max-height:90%;border-radius:8px">
+            <div style="font-family:sans-serif;font-size:12px;color:#9b8dae;margin-top:8px">HTMLから: &lt;img src="${f.full}"&gt;</div>`;
+        }else if(/\.(mp4|webm|mov)$/i.test(f.full)){
+          if(file.lazy){tv.textContent='☁️ 動画取得中...';
+            try{await ensureFile(f.full);}catch(e){tv.textContent='❌ '+e.message;return;}}
+          tv.innerHTML=`<video controls style="max-width:100%;max-height:90%" src="data:video/${f.full.split('.').pop()};base64,${file.base64}"></video>
+            <div style="font-family:sans-serif;font-size:12px;color:#9b8dae;margin-top:8px">HTMLから: &lt;video src="${f.full}" controls&gt;</div>`;
+        }else tv.textContent='(バイナリ: プレビュー非対応形式)';
+        return;}
       if(file.lazy){document.getElementById('treeView').textContent='☁️ 取得中...';
         try{await ensureFile(f.full);}catch(e){
           document.getElementById('treeView').textContent='❌ '+e.message;return;}}
