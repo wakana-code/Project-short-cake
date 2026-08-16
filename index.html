@@ -1043,6 +1043,17 @@ async function commitCore(msg,logEl){
     const{repo,branch}=WS.linked;
     const ref=await gh(`/repos/${USER}/${repo}/git/ref/heads/${branch}`);
     const hc=await gh(`/repos/${USER}/${repo}/git/commits/${ref.object.sha}`);
+    /* ★リモートに実在するパス一覧を取得し、幽霊削除(存在しないファイルの削除指示)を除外 */
+    const remoteTree=await gh(`/repos/${USER}/${repo}/git/trees/${hc.tree.sha}?recursive=1`);
+    const remotePaths=new Set(remoteTree.tree.filter(t=>t.type==='blob').map(t=>t.path));
+    const realDels=[],ghosts=[];
+    for(const p of dels)(remotePaths.has(p)?realDels:ghosts).push(p);
+    if(ghosts.length){
+      clog(`👻 ${ghosts.length}件はGitHub上に元々存在しないため削除指示から除外:`,'lin');
+      ghosts.forEach(p=>clog(`　👻 ${p}`,'lin'));
+      ghosts.forEach(p=>WS.deleted.delete(p));
+    }
+    dels.length=0;dels.push(...realDels);
     clog(`📤 変更${paths.length}+削除${dels.length}件を送信中...`);
     const tree=[];
     for(const p of paths){
