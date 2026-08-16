@@ -303,6 +303,9 @@ textarea:focus{border-color:#ff9eb5}
 
 <div id="treeModal"><div class="modalBox">
   <div class="modalHead"><b>🔍 ファイル構造</b><span class="spacer"></span>
+    <button class="btn sm" onclick="document.getElementById('anyPicker').click()">➕ ファイル追加(画像/動画OK)</button>
+    <button class="btn sm" onclick="newTextFile()">📝 新規コード</button>
+    <button class="btn sm" id="delFileBtn" style="display:none" onclick="deleteSelFile()">🗑️</button>
     <button class="btn sm" id="editBtn" style="display:none" onclick="startEdit()">✏️ 編集</button>
     <button class="btn sm" onclick="document.getElementById('treeModal').classList.remove('show');exitEdit()">閉じる</button></div>
   <div id="treeBody"><div id="treeList"></div>
@@ -326,6 +329,7 @@ textarea:focus{border-color:#ff9eb5}
 </div></div>
 <input type="file" id="dirPicker" webkitdirectory hidden>
 <input type="file" id="zipPicker" accept=".zip,application/zip,application/x-zip-compressed" hidden>
+<input type="file" id="anyPicker" multiple hidden>
 <div id="toast"></div>
 <script>
 /* =====================================================
@@ -614,7 +618,7 @@ function renderWork(){
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button class="btn sm" onclick="document.getElementById('dirPicker').click()">📂 フォルダで差分更新</button>
     <button class="btn sm" onclick="document.getElementById('zipPicker').click()">🤐 ZIPで差分更新</button>
-    <button class="btn sm" onclick="openTree()">🔍 中身/手動編集</button>
+    <button class="btn sm" onclick="openTree()">📂 ファイル構造を確認/編集</button>
     <button class="btn sm" onclick="openInspect()">🕵️ 検品</button>
     <button class="btn sm" id="wkCommitBtn" onclick="workManualCommit()">💾 未コミット反映</button>
   </div>
@@ -1224,6 +1228,54 @@ document.getElementById('dirPicker').addEventListener('change',async e=>{
   }catch(err){toast('😵 '+err.message);}e.target.value='';});
 document.getElementById('zipPicker').addEventListener('change',async e=>{
   try{if(e.target.files[0])await loadZip(e.target.files[0]);}catch(err){toast('😵 '+err.message);}e.target.value='';});
+/* ➕ Finderから任意ファイル追加(画像/動画/コード何でも) */
+document.getElementById('anyPicker').addEventListener('change',async e=>{
+  try{
+    if(!WS||!WS.name)return toast('😵 先にプロジェクトを読み込んでください');
+    const list=[...e.target.files];if(!list.length)return;
+    let added=[];
+    for(const f of list){
+      if(!sizeOK(f,f.name)){toast(`⚠️ ${f.name} サイズ超過でスキップ`);continue;}
+      const file=await readFileSmart(f,f.name);
+      /* 画像/動画等の新規バイナリはassets/へ。既存同名は元の場所を上書き */
+      let dest=f.name;
+      if(file.bin&&!(dest in WS.files)&&!('assets/'+dest in WS.files))dest='assets/'+dest;
+      else if('assets/'+dest in WS.files)dest='assets/'+dest;
+      WS.files[dest]=file;markDirty(dest);added.push(dest);
+    }
+    if(added.length){
+      refreshDirtyUI();openTree();
+      toast(`➕ ${added.length}件追加!コードからの参照例: <img src="${added[0]}">`);
+    }
+  }catch(err){toast('😵 '+err.message);}
+  e.target.value='';
+});
+/* 📝 新規テキストファイル作成→即編集 */
+function newTextFile(){
+  if(!WS||!WS.name)return toast('😵 先にプロジェクトを');
+  let p=prompt('ファイルパス(例: js/util.js, style.css):');
+  if(!p)return;
+  p=p.trim().replace(/^\/+/,'');
+  if(!/^[\w\-./]+$/.test(p))return toast('😵 使える文字は英数字と - _ . / です');
+  if(p in WS.files&&!confirm(`「${p}」は既にあります。上書きしますか?`))return;
+  WS.files[p]={text:''};markDirty(p);
+  openTree();
+  selPath=p;
+  document.getElementById('treeView').style.display='none';
+  const ea=document.getElementById('editArea');
+  ea.style.display='block';ea.value='';ea.focus();
+  document.getElementById('editFoot').style.display='flex';
+  toast(`📝 「${p}」を作成。コードを書いて💾保存!`);
+}
+/* 🗑️ 選択中ファイルの削除 */
+function deleteSelFile(){
+  if(!selPath)return;
+  if(!confirm(`「${selPath}」を削除しますか?`))return;
+  delete WS.files[selPath];
+  if(WS.linked)markDeleted(selPath);
+  selPath=null;refreshDirtyUI();openTree();
+  toast('🗑️ 削除しました(💾コミットで反映)');
+}
 function walkEntry(entry,prefix,files,stripRoot){
   return new Promise(resolve=>{
     if(entry.isFile){entry.file(async f=>{
@@ -1572,7 +1624,8 @@ function renderNode(node,container,depth){
         try{await ensureFile(f.full);}catch(e){
           document.getElementById('treeView').textContent='❌ '+e.message;return;}}
       document.getElementById('treeView').textContent=file.text;
-      document.getElementById('editBtn').style.display='inline-block';};
+      document.getElementById('editBtn').style.display='inline-block';
+      document.getElementById('delFileBtn').style.display='inline-block';};
     container.appendChild(el);});
 }
 function startEdit(){
