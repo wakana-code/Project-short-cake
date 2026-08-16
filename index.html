@@ -1607,6 +1607,50 @@ async function deploy(){
   btn.disabled=false;btn.textContent='🚀 デプロイ!';
 }
 
+/* ---------- 右クリックメニュー ---------- */
+let ctxEl=null;
+function showCtxMenu(x,y,path){
+  hideCtxMenu();
+  ctxEl=document.createElement('div');
+  ctxEl.style.cssText=`position:fixed;left:${x}px;top:${y}px;z-index:99;background:#2a2536;border:1px solid #453d55;border-radius:10px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.5);font-size:13px;min-width:160px`;
+  const item=(label,fn,danger)=>{
+    const d=document.createElement('div');
+    d.textContent=label;
+    d.style.cssText=`padding:10px 16px;cursor:pointer;color:${danger?'#ff9d9d':'#e8e2ee'}`;
+    d.onmouseenter=()=>d.style.background='#332d4a';
+    d.onmouseleave=()=>d.style.background='';
+    d.onclick=()=>{hideCtxMenu();fn();};
+    ctxEl.appendChild(d);
+  };
+  item('✏️ 名前を変更 / 移動',()=>{
+    const np=prompt('新しいパス(フォルダ移動も可):',path);
+    if(!np||np.trim()===path)return;
+    const clean=np.trim().replace(/^\/+/,'');
+    if(!/^[\w\-./]+$/.test(clean))return toast('😵 使える文字は英数字と - _ . / です');
+    if(moveFile(path,clean)){
+      if(selPath===path)selPath=clean;
+      refreshDirtyUI();openTree();
+      toast(`✏️ 「${clean}」に変更(💾で反映)`);
+    }
+  });
+  item('🗑️ 削除',()=>{
+    if(!confirm(`「${path}」を削除しますか?`))return;
+    delete WS.files[path];
+    if(WS.linked)markDeleted(path);
+    if(selPath===path)selPath=null;
+    refreshDirtyUI();openTree();
+    toast('🗑️ 削除しました(💾コミットで反映)');
+  },true);
+  document.body.appendChild(ctxEl);
+  /* 画面外にはみ出したら位置調整 */
+  const r=ctxEl.getBoundingClientRect();
+  if(r.right>innerWidth)ctxEl.style.left=(x-r.width)+'px';
+  if(r.bottom>innerHeight)ctxEl.style.top=(y-r.height)+'px';
+}
+function hideCtxMenu(){if(ctxEl){ctxEl.remove();ctxEl=null;}}
+document.addEventListener('click',hideCtxMenu);
+document.addEventListener('scroll',hideCtxMenu,true);
+
 /* ---------- ツリー/編集 ---------- */
 let selPath=null;
 function openTree(){
@@ -1694,18 +1738,10 @@ function renderNode(node,container,depth,dirPath=''){
       if(moveFile(src,destDir+name)){refreshDirtyUI();openTree();
         toast(`📥 ${name} → ${destDir||'ルート'} に移動(💾で反映)`);}
     });
-    /* 🖱️ 右クリックでリネーム */
+    /* 🖱️ 右クリックメニュー(リネーム/削除) */
     el.addEventListener('contextmenu',e=>{
       e.preventDefault();
-      const np=prompt('新しいパス(フォルダ移動も可):',f.full);
-      if(!np||np.trim()===f.full)return;
-      const clean=np.trim().replace(/^\/+/,'');
-      if(!/^[\w\-./]+$/.test(clean))return toast('😵 使える文字は英数字と - _ . / です');
-      if(moveFile(f.full,clean)){
-        if(selPath===f.full)selPath=clean;
-        refreshDirtyUI();openTree();
-        toast(`✏️ 「${clean}」に変更(💾で反映)`);
-      }
+      showCtxMenu(e.pageX,e.pageY,f.full);
     });
     el.onclick=async()=>{
       document.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
