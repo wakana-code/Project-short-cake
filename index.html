@@ -305,6 +305,7 @@ textarea:focus{border-color:#ff9eb5}
   <div class="modalHead"><b>🔍 ファイル構造</b><span class="spacer"></span>
     <button class="btn sm" onclick="document.getElementById('anyPicker').click()">➕ ファイル追加(画像/動画OK)</button>
     <button class="btn sm" onclick="newTextFile()">📝 新規コード</button>
+    <button class="btn sm" id="mpModeBtn" onclick="togglePatchMode()">🩹 手動パッチ: OFF</button>
     <button class="btn sm" id="renameBtn" style="display:none" onclick="renameSelFile()">✏️ 名前変更</button>
     <button class="btn sm" id="delFileBtn" style="display:none" onclick="deleteSelFile()">🗑️</button>
     <button class="btn sm" id="editBtn" style="display:none" onclick="startEdit()">✏️ 編集</button>
@@ -320,6 +321,21 @@ textarea:focus{border-color:#ff9eb5}
     <button class="btn sm" onclick="document.getElementById('inspectModal').classList.remove('show')">閉じる</button></div>
   <div id="inspectBody"></div>
 </div></div>
+<div id="mpModal" style="position:fixed;inset:0;background:rgba(10,7,14,.8);display:none;align-items:center;justify-content:center;z-index:80">
+  <div style="background:#211d2b;border:1px solid #453d55;border-radius:16px;padding:18px;width:min(640px,94vw);max-height:88vh;overflow-y:auto">
+    <b style="color:#ff9eb5">🩹 手動パッチ: <span id="mpPath"></span></b>
+    <div class="stepHead">① 変更前のコード(old)— 現在のファイルから該当部分をコピペ</div>
+    <textarea id="mpOld" rows="7" placeholder="AIの回答のoldブロックの中身、または現ファイルの該当箇所をそのまま貼る"></textarea>
+    <div class="stepHead">② 変更後のコード(new)</div>
+    <textarea id="mpNew" rows="7" placeholder="AIの回答のnewブロックの中身を貼る(削除なら空のまま)"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn pink" onclick="applyManualPatch()">🩹 適用(コミット待ちへ)</button>
+      <button class="btn" onclick="applyManualPatch(true)">🩹 適用して続けて次のパッチ</button>
+      <button class="btn sm" style="margin-left:auto" onclick="document.getElementById('mpModal').style.display='none'">閉じる</button>
+    </div>
+    <p class="danger">💡 oldは現在のファイルに「一字一句そのまま」存在する必要があります(空白のゆらぎは自動吸収)。見つからない時はファイルを開いて該当部分をコピーし直してください。</p>
+  </div>
+</div>
 <div id="exportModal"><div class="box">
   <b style="color:#ff9eb5">📤 AIに渡す — サイズを選ぶ</b>
   <div id="expSizeBtns" style="display:flex;flex-direction:column;gap:8px;margin:14px 0"></div>
@@ -1667,6 +1683,48 @@ async function deploy(){
   btn.disabled=false;btn.textContent='🚀 デプロイ!';
 }
 
+/* ---------- 🩹 手動パッチモード ---------- */
+let PATCH_MODE=false,mpTarget=null;
+function togglePatchMode(){
+  PATCH_MODE=!PATCH_MODE;
+  const b=document.getElementById('mpModeBtn');
+  b.textContent=`🩹 手動パッチ: ${PATCH_MODE?'ON':'OFF'}`;
+  b.style.background=PATCH_MODE?'#8a2f3a':'';
+  b.style.color=PATCH_MODE?'#ffd9dd':'';
+  toast(PATCH_MODE?'🩹 パッチモードON!直したいファイルをクリックしてください':'パッチモードOFF');
+}
+async function openManualPatch(path){
+  const f=WS.files[path];
+  if(!f)return;
+  if(f.bin)return toast('😵 バイナリにはパッチできません');
+  if(f.lazy){toast('☁️ 取得中...');try{await ensureFile(path);}catch(e){return toast('❌ '+e.message);}}
+  mpTarget=path;
+  document.getElementById('mpPath').textContent=path;
+  document.getElementById('mpOld').value='';
+  document.getElementById('mpNew').value='';
+  document.getElementById('mpModal').style.display='flex';
+  document.getElementById('mpOld').focus();
+}
+function applyManualPatch(keepOpen=false){
+  const oldC=document.getElementById('mpOld').value;
+  const newC=document.getElementById('mpNew').value;
+  if(!oldC.trim())return toast('😵 oldが空です(新規追加は📝新規コードでどうぞ)');
+  const f=WS.files[mpTarget];
+  const r=applyPatch(f.text,{old:oldC,neu:newC});
+  if(r.text===null){
+    /* 両端の空行を削って再試行 */
+    const r2=applyPatch(f.text,{old:oldC.trim(),neu:newC.trim()});
+    if(r2.text===null)return toast('❌ oldが現在のファイル内に見つかりません。該当箇所をコピーし直してください');
+    WS.files[mpTarget]={text:r2.text};
+  }else WS.files[mpTarget]={text:r.text};
+  markDirty(mpTarget);refreshDirtyUI();
+  toast(`🩹 ${mpTarget} にパッチ適用!(💾で反映)`);
+  if(keepOpen){
+    document.getElementById('mpOld').value='';
+    document.getElementById('mpNew').value='';
+    document.getElementById('mpOld').focus();
+  }else document.getElementById('mpModal').style.display='none';
+}
 /* ---------- 🌲ツリーからの直コミット ---------- */
 function refreshTreeCommitBtn(){
   const b=document.getElementById('treeCommitBtn');
@@ -1827,6 +1885,7 @@ function renderNode(node,container,depth,dirPath=''){
       showCtxMenu(e.pageX,e.pageY,f.full);
     });
     el.onclick=async()=>{
+      if(PATCH_MODE){openManualPatch(f.full);return;}
       document.querySelectorAll('.tnode').forEach(x=>x.classList.remove('sel'));
       el.classList.add('sel');exitEdit();selPath=f.full;
       const file=WS.files[f.full];
