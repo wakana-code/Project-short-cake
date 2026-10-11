@@ -166,6 +166,7 @@ textarea:focus{border-color:#ff9eb5}
     <button class="bigChoice" onclick="startFlow('new')">✨ 新しく作る(AIと)<small>アイデアを伝えてAIに作らせ、そのまま公開</small></button>
     <button class="bigChoice" onclick="startFlow('fix')">🔧 あるものを直す<small>公開済みプロジェクトをAIと一緒に修正</small></button>
     <button class="bigChoice" onclick="startFlow('files')">📦 手元のファイルから作る<small>フォルダやZIPをそのまま公開</small></button>
+    <button class="bigChoice" onclick="startFlow('hand')">🗂️ 手組みで作る<small>ファイル構造を自分で作ってコードをコピペ→公開</small></button>
   </div>
 
   <div class="card" id="gNew" style="display:none">
@@ -202,6 +203,15 @@ textarea:focus{border-color:#ff9eb5}
     <div class="svcRow" id="svcHo"></div>
     <div class="stepHead">Step2: 会話リンクを保存</div>
     <div class="linkRow"><input type="text" id="hoLink" placeholder="https://..."><button class="btn sm" onclick="finishHandover()">保存して作業開始 →</button></div>
+  </div>
+
+  <div class="card" id="gHand" style="display:none">
+    <h2>🗂️ 手組みで作る <button class="btn sm" style="float:right" onclick="gBack()">← 戻る</button></h2>
+    <p>空のプロジェクトを作って、ファイル構造エディタで自由に組み立てます。<br>
+    📝新規コード(コピペ先を作る)/➕画像・動画追加/ドラッグ移動/右クリック操作、全部使えます。</p>
+    <div class="stepHead">プロジェクト名(英数字とハイフン)</div>
+    <input type="text" id="handName" placeholder="my-app">
+    <button class="btn pink" onclick="startHandBuild()">🗂️ 作成してエディタを開く</button>
   </div>
 
   <div class="card" id="gFiles" style="display:none">
@@ -1135,6 +1145,17 @@ function startFlow(mode){
   if(mode==='new'){document.getElementById('gNew').style.display='block';renderSvcButtons('svcNew');}
   if(mode==='fix'){document.getElementById('gFix').style.display='block';loadRepoList().then(renderFixList);}
   if(mode==='files')document.getElementById('gFiles').style.display='block';
+  if(mode==='hand')document.getElementById('gHand').style.display='block';
+}
+/* 🗂️ 手組みビルド開始 */
+function startHandBuild(){
+  const name=(document.getElementById('handName').value.trim()||'my-app')
+    .toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'')||'my-app';
+  /* 最低限の雛形index.html入りで空WSを作る */
+  const files={'index.html':{text:'<!DOCTYPE html>\n<html lang="ja">\n<head>\n<meta charset="UTF-8">\n<title>'+name+'</title>\n</head>\n<body>\n<h1>'+name+'</h1>\n</body>\n</html>\n'}};
+  setAdvWS(name,files);
+  toast('🗂️ 空プロジェクトを作成!エディタで組み立ててください');
+  openTree();
 }
 async function copyNewPrompt(){
   const d=document.getElementById('newDesc').value.trim();
@@ -1729,11 +1750,25 @@ function applyManualPatch(keepOpen=false){
 function refreshTreeCommitBtn(){
   const b=document.getElementById('treeCommitBtn');
   if(!b)return;
+  if(WS&&WS.name&&!WS.linked){
+    /* 手組み等の未公開プロジェクト: デプロイ誘導ボタンとして常時表示 */
+    b.style.display='inline-block';
+    b.textContent='🚀 公開へ進む';
+    return;
+  }
   const n=WS&&WS.linked?WS.dirty.size+WS.deleted.size:0;
   b.style.display=n?'inline-block':'none';
   b.textContent=`💾 保存して反映(${n}件)`;
 }
 async function treeCommit(){
+  /* ★未リンク(手組み等)なら、デプロイ画面へ誘導 */
+  if(WS&&WS.name&&!WS.linked){
+    document.getElementById('treeModal').classList.remove('show');exitEdit();
+    inspectProject();
+    activate('advPane');advGoto('advDeploy');
+    toast('🚀 未公開プロジェクトです。この画面からデプロイしてください!');
+    return;
+  }
   if(!WS||!WS.linked)return toast('😵 リポジトリ未リンク');
   const n=WS.dirty.size+WS.deleted.size;
   if(!n)return toast('変更がありません');
