@@ -854,6 +854,32 @@ function parsePatches(t){
 }
 function parseDeletes(t){const d=[];for(const m of t.matchAll(/####\s*DELETE:\s*([\w\-./]+)/g))d.push(m[1].trim());return d;}
 const LANG_LINE=/^(html|css|javascript|js|typescript|ts|json|manifest|python|py|text|txt|xml|yaml|yml|markdown|md)$/i;
+/* 裸PATCH: 「PATCH: path」「old」「new」が見出し行だけで囲いが無い形式を救済 */
+function parseNakedPatches(text){
+  const lines=text.replace(/\r\n?/g,'\n').split('\n');
+  const patches=[];
+  let path=null,mode=null,oldBuf=[],newBuf=[];
+  const flush=()=>{
+    if(path&&oldBuf.length){
+      const trimTail=a=>{while(a.length&&!a[a.length-1].trim())a.pop();return a;};
+      patches.push({path,old:trimTail([...oldBuf]).join('\n')+'\n',
+        neu:trimTail([...newBuf]).join('\n')+(newBuf.length?'\n':'')});
+    }
+    path=null;mode=null;oldBuf=[];newBuf=[];
+  };
+  for(const line of lines){
+    const t=line.trim().replace(/^#+\s*/,'');
+    const pm=t.match(/^PATCH:\s*([\w\-./]+)$/i);
+    if(pm){flush();path=pm[1];mode=null;continue;}
+    if(path&&/^(```|~~~)?old(```|~~~)?$/i.test(t)){mode='old';continue;}
+    if(path&&/^(```|~~~)?new(```|~~~)?$/i.test(t)){mode='new';continue;}
+    if(path&&/^(```|~~~)$/.test(t))continue; /* はぐれフェンスは無視 */
+    if(mode==='old')oldBuf.push(line);
+    else if(mode==='new')newBuf.push(line);
+  }
+  flush();
+  return patches;
+}
 function parseNaked(text){
   const lines=text.replace(/\r\n?/g,'\n').split('\n');
   let man=null,files={},cur=null,buf=[],inMan=false,manBuf=[];
